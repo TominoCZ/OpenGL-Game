@@ -62,7 +62,9 @@ namespace OpenGL_Game
 
                 int ID = GL.CreateShader(type);
 
-                GL.ShaderSource(ID, File.ReadAllText(file + ext));
+                var text = File.ReadAllText(file + ext);
+
+                GL.ShaderSource(ID, text);
                 GL.CompileShader(ID);
 
                 GL.GetShader(ID, ShaderParameter.CompileStatus, out var status);

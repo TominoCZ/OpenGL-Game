@@ -4,9 +4,7 @@ using System.Text;
 using System.Threading;
 using OpenTK;
 using OpenTK.Input;
-using EnableCap = OpenTK.Graphics.OpenGL.EnableCap;
-using LightModelParameter = OpenTK.Graphics.OpenGL.LightModelParameter;
-using PrimitiveType = OpenTK.Graphics.OpenGL.PrimitiveType;
+using GL = OpenTK.Graphics.OpenGL.GL;
 
 namespace OpenGL_Game
 {
@@ -24,6 +22,7 @@ namespace OpenGL_Game
     {
         private static Vector3 hue;
 
+        private Loader loader;
         private Model model;
         private Renderer renderer;
 
@@ -35,12 +34,13 @@ namespace OpenGL_Game
 
             MakeCurrent();
 
-            shader = new StaticShader();
+            shader = new StaticShader("texture");
 
-            var ml = new Loader();
+            loader = new Loader();
             renderer = new Renderer();
 
-            var model = new Model();
+            var texture = new ModelTexture(loader.loadTexture("image"));
+            var model = new Model(texture);
 
             model.addVertices(
                 -0.5f, 0.5f, 0,
@@ -48,8 +48,17 @@ namespace OpenGL_Game
                 0.5f, -0.5f, 0,
                 0.5f, 0.5f, 0);
 
-            model.addIndices(0, 1, 3, 3, 1, 2);
-            model.bake(ml);
+            model.addIndices(
+                0, 1, 3,
+                3, 1, 2);
+
+            model.addUV(
+               0, 0,
+               0, 1,
+               1, 1,
+               1, 0);
+
+            model.bake(loader);
 
             this.model = model;
 
@@ -79,6 +88,7 @@ namespace OpenGL_Game
             shader.start();
             renderer.render(model);
             shader.stop();
+
             /*
             GL.Begin(PrimitiveType.Quads);
 
@@ -109,6 +119,7 @@ namespace OpenGL_Game
         protected override void OnClosing(CancelEventArgs e)
         {
             shader.DetachShader();
+            loader.cleanUp();
         }
 
         static Vector3 Hue(double angle)

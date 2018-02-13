@@ -2,9 +2,7 @@
 {
     class StaticShader : ShaderProgram
     {
-        public static string FileName = "Shaders/color";
-
-        public StaticShader() : base(FileName)
+        public StaticShader(string fileName) : base("shaders/" + fileName)
         {
 
         }
@@ -12,6 +10,7 @@
         protected override void bindAttributes()
         {
             bindAttributes(0, "position");
+            bindAttributes(1, "textureCoords");
         }
     }
 }

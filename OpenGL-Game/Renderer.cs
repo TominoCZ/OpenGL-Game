@@ -8,21 +8,26 @@ namespace OpenGL_Game
     {
         public void prepare()
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Enable(EnableCap.DepthTest);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.ClearColor(1, 0, 0, 1);
         }
 
         public void render(Model model)
         {
-            render(model.getRaw());
-        }
+            var rawModel = model.getRaw();
 
-        private void render(RawModel model)
-        {
-            GL.BindVertexArray(model.getVaoID());
-            GL.EnableVertexAttribArray(0);
-            GL.DrawElements(BeginMode.Triangles, model.getVertexCount(), DrawElementsType.UnsignedInt, 0);
+            GL.BindVertexArray(rawModel.getVaoID());
+
+            GL.EnableVertexAttribArray(0);//enable position
+            GL.EnableVertexAttribArray(1);//enable UV
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, model.getTexture().getID());
+
+            GL.DrawElements(BeginMode.Triangles, rawModel.getVertexCount(), DrawElementsType.UnsignedInt, 0);
             GL.DisableVertexAttribArray(0);
+
             GL.BindVertexArray(0);
         }
     }
