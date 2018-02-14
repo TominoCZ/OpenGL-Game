@@ -36,13 +36,7 @@ namespace OpenGL_Game
         }
 
         protected abstract void getAllUniformLocations();
-
-        public abstract void loadTransformationMatrix(Matrix4 mat);
-
-        public abstract void loadProjectionMatrix(Matrix4 mat);
-
-        public abstract void loadViewMatrix(Camera c);
-
+        
         protected int getUniformLocation(string uniform)
         {
             return GL.GetUniformLocation(ProgramID, uniform);
@@ -51,6 +45,11 @@ namespace OpenGL_Game
         protected void loadMatrix4(int location, Matrix4 mat)
         {
             GL.UniformMatrix4(location, false, ref mat);
+        }
+
+        protected void loadVector(int location, Vector3 vec)
+        {
+            GL.Uniform3(location, ref vec);
         }
 
         public void start()

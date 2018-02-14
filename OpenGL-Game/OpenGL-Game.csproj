@@ -51,6 +51,8 @@
   <ItemGroup>
     <Compile Include="BlockRenderer.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="ModelHelper.cs" />
+    <Compile Include="ModelLight.cs" />
     <Compile Include="ModelRegistry.cs" />
     <Compile Include="GameMain.cs" />
     <Compile Include="Loader.cs" />

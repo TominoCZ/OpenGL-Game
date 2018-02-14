@@ -8,8 +8,12 @@ namespace OpenGL_Game
 {
     enum EnumBlock
     {
+        SELECTION,
+        AIR,
         STONE,
-        TESTBLOCK
+        DIRT,
+        BEDROCK,
+        RARE
     }
 
     class ModelRegistry
@@ -28,6 +32,9 @@ namespace OpenGL_Game
 
         public static BlockModel getModelForBlock(EnumBlock blockType)
         {
+            if (!models.ContainsKey(blockType))
+                return getModelForBlock(EnumBlock.AIR);
+
             models.TryGetValue(blockType, out var model);
 
             return model;
@@ -38,41 +45,41 @@ namespace OpenGL_Game
     {
         public float[] vertices { get; }
         public int[] indices { get; }
-        public int[] normals { get; }
+        public float[] normals { get; }
         public float[] UVs { get; }
 
         public CubeVertexData()
         {
-            vertices = new[]{
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
+            vertices = new float[]{
+                0, 1, 1,
+                0, 0, 1,
+                1, 0, 1,
+                1, 1, 1,
 
-                0.5f, 0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, 0.5f, -0.5f,
+                1, 1, 0,
+                1, 0, 0,
+                0, 0, 0,
+                0, 1, 0,
 
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, -0.5f,
+                0, 1, 0,
+                0, 1, 1,
+                1, 1, 1,
+                1, 1, 0,
 
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, 0.5f,
+                0, 0, 1,
+                0, 0, 0,
+                1, 0, 0,
+                1, 0, 1,
 
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
+                0, 1, 0,
+                0, 0, 0,
+                0, 0, 1,
+                0, 1, 1,
 
-                0.5f, 0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f};
+                1, 1, 1,
+                1, 0, 1,
+                1, 0, 0,
+                1, 1, 0};
 
             List<int> indices = new List<int>();
             List<float> UVs = new List<float>();
@@ -97,14 +104,7 @@ namespace OpenGL_Game
             this.indices = indices.ToArray();
             this.UVs = UVs.ToArray();
 
-            normals = new[]{
-                0, 0, 1,
-                0, 0, -1,
-                0, 1, 0,
-                0, -1, 0,
-                -1, 0, 0,
-                1, 0, 0
-            };
+            normals = ModelHelper.calculateNormals(vertices, this.indices);
         }
     }
 }

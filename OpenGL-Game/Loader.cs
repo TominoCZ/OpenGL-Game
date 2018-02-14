@@ -12,7 +12,7 @@ namespace OpenGL_Game
         static List<int> VBOs = new List<int>();
         static List<int> textures = new List<int>();
 
-        public static RawModel loadToVAO(float[] positions, float[] UVs, int[] indices)
+        public static RawModel loadToVAO(float[] positions, float[] UVs, int[] indices, float[] normals)
         {
             int vaoID = createVAO();
 
@@ -20,6 +20,7 @@ namespace OpenGL_Game
 
             storeDataInAttributeList(0, 3, positions);
             storeDataInAttributeList(1, 2, UVs);
+            storeDataInAttributeList(2, 3, normals);
 
             unbindVAO();
 
@@ -39,7 +40,7 @@ namespace OpenGL_Game
             GL.BindTexture(TextureTarget.Texture2D, texID);
 
             BitmapData data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
-                ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
 
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
                 OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
@@ -47,8 +48,8 @@ namespace OpenGL_Game
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.MirroredRepeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.MirroredRepeat);
 
             textures.Add(texID);
 
@@ -63,6 +64,18 @@ namespace OpenGL_Game
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, vboID);
             GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(int) * indices.Length, indices, BufferUsageHint.StaticDraw);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+
+        private static void bindNormalsBuffer(float[] normals)
+        {
+            int vboID = GL.GenBuffer();
+
+            VBOs.Add(vboID);
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, vboID);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(float) * normals.Length, normals, BufferUsageHint.StaticDraw);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
 
         private static void storeDataInAttributeList(int attrib, int coordSize, float[] data)

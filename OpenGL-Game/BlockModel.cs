@@ -9,14 +9,14 @@ namespace OpenGL_Game
 
         public ModelTexture texture { get; }
 
-        public ShaderProgram shader { get; }
+        public StaticShader shader { get; }
 
-        public BlockModel(ModelTexture texture, ShaderProgram shader)
+        public BlockModel(ModelTexture texture, StaticShader shader)
         {
             this.texture = texture;
             this.shader = shader;
 
-            rawModel = Loader.loadToVAO(ModelRegistry.CUBE.vertices, ModelRegistry.CUBE.UVs, ModelRegistry.CUBE.indices);
+            rawModel = Loader.loadToVAO(ModelRegistry.CUBE.vertices, ModelRegistry.CUBE.UVs, ModelRegistry.CUBE.indices, ModelRegistry.CUBE.normals);
         }
     }
 }
