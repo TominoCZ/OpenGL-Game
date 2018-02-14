@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
 using System.Text;
 using System.Threading;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using GL = OpenTK.Graphics.OpenGL.GL;
 
@@ -14,97 +18,157 @@ namespace OpenGL_Game
         static void Main()
         {
             var window = new MainWindow();
-            window.Run(60);
+            window.Run(0);
         }
     }
 
     public sealed class MainWindow : GameWindow
     {
-        private static Vector3 hue;
+        private Renderer renderer;
+        private Camera camera;
 
         private Loader loader;
-        private Model model;
-        private Renderer renderer;
 
         private StaticShader shader;
 
+        private WindowState lastWindowState;
+
+        Stopwatch sw;
+
+        int frames;
+
         public MainWindow()
         {
+            CursorVisible = false;
+            VSync = VSyncMode.Off;
+
+            sw = new Stopwatch();
+            sw.Start();
+
             Title = "OpenGL Game";
 
             MakeCurrent();
 
-            shader = new StaticShader("texture");
+            initRenderer();
 
+            new Thread(() =>
+            {
+                int i = 0;
+
+                while (true)
+                {
+                    // mouse, every 5ms - 200Hz
+                    if (Focused)
+                    {
+                        // every 15ms
+                        if (++i >= 2)
+                        {
+                            camera.move();
+                            i = 0;
+                        }
+
+                        var center = PointToScreen(new Point(ClientSize.Width / 2, ClientSize.Height / 2));
+
+                        var state = OpenTK.Input.Mouse.GetCursorState();
+                        var point = new Point(state.X, state.Y);
+                        var delta = new Point(center.X - point.X, center.Y - point.Y);
+
+                        camera.yaw -= delta.X / 1000f;
+                        camera.pitch -= delta.Y / 1000f;
+
+                        OpenTK.Input.Mouse.SetPosition(center.X, center.Y);
+                    }
+
+                    Thread.Sleep(8);
+                }
+            })
+            { IsBackground = true }.Start();
+        }
+
+        void initRenderer()
+        {
+            shader = new StaticShader("texture");
+            camera = new Camera();
+            renderer = new Renderer(this, shader, camera);
             loader = new Loader();
-            renderer = new Renderer();
 
             var texture = new ModelTexture(loader.loadTexture("image"));
-            var model = new Model(texture);
+            var model = new Model(texture, shader);
 
             model.addVertices(
-                -0.5f, 0.5f, 0,
-                -0.5f, -0.5f, 0,
-                0.5f, -0.5f, 0,
-                0.5f, 0.5f, 0);
+                -0.5f, 0.5f, 0.5f,
+                -0.5f, -0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
 
-            model.addIndices(
-                0, 1, 3,
-                3, 1, 2);
+                0.5f, 0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, 0.5f, -0.5f,
 
-            model.addUV(
-               0, 0,
-               0, 1,
-               1, 1,
-               1, 0);
+                -0.5f, 0.5f, -0.5f,
+                -0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, -0.5f,
+
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, -0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f,
+                0.5f, -0.5f, 0.5f,
+
+                -0.5f, 0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, 0.5f, 0.5f,
+
+                0.5f, 0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                0.5f, -0.5f, -0.5f,
+                0.5f, 0.5f, -0.5f);
+
+            for (int i = 0; i < 24; i += 4)
+            {
+                model.addIndices(
+                    i, i + 1, i + 3,
+                    i + 3, i + 1, i + 2);
+
+                model.addUVs(
+                    0, 0,
+                    0, 1,
+                    1, 1,
+                    1, 0);
+            }
 
             model.bake(loader);
 
-            this.model = model;
+            List<BlockNode> blocks = new List<BlockNode>();
 
-            new Thread(() =>
-                  {
-                      double a = 0;
+            for (int x = 0; x < 64; x++)
+            {
+                for (int z = 0; z < 64; z++)
+                {
+                    var entity = new BlockNode(model, new Vector3(-x, -1, -z), 1f);
 
-                      while (true)
-                      {
-                          hue = Hue(a);
+                    blocks.Add(entity);
+                }
+            }
 
-                          if (a >= 360)
-                              a = 0;
-
-                          a++;
-
-                          Thread.Sleep(16);
-                      }
-                  })
-            { IsBackground = true }.Start();
+            renderer.blockRenderer.addBlockNodes(blocks.ToArray());
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            renderer.prepare();
+            frames++;
 
-            shader.start();
-            renderer.render(model);
-            shader.stop();
+            if (sw.ElapsedMilliseconds >= 1000)
+            {
+                Console.WriteLine(frames + " FPS");
 
-            /*
-            GL.Begin(PrimitiveType.Quads);
+                frames = 0;
+                sw.Restart();
+            }
 
-            GL.Color3(hue.X, hue.Y, hue.Z);
-
-            GL.Enable(EnableCap.Lighting);
-            GL.LightModel(LightModelParameter.LightModelAmbient, 1);
-            GL.Enable(EnableCap.Light0);
-            GL.Enable(EnableCap.Light1);
-
-            GL.Vertex3(-1, -1, -1);
-            GL.Vertex3(-1, 1, -1);
-            GL.Vertex3(1, 1, -1);
-            GL.Vertex3(1, -1, -1);
-
-            GL.End();*/
+            renderer.render();
 
             SwapBuffers();
             ProcessEvents(true);
@@ -112,26 +176,35 @@ namespace OpenGL_Game
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
-            if (e.Key == Key.Escape)
+            if (Keyboard.GetState().IsKeyDown(Key.LAlt | Key.F4))
                 Exit();
+
+            if (e.Key == Key.F11)
+            {
+                if (WindowState != WindowState.Fullscreen)
+                {
+                    lastWindowState = WindowState;
+                    WindowState = WindowState.Fullscreen;
+                }
+                else
+                    WindowState = lastWindowState;
+            }
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+
+            GL.Viewport(ClientRectangle);
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadIdentity();
+            GL.Ortho(0, ClientSize.Width, ClientSize.Height, 0, -1, 0);
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             shader.DetachShader();
             loader.cleanUp();
-        }
-
-        static Vector3 Hue(double angle)
-        {
-            double rad = Math.PI / 180 * angle;
-            double third = Math.PI / 3;
-
-            float x = (float)(Math.Sin(rad) * 0.5 + 0.5);
-            float y = (float)(Math.Sin(rad + 2 * third) * 0.5 + 0.5);
-            float z = (float)(Math.Sin(rad + 4 * third) * 0.5 + 0.5);
-
-            return new Vector3 { X = x, Y = y, Z = z };
         }
     }
 }

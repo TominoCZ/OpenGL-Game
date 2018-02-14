@@ -4,17 +4,19 @@ namespace OpenGL_Game
 {
     class Model
     {
-        private List<float> UVs;
-
         private List<float> vertices;
         private List<int> indices;
+        private List<float> UVs;
 
-        private RawModel model;
-        private ModelTexture texture;
-        
+        public RawModel rawModel{ get; private set; }
+
+        public ModelTexture texture { get; }
+
+        public ShaderProgram shader { get; }
+
         private bool baked;
 
-        public Model(ModelTexture texture)
+        public Model(ModelTexture texture, ShaderProgram shader)
         {
             UVs = new List<float>();
 
@@ -22,6 +24,7 @@ namespace OpenGL_Game
             indices = new List<int>();
 
             this.texture = texture;
+            this.shader = shader;
         }
 
         public void addVertices(params float[] vertices)
@@ -34,7 +37,7 @@ namespace OpenGL_Game
             this.indices.AddRange(indices);
         }
 
-        public void addUV(params float[] UVs)
+        public void addUVs(params float[] UVs)
         {
             this.UVs.AddRange(UVs);
         }
@@ -44,19 +47,9 @@ namespace OpenGL_Game
             if (baked || vertices.Count < 3 || indices.Count < 3)
                 return false;
 
-            model = l.loadToVAO(vertices.ToArray(), UVs.ToArray(), indices.ToArray());
+            rawModel = l.loadToVAO(vertices.ToArray(), UVs.ToArray(), indices.ToArray());
 
             return baked = true;
-        }
-
-        public RawModel getRaw()
-        {
-            return model;
-        }
-
-        public ModelTexture getTexture()
-        {
-            return texture;
         }
     }
 }

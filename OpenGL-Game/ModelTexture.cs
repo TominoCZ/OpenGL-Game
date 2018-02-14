@@ -2,16 +2,11 @@
 {
     class ModelTexture
     {
-        private int textureID;
+        public int textureID { get; }
 
         public ModelTexture(int id)
         {
             textureID = id;
-        }
-
-        public int getID()
-        {
-            return textureID;
         }
     }
 }

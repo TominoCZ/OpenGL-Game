@@ -49,8 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockRenderer.cs" />
+    <Compile Include="Camera.cs" />
+    <Compile Include="Entity.cs" />
     <Compile Include="GameMain.cs" />
     <Compile Include="Loader.cs" />
+    <Compile Include="MatrixHelper.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="ModelTexture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

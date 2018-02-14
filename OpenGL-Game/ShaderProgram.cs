@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using GL = OpenTK.Graphics.OpenGL.GL;
 
@@ -6,24 +8,47 @@ namespace OpenGL_Game
 {
     abstract class ShaderProgram
     {
-        public int ProgramID;
-        public int VertexShaderID;
-        public int FragmentShaderID;
+        public int ProgramID { get; }
+        public int VertexShaderID { get; }
+        public int FragmentShaderID { get; }
 
-        public ShaderProgram(string file)
+        protected ShaderProgram(string shaderName)
         {
+            var file = "assets/shaders/" + shaderName;
+
             VertexShaderID = loadShader(ShaderType.VertexShader, file);
             FragmentShaderID = loadShader(ShaderType.FragmentShader, file);
+
+            Console.WriteLine($"vertex: {(VertexShaderID != -1 ? "OK" : "ERR")}");
+            Console.WriteLine($"fragment: {(FragmentShaderID != -1 ? "OK" : "ERR")}");
 
             ProgramID = GL.CreateProgram();
 
             GL.AttachShader(ProgramID, VertexShaderID);
             GL.AttachShader(ProgramID, FragmentShaderID);
 
+            bindAttributes();
+
             GL.LinkProgram(ProgramID);
             GL.ValidateProgram(ProgramID);
 
-            bindAttributes();
+            getAllUniformLocations();
+        }
+
+        protected abstract void getAllUniformLocations();
+
+        public abstract void loadTransformationMatrix(Matrix4 mat);
+
+        public abstract void loadViewMatrix(Camera c);
+
+        protected int getUniformLocation(string uniform)
+        {
+            return GL.GetUniformLocation(ProgramID, uniform);
+        }
+
+        protected void loadMatrix4(int location, Matrix4 mat)
+        {
+            GL.UniformMatrix4(location, false, ref mat);
         }
 
         public void start()

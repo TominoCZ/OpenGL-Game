@@ -2,23 +2,13 @@
 {
     class RawModel
     {
-        private int vaoID;
-        private int vertexes;
+        public int vaoID { get; }
+        public int vertexes { get; }
 
         public RawModel(int vaoID, int vertexes)
         {
             this.vaoID = vaoID;
             this.vertexes = vertexes;
-        }
-
-        public int getVertexCount()
-        {
-            return vertexes;
-        }
-
-        public int getVaoID()
-        {
-            return vaoID;
         }
     }
 }

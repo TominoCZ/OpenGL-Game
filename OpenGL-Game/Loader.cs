@@ -17,64 +17,50 @@ namespace OpenGL_Game
             int vaoID = createVAO();
 
             bindIndicesBuffer(indices);
+
             storeDataInAttributeList(0, 3, positions);
             storeDataInAttributeList(1, 2, UVs);
+
             unbindVAO();
 
             return new RawModel(vaoID, indices.Length);
         }
 
-        public int loadTexture(string file)
+        public int loadTexture(string textureName)
         {
-            int texID;
+            var file = "assets/textures/" + textureName + ".png";
 
-            var bmp = new Bitmap("res/" + file + ".png");
+            var bmp = new Bitmap(file);
 
-            texID = GL.GenTexture();
+            GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
+
+            int texID = GL.GenTexture();
 
             GL.BindTexture(TextureTarget.Texture2D, texID);
 
-            var bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Size.Width, bmp.Size.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, bmp.Size.Width, bmp.Size.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Rgb, PixelType.UnsignedByte, bmpData.Scan0);
-            GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, new[] { (int)TextureMagFilter.Linear });
-            GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, new[] { (int)TextureMagFilter.Nearest });
+            BitmapData data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
+                OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            bmp.UnlockBits(data);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
             textures.Add(texID);
 
             return texID;
         }
 
-        public void cleanUp()
-        {
-            foreach (var item in VAOs)
-            {
-                GL.DeleteVertexArray(item);
-            }
-            foreach (var item in VBOs)
-            {
-                GL.DeleteBuffer(item);
-            }
-            foreach (var item in textures)
-            {
-                GL.DeleteTexture(item);
-            }
-        }
-
-        private int createVAO()
-        {
-            int vaoID = GL.GenVertexArray();
-
-            VAOs.Add(vaoID);
-            GL.BindVertexArray(vaoID);
-
-            return vaoID;
-        }
-
         private void bindIndicesBuffer(int[] indices)
         {
             int vboID = GL.GenBuffer();
+
             VBOs.Add(vboID);
+
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, vboID);
             GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(int) * indices.Length, indices, BufferUsageHint.StaticDraw);
         }
@@ -91,9 +77,35 @@ namespace OpenGL_Game
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
 
+        private int createVAO()
+        {
+            int vaoID = GL.GenVertexArray();
+
+            VAOs.Add(vaoID);
+            GL.BindVertexArray(vaoID);
+
+            return vaoID;
+        }
+
         private void unbindVAO()
         {
             GL.BindVertexArray(0);
+        }
+
+        public void cleanUp()
+        {
+            foreach (var item in VAOs)
+            {
+                GL.DeleteVertexArray(item);
+            }
+            foreach (var item in VBOs)
+            {
+                GL.DeleteBuffer(item);
+            }
+            foreach (var item in textures)
+            {
+                GL.DeleteTexture(item);
+            }
         }
     }
 }
