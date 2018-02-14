@@ -8,11 +8,11 @@ namespace OpenGL_Game
 {
     class Loader
     {
-        List<int> VAOs = new List<int>();
-        List<int> VBOs = new List<int>();
-        List<int> textures = new List<int>();
+        static List<int> VAOs = new List<int>();
+        static List<int> VBOs = new List<int>();
+        static List<int> textures = new List<int>();
 
-        public RawModel loadToVAO(float[] positions, float[] UVs, int[] indices)
+        public static RawModel loadToVAO(float[] positions, float[] UVs, int[] indices)
         {
             int vaoID = createVAO();
 
@@ -26,7 +26,7 @@ namespace OpenGL_Game
             return new RawModel(vaoID, indices.Length);
         }
 
-        public int loadTexture(string textureName)
+        public static int loadTexture(string textureName)
         {
             var file = "assets/textures/" + textureName + ".png";
 
@@ -55,7 +55,7 @@ namespace OpenGL_Game
             return texID;
         }
 
-        private void bindIndicesBuffer(int[] indices)
+        private static void bindIndicesBuffer(int[] indices)
         {
             int vboID = GL.GenBuffer();
 
@@ -65,7 +65,7 @@ namespace OpenGL_Game
             GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(int) * indices.Length, indices, BufferUsageHint.StaticDraw);
         }
 
-        private void storeDataInAttributeList(int attrib, int coordSize, float[] data)
+        private static void storeDataInAttributeList(int attrib, int coordSize, float[] data)
         {
             int vboID = GL.GenBuffer();
 
@@ -77,7 +77,7 @@ namespace OpenGL_Game
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
 
-        private int createVAO()
+        private static int createVAO()
         {
             int vaoID = GL.GenVertexArray();
 
@@ -87,12 +87,12 @@ namespace OpenGL_Game
             return vaoID;
         }
 
-        private void unbindVAO()
+        private static void unbindVAO()
         {
             GL.BindVertexArray(0);
         }
 
-        public void cleanUp()
+        public static void cleanUp()
         {
             foreach (var item in VAOs)
             {

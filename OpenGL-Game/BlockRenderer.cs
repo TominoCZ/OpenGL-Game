@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OpenTK;
 using GL = OpenTK.Graphics.OpenGL.GL;
 using TextureUnit = OpenTK.Graphics.OpenGL.TextureUnit;
 using TextureTarget = OpenTK.Graphics.OpenGL.TextureTarget;
@@ -12,9 +11,9 @@ namespace OpenGL_Game
 {
     class BlockRenderer
     {
-        private Dictionary<Model, List<BlockNode>> blocks = new Dictionary<Model, List<BlockNode>>();
+        private Dictionary<EnumBlock, List<Vector3>> blocks = new Dictionary<EnumBlock, List<Vector3>>();
 
-        private void prepareModel(Model m)
+        private void beginRendering(BlockModel m)
         {
             GL.BindVertexArray(m.rawModel.vaoID);
 
@@ -25,60 +24,69 @@ namespace OpenGL_Game
             GL.BindTexture(TextureTarget.Texture2D, m.texture.textureID);
         }
 
-        private void finishModel(Model m)
+        private void finishRendering()
         {
             GL.DisableVertexAttribArray(0);
             GL.DisableVertexAttribArray(1);
 
             GL.BindVertexArray(0);
         }
-
+        
         public void render(Camera c)
         {
             var keys = blocks.Keys.ToArray();
 
             for (int i = 0; i < keys.Length; i++)
             {
-                var model = keys[i];
+                EnumBlock blockType = keys[i];
+                BlockModel model = ModelRegistry.getModelForBlock(blockType);
 
-                prepareModel(model);
+                beginRendering(model);
 
                 model.shader.start();
                 model.shader.loadViewMatrix(c);
 
-                if (blocks.TryGetValue(model, out var list))
+                if (blocks.TryGetValue(blockType, out var positions))
                 {
-                    for (int j = 0; j < list.Count; j++)
+                    for (int j = 0; j < positions.Count; j++)
                     {
-                        var node = list[j];
+                        Vector3 pos = positions[j];
 
-                        var mat = MatrixHelper.createTransformationMatrix(node.translation, node.rx, node.ry, node.rz, node.scale);
-                        model.shader.loadTransformationMatrix(mat);
+                        model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos, 0, 0, 0, 1));
 
                         GL.DrawElements(BeginMode.Triangles, model.rawModel.vertexes, DrawElementsType.UnsignedInt, 0);
                     }
                 }
 
-                finishModel(model);
+                finishRendering();
                 model.shader.stop();
             }
         }
 
-        public void addBlockNodes(params BlockNode[] nodes)
+        public void setBlock(EnumBlock blockType, Vector3 pos)
         {
             lock (blocks)
             {
-                foreach (var n in nodes)
+                var keys = blocks.Keys.ToArray();
+
+                //remove block at position
+                for (int i = 0; i < keys.Length; i++)
                 {
-                    blocks.TryGetValue(n.model, out var list);
+                    var key = keys[i];
 
-                    if (list == null)
-                        blocks.Add(n.model, list = new List<BlockNode>());
-
-                    lock (list)
+                    if (blocks.TryGetValue(key, out var positions))
                     {
-                        list.Add(n);
+                        if (positions.Contains(pos))
+                            positions.Remove(pos);
                     }
+                }
+
+                if (!blocks.ContainsKey(blockType))
+                    blocks.Add(blockType, new List<Vector3>());
+
+                if (blocks.TryGetValue(blockType, out var list))
+                {
+                    list.Add(pos);
                 }
             }
         }

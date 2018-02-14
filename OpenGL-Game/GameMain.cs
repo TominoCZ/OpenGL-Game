@@ -27,8 +27,6 @@ namespace OpenGL_Game
         private Renderer renderer;
         private Camera camera;
 
-        private Loader loader;
-
         private StaticShader shader;
 
         private WindowState lastWindowState;
@@ -49,7 +47,7 @@ namespace OpenGL_Game
 
             MakeCurrent();
 
-            initRenderer();
+            init();
 
             new Thread(() =>
             {
@@ -85,75 +83,24 @@ namespace OpenGL_Game
             { IsBackground = true }.Start();
         }
 
-        void initRenderer()
+        void init()
         {
             shader = new StaticShader("texture");
             camera = new Camera();
             renderer = new Renderer(this, shader, camera);
-            loader = new Loader();
 
-            var texture = new ModelTexture(loader.loadTexture("image"));
-            var model = new Model(texture, shader);
+            var texture = new ModelTexture(Loader.loadTexture("image"));
+            var model = new BlockModel(texture, shader);
 
-            model.addVertices(
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
+            ModelRegistry.setModelForBlock(EnumBlock.STONE, model);
 
-                0.5f, 0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, 0.5f, -0.5f,
-
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, -0.5f,
-
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, 0.5f,
-
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f);
-
-            for (int i = 0; i < 24; i += 4)
+            for (int x = 0; x < 16; x++)
             {
-                model.addIndices(
-                    i, i + 1, i + 3,
-                    i + 3, i + 1, i + 2);
-
-                model.addUVs(
-                    0, 0,
-                    0, 1,
-                    1, 1,
-                    1, 0);
-            }
-
-            model.bake(loader);
-
-            List<BlockNode> blocks = new List<BlockNode>();
-
-            for (int x = 0; x < 64; x++)
-            {
-                for (int z = 0; z < 64; z++)
+                for (int z = 0; z < 16; z++)
                 {
-                    var entity = new BlockNode(model, new Vector3(-x, -1, -z), 1f);
-
-                    blocks.Add(entity);
+                    renderer.blockRenderer.setBlock(EnumBlock.STONE, new Vector3(-x, -1, -z));
                 }
             }
-
-            renderer.blockRenderer.addBlockNodes(blocks.ToArray());
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -204,7 +151,7 @@ namespace OpenGL_Game
         protected override void OnClosing(CancelEventArgs e)
         {
             shader.DetachShader();
-            loader.cleanUp();
+            Loader.cleanUp();
         }
     }
 }

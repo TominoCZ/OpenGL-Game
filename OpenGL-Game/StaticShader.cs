@@ -31,7 +31,7 @@ namespace OpenGL_Game
             loadMatrix4(loc_transformationMatrix, mat);
         }
 
-        public void loadProjectionMatrix(Matrix4 mat)
+        public override void loadProjectionMatrix(Matrix4 mat)
         {
             loadMatrix4(loc_projectionMatrix, mat);
         }

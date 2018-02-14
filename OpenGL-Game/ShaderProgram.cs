@@ -39,6 +39,8 @@ namespace OpenGL_Game
 
         public abstract void loadTransformationMatrix(Matrix4 mat);
 
+        public abstract void loadProjectionMatrix(Matrix4 mat);
+
         public abstract void loadViewMatrix(Camera c);
 
         protected int getUniformLocation(string uniform)

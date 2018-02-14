@@ -6,21 +6,15 @@ namespace OpenGL_Game
 {
     class Camera
     {
-        private float _pitch, _yaw, speed = 0.05f;
+        private float _pitch, _yaw, speed = 0.1f;
 
         public Vector3 pos { get; private set; }
 
         public float pitch
         {
-            get
-            {
-                return _pitch;
-            }
+            get => _pitch;
 
-            set
-            {
-                _pitch = MathHelper.Clamp(value, -MathHelper.PiOver2, MathHelper.PiOver2);
-            }
+            set => _pitch = MathHelper.Clamp(value, -MathHelper.PiOver2, MathHelper.PiOver2);
         }
 
         public float yaw

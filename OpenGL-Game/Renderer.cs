@@ -17,26 +17,22 @@ namespace OpenGL_Game
         private int FOV = 65;
 
         private Matrix4 projectionMatrix;
-
-        private Size startSize;
-
+        
         public BlockRenderer blockRenderer;
 
         private Camera camera;
 
-        public Renderer(GameWindow window, StaticShader shader, Camera camera)
+        public Renderer(GameWindow window, ShaderProgram sp, Camera camera)
         {
             this.window = window;
             this.camera = camera;
 
-            startSize = window.ClientSize;
-
             blockRenderer = new BlockRenderer();
 
             createProjectionMatrix();
-            shader.start();
-            shader.loadProjectionMatrix(projectionMatrix);
-            shader.stop();
+            sp.start();
+            sp.loadProjectionMatrix(projectionMatrix);
+            sp.stop();
 
             prepare();
         }
@@ -58,25 +54,25 @@ namespace OpenGL_Game
             blockRenderer.render(camera);
             /*
             //prepare for rendering
-            GL.BindVertexArray(e.model.rawModel.vaoID);
+            GL.BindVertexArray(e.blockModel.rawModel.vaoID);
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, e.model.texture.textureID);
+            GL.BindTexture(TextureTarget.Texture2D, e.blockModel.texture.textureID);
 
             //render
-            var mat = MatrixHelper.createTransformationMatrix(e.translation, e.rx, e.ry, e.rz, e.scale);
+            var mat = MatrixHelper.createTransformationMatrix(e.pos, e.rx, e.ry, e.rz, e.scale);
             shader.loadTransformationMatrix(mat);
 
-            GL.DrawElements(BeginMode.Triangles, e.model.rawModel.vertexes, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(BeginMode.Triangles, e.blockModel.rawModel.vertices, DrawElementsType.UnsignedInt, 0);
 
-            //model 2
-            mat = MatrixHelper.createTransformationMatrix(e.translation, e.rx, e.ry, e.rz, e.scale);
+            //blockModel 2
+            mat = MatrixHelper.createTransformationMatrix(e.pos, e.rx, e.ry, e.rz, e.scale);
             shader.loadTransformationMatrix(mat);
             
-            GL.DrawElements(BeginMode.Triangles, e.model.rawModel.vertexes, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(BeginMode.Triangles, e.blockModel.rawModel.vertices, DrawElementsType.UnsignedInt, 0);
 
             //cleanup
             GL.DisableVertexAttribArray(0);
@@ -101,23 +97,6 @@ namespace OpenGL_Game
             projectionMatrix.M34 = -1;
             projectionMatrix.M43 = -((2 * FAR_PLANE * NEAR_PLANE) / frustrum_length);
             projectionMatrix.M44 = 0;
-        }
-
-        static Vector2 AR(int a, int b)
-        {
-            int w = a;
-            int h = b;
-
-            int Remainder;
-
-            while (b != 0)
-            {
-                Remainder = a % b;
-                a = b;
-                b = Remainder;
-            }
-
-            return new Vector2(w / a, h / a);
         }
     }
 }
