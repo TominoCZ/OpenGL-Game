@@ -24,7 +24,7 @@ namespace OpenGL_Game
 
             unbindVAO();
 
-            return new RawModel(vaoID, indices.Length);
+            return new RawModel(vaoID, positions, UVs, indices, normals);
         }
 
         public static int loadTexture(string textureName)

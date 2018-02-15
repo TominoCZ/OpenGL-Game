@@ -14,7 +14,7 @@ namespace OpenGL_Game
         public float NEAR_PLANE = 0.1f;
         public float FAR_PLANE = 100f;
 
-        private int FOV = 100;
+        private int FOV = 70;
 
         private Matrix4 projectionMatrix;
 
@@ -52,23 +52,26 @@ namespace OpenGL_Game
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            //prepare();
+
             blockRenderer.render(camera);
         }
 
         private void createProjectionMatrix()
         {
-            //works for fullscreen
-            float aspectRatio = (float)window.Width / window.Height;
-
-            float y_scale = (float)(1f / Math.Tan(MathHelper.DegreesToRadians(FOV / 2f)) * aspectRatio);
-            float x_scale = y_scale / aspectRatio;
-            float frustrum_length = FAR_PLANE - NEAR_PLANE;
-
             projectionMatrix = new Matrix4();
-            projectionMatrix.Diagonal = new Vector4(x_scale, y_scale, -((FAR_PLANE + NEAR_PLANE) / frustrum_length), 0);
 
+            float aspectRatio = (float)window.Width / window.Height;
+            float y_scale = (float)(1f / Math.Tan(MathHelper.DegreesToRadians(FOV / 2f)));
+            float x_scale = y_scale / aspectRatio;
+            float frustum_length = FAR_PLANE - NEAR_PLANE;
+
+            projectionMatrix.M11 = x_scale;
+            projectionMatrix.M22 = y_scale;
+            projectionMatrix.M33 = -((FAR_PLANE + NEAR_PLANE) / frustum_length);
             projectionMatrix.M34 = -1;
-            projectionMatrix.M43 = -((2 * FAR_PLANE * NEAR_PLANE) / frustrum_length);
+            projectionMatrix.M43 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length);
+            projectionMatrix.M44 = 0;
         }
     }
 }

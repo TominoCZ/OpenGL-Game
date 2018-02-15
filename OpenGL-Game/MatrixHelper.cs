@@ -15,19 +15,30 @@ namespace OpenGL_Game
             var s = Matrix4.CreateScale(scale);
             var t = Matrix4.CreateTranslation(translation);
 
-            return Matrix4.Identity * x * y * z * s * t;
+            return x * y * z * s * t;
+        }
+
+        public static Matrix4 createTransformationMatrix(Vector3 translation, float scale)
+        {
+            var s = Matrix4.CreateScale(scale);
+            var t = Matrix4.CreateTranslation(translation);
+
+            return s * t;
+        }
+
+        public static Matrix4 createTransformationMatrix(Vector3 translation)
+        {
+            return Matrix4.CreateTranslation(translation);
         }
 
         public static Matrix4 createViewMatrix(Camera c)
         {
-            var negativeCameraPos = -c.pos;
-
             var x = Matrix4.CreateRotationX(c.pitch);
             var y = Matrix4.CreateRotationY(c.yaw);
 
-            var t = Matrix4.CreateTranslation(negativeCameraPos);
+            var t = Matrix4.CreateTranslation(-c.pos);
 
-            return Matrix4.Identity * t * y * x;
+            return t * y * x;
         }
     }
 }

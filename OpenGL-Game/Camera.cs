@@ -9,7 +9,7 @@ namespace OpenGL_Game
     {
         public static Camera INSTANCE;
 
-        private float _pitch, _yaw, speed = 0.15f;
+        private float _pitch = MathHelper.PiOver6, _yaw = MathHelper.PiOver2 + MathHelper.PiOver4, speed = 0.15f;
 
         public Vector3 pos { get; private set; }
 
@@ -73,9 +73,7 @@ namespace OpenGL_Game
 
         public Vector3 getLookVec()
         {
-            Vector3 vec = new Vector3(0, 0, 1);
-
-            return rotate(vec, _pitch, _yaw, 0);
+            return rotate(Vector3.UnitZ, _pitch, _yaw, 0);
         }
 
         public static Vector3 rotate(Vector3 vec, float AngleX, float AngleY, float AngleZ)

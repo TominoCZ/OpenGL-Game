@@ -8,12 +8,12 @@ namespace OpenGL_Game
 {
     enum EnumBlock
     {
-        SELECTION,
         AIR,
         STONE,
         DIRT,
         BEDROCK,
-        RARE
+        RARE,
+        SELECTION
     }
 
     class ModelRegistry
@@ -32,9 +32,6 @@ namespace OpenGL_Game
 
         public static BlockModel getModelForBlock(EnumBlock blockType)
         {
-            if (!models.ContainsKey(blockType))
-                return getModelForBlock(EnumBlock.AIR);
-
             models.TryGetValue(blockType, out var model);
 
             return model;

@@ -11,18 +11,21 @@ namespace OpenGL_Game
 {
     class BlockRenderer
     {
-        private Dictionary<EnumBlock, List<Vector3>> blocks = new Dictionary<EnumBlock, List<Vector3>>();
+        private Dictionary<EnumBlock, List<BlockPos>> blocks = new Dictionary<EnumBlock, List<BlockPos>>();
+        private EnumBlock[] keys;
 
         private ModelLight modelLight, selectionLight;
 
         private BlockModel PreviewModel;
 
-        public Vector3 PreviewModelVector;
+        public BlockPos PreviewModelPos;
 
         public BlockRenderer()
         {
             modelLight = new ModelLight(new Vector3(-25, 120, -100), Vector3.One);
             selectionLight = new ModelLight(Vector3.Zero, Vector3.One);
+
+            keys = new EnumBlock[1];
         }
 
         private void beginRendering(BlockModel m)
@@ -48,9 +51,8 @@ namespace OpenGL_Game
 
         public void render(Camera c)
         {
-            var keys = blocks.Keys.ToArray();
             var viewMatrix = MatrixHelper.createViewMatrix(c);
-
+            
             if (PreviewModel != null)
             {
                 beginRendering(PreviewModel);
@@ -60,10 +62,10 @@ namespace OpenGL_Game
                 PreviewModel.shader.start();
                 PreviewModel.shader.loadViewMatrix(viewMatrix);
                 PreviewModel.shader.loadLight(selectionLight);
-                PreviewModel.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(PreviewModelVector + new Vector3(-0.0125f), 0, 0, 0, 1.025f));
+                PreviewModel.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(PreviewModelPos.vector + Vector3.One * -0.0125f, 1.025f));
 
                 GL.Disable(EnableCap.CullFace);
-                GL.DrawElements(BeginMode.Triangles, PreviewModel.rawModel.vertexes, DrawElementsType.UnsignedInt, 0);
+                GL.DrawElements(BeginMode.Triangles, PreviewModel.rawModel.indices.Length, DrawElementsType.UnsignedInt, 0);
                 GL.Enable(EnableCap.CullFace);
 
                 finishRendering();
@@ -76,8 +78,8 @@ namespace OpenGL_Game
 
             for (int i = 0; i < keys.Length; i++)
             {
-                EnumBlock blockType = keys[i];
-                BlockModel model = ModelRegistry.getModelForBlock(blockType);
+                var blockType = keys[i];
+                var model = ModelRegistry.getModelForBlock(blockType);
 
                 beginRendering(model);
 
@@ -87,13 +89,11 @@ namespace OpenGL_Game
 
                 if (blocks.TryGetValue(blockType, out var positions))
                 {
-                    for (int j = 0; j < positions.Count; j++)
+                    foreach (var pos in positions)
                     {
-                        Vector3 pos = positions[j];
+                        model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos.vector));
 
-                        model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos, 0, 0, 0, 1));
-
-                        GL.DrawElements(BeginMode.Triangles, model.rawModel.vertexes, DrawElementsType.UnsignedInt, 0);
+                        GL.DrawElements(BeginMode.Triangles, model.rawModel.indices.Length, DrawElementsType.UnsignedInt, 0);
                     }
                 }
 
@@ -102,7 +102,7 @@ namespace OpenGL_Game
             }
         }
 
-        public void setBlock(EnumBlock blockType, Vector3 pos)
+        public void setBlock(EnumBlock blockType, BlockPos pos)
         {
             if (blockType == EnumBlock.SELECTION)
                 return;
@@ -111,8 +111,6 @@ namespace OpenGL_Game
             {
                 var keys = blocks.Keys.ToArray();
 
-                var vecI = new Vector3((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y), (float)Math.Floor(pos.Z));
-
                 //remove block at position
                 for (int i = 0; i < keys.Length; i++)
                 {
@@ -120,8 +118,8 @@ namespace OpenGL_Game
 
                     if (blocks.TryGetValue(key, out var positions))
                     {
-                        if (positions.Contains(vecI))
-                            positions.Remove(vecI);
+                        if (positions.Contains(pos))
+                            positions.Remove(pos);
                     }
                 }
 
@@ -129,22 +127,25 @@ namespace OpenGL_Game
                     return;
 
                 if (!blocks.ContainsKey(blockType))
-                    blocks.Add(blockType, new List<Vector3>());
+                    blocks.Add(blockType, new List<BlockPos>());
 
                 if (blocks.TryGetValue(blockType, out var list))
                 {
-                    list.Add(vecI);
+                    list.Add(pos);
+                }
+
+                lock (keys)
+                {
+                    this.keys = blocks.Keys.ToArray();
                 }
             }
         }
 
-        public EnumBlock getBlock(Vector3 pos)
+        public EnumBlock getBlock(BlockPos pos)
         {
             lock (blocks)
             {
                 var keys = blocks.Keys.ToArray();
-
-                var vecI = new Vector3((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y), (float)Math.Floor(pos.Z));
 
                 //remove block at position
                 for (int i = 0; i < keys.Length; i++)
@@ -153,7 +154,7 @@ namespace OpenGL_Game
 
                     if (blocks.TryGetValue(key, out var positions))
                     {
-                        if (positions.Contains(vecI))
+                        if (positions.Contains(pos))
                             return key;
                     }
                 }

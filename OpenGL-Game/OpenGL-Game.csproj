@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="BlockRenderer.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="Chunk.cs" />
     <Compile Include="ModelHelper.cs" />
     <Compile Include="ModelLight.cs" />
     <Compile Include="ModelRegistry.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Renderer.cs" />
     <Compile Include="ShaderProgram.cs" />
     <Compile Include="StaticShader.cs" />
+    <Compile Include="World.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

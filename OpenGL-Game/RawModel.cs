@@ -3,12 +3,20 @@
     class RawModel
     {
         public int vaoID { get; }
-        public int vertexes { get; }
 
-        public RawModel(int vaoID, int vertexes)
+        public float[] postitions { get; }
+        public float[] UVs { get; }
+        public int[] indices { get; }
+        public float[] normals { get; }
+
+        public RawModel(int vaoID, float[] postitions, float[] UVs, int[] indices, float[] normals)
         {
             this.vaoID = vaoID;
-            this.vertexes = vertexes;
+
+            this.postitions = postitions;
+            this.UVs = UVs;
+            this.indices = indices;
+            this.normals = normals;
         }
     }
 }

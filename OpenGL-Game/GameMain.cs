@@ -18,7 +18,7 @@ namespace OpenGL_Game
         static void Main()
         {
             var window = new MainWindow();
-            window.Run(0);
+            window.Run(60);
         }
     }
 
@@ -86,7 +86,7 @@ namespace OpenGL_Game
                                 pos.Y = (float)Math.Floor(pos.Y);
                                 pos.Z = (float)Math.Floor(pos.Z);
 
-                                renderer.blockRenderer.PreviewModelVector = pos;
+                                renderer.blockRenderer.PreviewModelPos = new BlockPos(pos);
 
                                 i = 0;
                             }
@@ -141,11 +141,11 @@ namespace OpenGL_Game
                 else if (y == 4)
                     layer = EnumBlock.DIRT;
 
-                for (int x = 0; x < 16; x++)
+                for (int x = 0; x < 32; x++)
                 {
-                    for (int z = 0; z < 16; z++)
+                    for (int z = 0; z < 32; z++)
                     {
-                        renderer.blockRenderer.setBlock((rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer, new Vector3(x, y - 6, z));
+                        renderer.blockRenderer.setBlock((rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer, new BlockPos(x, y - 6, z));
                     }
                 }
             }
@@ -166,7 +166,7 @@ namespace OpenGL_Game
             renderer.render();
 
             SwapBuffers();
-            ProcessEvents(true);
+            ProcessEvents(false);
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -192,7 +192,7 @@ namespace OpenGL_Game
 
             if (e.IsPressed)
             {
-                Vector3 target = renderer.blockRenderer.PreviewModelVector;
+                var target = renderer.blockRenderer.PreviewModelPos;
 
                 if (e.Button == MouseButton.Right)
                 {
