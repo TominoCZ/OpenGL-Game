@@ -18,24 +18,25 @@ namespace OpenGL_Game
         static void Main()
         {
             var window = new MainWindow();
-            window.Run(60);
+            window.Run(0);
         }
     }
 
     public sealed class MainWindow : GameWindow
     {
-        private Renderer renderer;
-        private Camera camera;
+        private WindowState lastWindowState;
 
         private StaticShader shader;
 
-        private WindowState lastWindowState;
+        private Renderer renderer;
+        private Camera camera;
 
-        Stopwatch sw;
-
-        int frames;
+        private World world;
 
         private Point mouseLast;
+
+        private Stopwatch sw;
+        private int frames;
 
         public MainWindow()
         {
@@ -45,6 +46,8 @@ namespace OpenGL_Game
 
             CursorVisible = false;
             VSync = VSyncMode.Off;
+
+            TextureRegistry.stitchTextures();
 
             init();
 
@@ -112,23 +115,15 @@ namespace OpenGL_Game
             camera = new Camera();
             renderer = new Renderer(this, shader, camera);
 
-            var stoneTexture = new ModelTexture(Loader.loadTexture("stone"));
-            var dirtTexture = new ModelTexture(Loader.loadTexture("dirt"));
-            var bedrockTexture = new ModelTexture(Loader.loadTexture("bedrock"));
-            var rareTexture = new ModelTexture(Loader.loadTexture("rare"));
-            var selectionTexture = new ModelTexture(Loader.loadTexture("selection"));
+            var stoneModel = new BlockModel(EnumBlock.STONE, shader);
+            var dirtModel = new BlockModel(EnumBlock.DIRT, shader);
+            var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader);
+            var rareModel = new BlockModel(EnumBlock.RARE, shader);
 
-            var stoneModel = new BlockModel(stoneTexture, shader);
-            var dirtModel = new BlockModel(dirtTexture, shader);
-            var bedrockModel = new BlockModel(bedrockTexture, shader);
-            var rareModel = new BlockModel(rareTexture, shader);
-            var selectionModel = new BlockModel(selectionTexture, shader);
-
-            ModelRegistry.setModelForBlock(EnumBlock.STONE, stoneModel);
-            ModelRegistry.setModelForBlock(EnumBlock.DIRT, dirtModel);
-            ModelRegistry.setModelForBlock(EnumBlock.BEDROCK, bedrockModel);
-            ModelRegistry.setModelForBlock(EnumBlock.RARE, rareModel);
-            ModelRegistry.setModelForBlock(EnumBlock.SELECTION, selectionModel);
+            ModelRegistry.registerBlockModel(stoneModel);
+            ModelRegistry.registerBlockModel(dirtModel);
+            ModelRegistry.registerBlockModel(bedrockModel);
+            ModelRegistry.registerBlockModel(rareModel);
 
             var rand = new Random();
 
@@ -145,7 +140,7 @@ namespace OpenGL_Game
                 {
                     for (int z = 0; z < 32; z++)
                     {
-                        renderer.blockRenderer.setBlock((rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer, new BlockPos(x, y - 6, z));
+                        renderer.blockRenderer.setBlock((rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer, new BlockPos(x, y - 8, z));
                     }
                 }
             }
@@ -196,7 +191,8 @@ namespace OpenGL_Game
 
                 if (e.Button == MouseButton.Right)
                 {
-                    renderer.blockRenderer.setBlock(EnumBlock.STONE, target);
+                    if (renderer.blockRenderer.getBlock(target) == EnumBlock.AIR)
+                        renderer.blockRenderer.setBlock(EnumBlock.STONE, target);
                 }
                 else if (e.Button == MouseButton.Left)
                 {

@@ -1,22 +1,42 @@
-﻿namespace OpenGL_Game
+﻿using System.Collections.Generic;
+
+namespace OpenGL_Game
 {
     class RawModel
     {
         public int vaoID { get; }
 
-        public float[] postitions { get; }
-        public float[] UVs { get; }
-        public int[] indices { get; }
-        public float[] normals { get; }
+        private Dictionary<EnumFacing, RawQuad> quads;
 
-        public RawModel(int vaoID, float[] postitions, float[] UVs, int[] indices, float[] normals)
+        public int vertexCount;
+
+        public RawModel(int vaoID)
         {
             this.vaoID = vaoID;
 
-            this.postitions = postitions;
-            this.UVs = UVs;
-            this.indices = indices;
-            this.normals = normals;
+            quads = new Dictionary<EnumFacing, RawQuad>();
         }
+
+        public void setQuadForSide(EnumFacing side, RawQuad quad)
+        {
+            if (quads.TryGetValue(side, out var q))
+            {
+                vertexCount -= q.vertices.Length / 3;
+                quads.Remove(side);
+            }
+
+            quads.Add(side, quad);
+            vertexCount += quad.vertices.Length / 3;
+        }
+    }
+
+    enum EnumFacing
+    {
+        NORTH,
+        SOUTH,
+        EAST,
+        WEST,
+        UP,
+        DOWN
     }
 }

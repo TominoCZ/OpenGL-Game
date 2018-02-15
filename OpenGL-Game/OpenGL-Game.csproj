@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockPos.cs" />
     <Compile Include="BlockRenderer.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Chunk.cs" />
@@ -62,9 +63,11 @@
     <Compile Include="ModelTexture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawModel.cs" />
+    <Compile Include="RawQuad.cs" />
     <Compile Include="Renderer.cs" />
     <Compile Include="ShaderProgram.cs" />
     <Compile Include="StaticShader.cs" />
+    <Compile Include="TextureRegistry.cs" />
     <Compile Include="World.cs" />
   </ItemGroup>
   <ItemGroup>

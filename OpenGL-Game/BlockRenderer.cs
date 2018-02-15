@@ -37,7 +37,7 @@ namespace OpenGL_Game
             GL.EnableVertexAttribArray(2);
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, m.texture.textureID);
+            GL.BindTexture(TextureTarget.Texture2D, TextureRegistry.textureAtlasID);
         }
 
         private void finishRendering()
@@ -52,7 +52,7 @@ namespace OpenGL_Game
         public void render(Camera c)
         {
             var viewMatrix = MatrixHelper.createViewMatrix(c);
-            
+            /*
             if (PreviewModel != null)
             {
                 beginRendering(PreviewModel);
@@ -65,7 +65,7 @@ namespace OpenGL_Game
                 PreviewModel.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(PreviewModelPos.vector + Vector3.One * -0.0125f, 1.025f));
 
                 GL.Disable(EnableCap.CullFace);
-                GL.DrawElements(BeginMode.Triangles, PreviewModel.rawModel.indices.Length, DrawElementsType.UnsignedInt, 0);
+                GL.DrawArrays(PrimitiveType.Quads, 0, PreviewModel.rawModel.vertexCount);
                 GL.Enable(EnableCap.CullFace);
 
                 finishRendering();
@@ -74,7 +74,7 @@ namespace OpenGL_Game
             else
             {
                 PreviewModel = ModelRegistry.getModelForBlock(EnumBlock.SELECTION);
-            }
+            }*/
 
             for (int i = 0; i < keys.Length; i++)
             {
@@ -92,8 +92,8 @@ namespace OpenGL_Game
                     foreach (var pos in positions)
                     {
                         model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos.vector));
-
-                        GL.DrawElements(BeginMode.Triangles, model.rawModel.indices.Length, DrawElementsType.UnsignedInt, 0);
+                        
+                        GL.DrawArrays(PrimitiveType.Quads, 0, 24);
                     }
                 }
 
@@ -104,13 +104,11 @@ namespace OpenGL_Game
 
         public void setBlock(EnumBlock blockType, BlockPos pos)
         {
-            if (blockType == EnumBlock.SELECTION)
-                return;
+            //if (blockType == EnumBlock.SELECTION)
+                //return;
 
             lock (blocks)
             {
-                var keys = blocks.Keys.ToArray();
-
                 //remove block at position
                 for (int i = 0; i < keys.Length; i++)
                 {
@@ -145,8 +143,6 @@ namespace OpenGL_Game
         {
             lock (blocks)
             {
-                var keys = blocks.Keys.ToArray();
-
                 //remove block at position
                 for (int i = 0; i < keys.Length; i++)
                 {

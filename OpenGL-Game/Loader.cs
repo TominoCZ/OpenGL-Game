@@ -12,11 +12,9 @@ namespace OpenGL_Game
         static List<int> VBOs = new List<int>();
         static List<int> textures = new List<int>();
 
-        public static RawModel loadToVAO(float[] positions, float[] UVs, int[] indices, float[] normals)
+        public static RawModel loadToVAO(float[] positions, float[] normals, float[] UVs)
         {
             int vaoID = createVAO();
-
-            bindIndicesBuffer(indices);
 
             storeDataInAttributeList(0, 3, positions);
             storeDataInAttributeList(1, 2, UVs);
@@ -24,12 +22,12 @@ namespace OpenGL_Game
 
             unbindVAO();
 
-            return new RawModel(vaoID, positions, UVs, indices, normals);
+            return new RawModel(vaoID);
         }
 
         public static int loadTexture(string textureName)
         {
-            var file = "assets/textures/" + textureName + ".png";
+            var file = "assets/textures/blocks" + textureName + ".png";
 
             var bmp = new Bitmap(file);
 

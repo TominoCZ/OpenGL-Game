@@ -12,22 +12,67 @@ namespace OpenGL_Game
         STONE,
         DIRT,
         BEDROCK,
-        RARE,
-        SELECTION
+        RARE
     }
 
     class ModelRegistry
     {
         private static Dictionary<EnumBlock, BlockModel> models = new Dictionary<EnumBlock, BlockModel>();
 
-        public static CubeVertexData CUBE = new CubeVertexData();
+        private static Dictionary<EnumFacing, float[]> CUBE = new Dictionary<EnumFacing, float[]>();
 
-        public static void setModelForBlock(EnumBlock blockType, BlockModel model)
+        static ModelRegistry()
         {
-            if (models.ContainsKey(blockType))
-                models.Remove(blockType);
+            CUBE.Add(EnumFacing.NORTH, new float[]
+            {
+                1, 1, 0,
+                1, 0, 0,
+                0, 0, 0,
+                0, 1, 0
+            });
+            CUBE.Add(EnumFacing.SOUTH, new float[]
+            {
+                0, 1, 1,
+                0, 0, 1,
+                1, 0, 1,
+                1, 1, 1
+            });
+            CUBE.Add(EnumFacing.EAST, new float[]
+            {
+                1, 1, 1,
+                1, 0, 1,
+                1, 0, 0,
+                1, 1, 0
+            });
+            CUBE.Add(EnumFacing.WEST, new float[]
+            {
+                0, 1, 0,
+                0, 0, 0,
+                0, 0, 1,
+                0, 1, 1
+            });
+            CUBE.Add(EnumFacing.UP, new float[]
+            {
+                0, 1, 0,
+                0, 1, 1,
+                1, 1, 1,
+                1, 1, 0
+            });
+            CUBE.Add(EnumFacing.DOWN, new float[]
+            {
+                0, 0, 1,
+                0, 0, 0,
+                1, 0, 0,
+                1, 0, 1
+            });
+        }
 
-            models.Add(blockType, model);
+        public static void registerBlockModel(BlockModel model)
+        {
+            if (models.ContainsKey(model.block))
+                models.Remove(model.block);
+
+            models.Add(model.block, model);
         }
 
         public static BlockModel getModelForBlock(EnumBlock blockType)
@@ -36,72 +81,21 @@ namespace OpenGL_Game
 
             return model;
         }
-    }
 
-    class CubeVertexData
-    {
-        public float[] vertices { get; }
-        public int[] indices { get; }
-        public float[] normals { get; }
-        public float[] UVs { get; }
-
-        public CubeVertexData()
+        public static Dictionary<EnumFacing, RawQuad> createCube(EnumBlock block)
         {
-            vertices = new float[]{
-                0, 1, 1,
-                0, 0, 1,
-                1, 0, 1,
-                1, 1, 1,
+            var quads = new Dictionary<EnumFacing, RawQuad>();
+            var uvs = TextureRegistry.getUVsFromBlock(block);
 
-                1, 1, 0,
-                1, 0, 0,
-                0, 0, 0,
-                0, 1, 0,
-
-                0, 1, 0,
-                0, 1, 1,
-                1, 1, 1,
-                1, 1, 0,
-
-                0, 0, 1,
-                0, 0, 0,
-                1, 0, 0,
-                1, 0, 1,
-
-                0, 1, 0,
-                0, 0, 0,
-                0, 0, 1,
-                0, 1, 1,
-
-                1, 1, 1,
-                1, 0, 1,
-                1, 0, 0,
-                1, 1, 0};
-
-            List<int> indices = new List<int>();
-            List<float> UVs = new List<float>();
-
-            for (int i = 0; i < 24; i += 4)
+            foreach (var face in CUBE.Keys)
             {
-                indices.AddRange(new[]
+                if (CUBE.TryGetValue(face, out var data))
                 {
-                    i, i + 1, i + 3,
-                    i + 3, i + 1, i + 2
-                });
-
-                UVs.AddRange(new float[]
-                {
-                    0, 0,
-                    0, 1,
-                    1, 1,
-                    1, 0
-                });
+                    quads.Add(face, new RawQuad(data, uvs.getUVForSide(face).ToArray(), ModelHelper.calculateNormals(data)));
+                }
             }
 
-            this.indices = indices.ToArray();
-            this.UVs = UVs.ToArray();
-
-            normals = ModelHelper.calculateNormals(vertices, this.indices);
+            return quads;
         }
     }
 }
