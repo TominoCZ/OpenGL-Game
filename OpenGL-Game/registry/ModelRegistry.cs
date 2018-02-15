@@ -82,7 +82,7 @@ namespace OpenGL_Game
             return model;
         }
 
-        public static Dictionary<EnumFacing, RawQuad> createCube(EnumBlock block)
+        public static Dictionary<EnumFacing, RawQuad> createCubeModel(EnumBlock block)
         {
             var quads = new Dictionary<EnumFacing, RawQuad>();
             var uvs = TextureRegistry.getUVsFromBlock(block);

@@ -9,7 +9,6 @@ namespace OpenGL_Game
         private int loc_viewMatrix;
         private int loc_lightPosition;
         private int loc_lightColor;
-       
 
         public StaticShader(string shaderName) : base(shaderName)
         {

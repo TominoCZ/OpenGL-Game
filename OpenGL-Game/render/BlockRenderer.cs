@@ -14,16 +14,16 @@ namespace OpenGL_Game
         private Dictionary<EnumBlock, List<BlockPos>> blocks = new Dictionary<EnumBlock, List<BlockPos>>();
         private EnumBlock[] keys;
 
-        private ModelLight modelLight, selectionLight;
+        private ModelLight modelLight;//, selectionLight;
 
-        private BlockModel PreviewModel;
+        //private BlockModel PreviewModel;
 
         public BlockPos PreviewModelPos;
 
         public BlockRenderer()
         {
             modelLight = new ModelLight(new Vector3(-25, 120, -100), Vector3.One);
-            selectionLight = new ModelLight(Vector3.Zero, Vector3.One);
+            //selectionLight = new ModelLight(Vector3.Zero, Vector3.One);
 
             keys = new EnumBlock[1];
         }
@@ -65,7 +65,7 @@ namespace OpenGL_Game
                 PreviewModel.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(PreviewModelPos.vector + Vector3.One * -0.0125f, 1.025f));
 
                 GL.Disable(EnableCap.CullFace);
-                GL.DrawArrays(PrimitiveType.Quads, 0, PreviewModel.rawModel.vertexCount);
+                GL.DrawArrays(PrimitiveType.Quads, 0, PreviewModel.RawBlockModel.vertexCount);
                 GL.Enable(EnableCap.CullFace);
 
                 finishRendering();
@@ -102,6 +102,7 @@ namespace OpenGL_Game
             }
         }
 
+        [Obsolete]
         public void setBlock(EnumBlock blockType, BlockPos pos)
         {
             //if (blockType == EnumBlock.SELECTION)
@@ -139,6 +140,7 @@ namespace OpenGL_Game
             }
         }
 
+        [Obsolete]
         public EnumBlock getBlock(BlockPos pos)
         {
             lock (blocks)

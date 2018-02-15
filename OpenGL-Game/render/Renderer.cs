@@ -11,16 +11,16 @@ namespace OpenGL_Game
     {
         private GameWindow window;
 
-        public float NEAR_PLANE = 0.1f;
-        public float FAR_PLANE = 100f;
-
-        private int FOV = 70;
-
+        private Camera camera;
+        
         private Matrix4 projectionMatrix;
 
         public BlockRenderer blockRenderer;
 
-        private Camera camera;
+        public float NEAR_PLANE = 0.1f;
+        public float FAR_PLANE = 100f;
+
+        private int FOV = 70;
 
         public Renderer(GameWindow window, StaticShader sp, Camera camera)
         {

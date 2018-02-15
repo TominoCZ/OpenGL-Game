@@ -193,21 +193,6 @@ namespace OpenGL_Game
                 setUVForSide(side, from, to);
             }
         }
-
-        public float[] ToArray()
-        {
-            var values = Enum.GetValues(typeof(EnumFacing));
-
-            List<float> floats = new List<float>();
-
-            foreach (EnumFacing value in values)
-            {
-                if (UVs.TryGetValue(value, out var node))
-                    floats.AddRange(node.ToArray());
-            }
-
-            return floats.ToArray();
-        }
     }
 
     class TextureUVNode

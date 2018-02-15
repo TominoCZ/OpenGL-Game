@@ -14,13 +14,5 @@ namespace OpenGL_Game
             this.normal = normal;
             this.UVs = UVs;
         }
-
-        public RawQuad(float[] vertices, float[] UVs, float nx, float ny, float nz) : this(vertices, UVs, new[] { nx, ny, nz })
-        {
-        }
-
-        public RawQuad(float[] vertices, float[] UVs, Vector3 normal) : this(vertices, UVs, new[] { normal.X, normal.Y, normal.Z })
-        {
-        }
     }
 }

@@ -34,8 +34,6 @@ namespace OpenGL_Game
 
             getAllUniformLocations();
         }
-
-        protected abstract void getAllUniformLocations();
         
         protected int getUniformLocation(string uniform)
         {
@@ -73,8 +71,6 @@ namespace OpenGL_Game
             GL.DeleteProgram(ProgramID);
         }
 
-        protected abstract void bindAttributes();
-
         protected void bindAttributes(int attrib, string variable)
         {
             GL.BindAttribLocation(ProgramID, attrib, variable);
@@ -102,5 +98,8 @@ namespace OpenGL_Game
                 return -1;
             }
         }
+
+        protected abstract void getAllUniformLocations();
+        protected abstract void bindAttributes();
     }
 }

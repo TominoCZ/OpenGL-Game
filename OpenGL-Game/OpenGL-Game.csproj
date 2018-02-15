@@ -49,26 +49,30 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BlockPos.cs" />
-    <Compile Include="BlockRenderer.cs" />
-    <Compile Include="Camera.cs" />
-    <Compile Include="Chunk.cs" />
-    <Compile Include="ModelHelper.cs" />
-    <Compile Include="ModelLight.cs" />
-    <Compile Include="ModelRegistry.cs" />
+    <Compile Include="block\BlockPos.cs" />
+    <Compile Include="render\BlockRenderer.cs" />
+    <Compile Include="render\Camera.cs" />
+    <Compile Include="world\Chunk.cs" />
+    <Compile Include="model\ChunkModel.cs" />
+    <Compile Include="block\EnumFacing.cs" />
+    <Compile Include="model\IModel.cs" />
+    <Compile Include="model\IRawModel.cs" />
+    <Compile Include="util\ModelHelper.cs" />
+    <Compile Include="render\ModelLight.cs" />
+    <Compile Include="registry\ModelRegistry.cs" />
     <Compile Include="GameMain.cs" />
-    <Compile Include="Loader.cs" />
-    <Compile Include="MatrixHelper.cs" />
-    <Compile Include="BlockModel.cs" />
-    <Compile Include="ModelTexture.cs" />
+    <Compile Include="gpu\Loader.cs" />
+    <Compile Include="util\MatrixHelper.cs" />
+    <Compile Include="model\BlockModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RawModel.cs" />
-    <Compile Include="RawQuad.cs" />
-    <Compile Include="Renderer.cs" />
-    <Compile Include="ShaderProgram.cs" />
-    <Compile Include="StaticShader.cs" />
-    <Compile Include="TextureRegistry.cs" />
-    <Compile Include="World.cs" />
+    <Compile Include="model\RawBlockModel.cs" />
+    <Compile Include="model\RawChunkModel.cs" />
+    <Compile Include="model\RawQuad.cs" />
+    <Compile Include="render\Renderer.cs" />
+    <Compile Include="shader\ShaderProgram.cs" />
+    <Compile Include="shader\StaticShader.cs" />
+    <Compile Include="registry\TextureRegistry.cs" />
+    <Compile Include="world\World.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

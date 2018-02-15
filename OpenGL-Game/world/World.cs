@@ -26,8 +26,8 @@ namespace OpenGL_Game
                 {
                     var chunk = loadedChunks[i];
 
-                    var chunkX = Math.Floor(chunk.pos.x / 16.0);
-                    var chunkZ = Math.Floor(chunk.pos.z / 16.0);
+                    var chunkX = Math.Floor(chunk.chunkPos.x / 16.0);
+                    var chunkZ = Math.Floor(chunk.chunkPos.z / 16.0);
 
                     if (x == chunkX && z == chunkZ)
                         return chunk;
@@ -40,7 +40,7 @@ namespace OpenGL_Game
         public void setBlock(BlockPos pos, EnumBlock blockType)
         {
             var chunk = getChunkFromPos(pos);
-            chunk.setBlock(pos - chunk.pos, blockType);
+            chunk.setBlock(pos - chunk.chunkPos, blockType);
         }
     }
 }
