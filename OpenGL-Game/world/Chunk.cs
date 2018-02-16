@@ -9,71 +9,103 @@ using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game
 {
-    class Chunk
+    public class Chunk
     {
         private int[,,] blocks;
 
         public BlockPos chunkPos { get; }
 
-        public ChunkModel chunkModel { get; private set; }
+        private List<int> modelVaoIDs;
 
         public Chunk(BlockPos chunkPos)
         {
             this.chunkPos = chunkPos;
 
             blocks = new int[16, 32, 16];
+
+            modelVaoIDs = new List<int>();
+            //chunkModel = new Dictionary<ShaderProgram, ChunkFragmentModel>();
         }
 
-        public void setBlock(BlockPos pos, EnumBlock blockType)
+        public void setBlock(BlockPos pos, EnumBlock blockType, bool redraw)
         {
-            blocks[pos.z, pos.y, pos.x] = (int)blockType;
+            blocks[pos.x, pos.y, pos.z] = (int)blockType;
 
-            generateModel();
+            if (redraw)
+                generateModel();
         }
 
         public EnumBlock getBlock(BlockPos pos)
         {
-            return (EnumBlock)blocks[pos.z, pos.y, pos.x];
+            var thisChunk = pos.x >= 0 && pos.x < 16 &&
+                            pos.y >= 0 && pos.y < 32 &&
+                            pos.z >= 0 && pos.z < 16;
+
+            if (thisChunk)
+                return (EnumBlock)blocks[pos.x, pos.y, pos.z];
+
+            //var chunk = Game.INSTANCE.world.getChunkFromPos(chunkPos + pos);
+
+            return EnumBlock.AIR; //chunk?.getBlock(chunkPos + pos) ?? EnumBlock.AIR;
         }
 
-        private void generateModel()
+        public Dictionary<ShaderProgram, ChunkFragmentModel> generateModel()
         {
-            Dictionary<ShaderProgram, List<RawQuad>> MODEL = new Dictionary<ShaderProgram, List<RawQuad>>();
+            Dictionary<ShaderProgram, List<RawQuad>> MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
 
             var possibleDirections = Enum.GetValues(typeof(EnumFacing));
 
             for (int y = 0; y < blocks.GetLength(1); y++)
             {
-                for (int z = 0; z < blocks.GetLength(0); z++)
+                for (int x = 0; x < blocks.GetLength(0); x++)
                 {
-                    for (int x = 0; x < blocks.GetLength(2); x++)
+                    for (int z = 0; z < blocks.GetLength(2); z++)
                     {
                         var pos = new BlockPos(x, y, z);
                         var block = getBlock(pos);
-                        var model = ModelRegistry.getModelForBlock(block);
 
+                        if (block == EnumBlock.AIR)
+                            continue;
+
+                        var blockModel = ModelRegistry.getModelForBlock(block);
+                        
                         foreach (EnumFacing dir in possibleDirections)
                         {
                             if (getBlock(pos.offset(dir)) == EnumBlock.AIR)
                             {
                                 List<RawQuad> quads;
 
-                                if (!MODEL.ContainsKey(model.shader))
-                                    MODEL.Add(model.shader, quads = new List<RawQuad>());
+                                if (!MODEL_RAW.ContainsKey(blockModel.shader))
+                                    MODEL_RAW.Add(blockModel.shader, quads = new List<RawQuad>());
                                 else
-                                    MODEL.TryGetValue(model.shader, out quads);
+                                    MODEL_RAW.TryGetValue(blockModel.shader, out quads);
 
-                                quads?.Add(((RawBlockModel)model.rawModel).getQuadForSide(dir));
+                                quads?.Add(((RawBlockModel)blockModel.rawModel).getQuadForSide(dir).offset(x,y,z));
                             }
                         }
                     }
                 }
             }
 
-            if (chunkModel != null)
-                Loader.deleteVAO(chunkModel.rawModel.vaoID);
+            foreach (var id in modelVaoIDs)
+            {
+                Loader.deleteVAO(id);
+            }
 
-            chunkModel = new ChunkModel(MODEL);
+            modelVaoIDs.Clear();
+
+            Dictionary<ShaderProgram, ChunkFragmentModel> model = new Dictionary<ShaderProgram, ChunkFragmentModel>();
+
+            foreach (var m in MODEL_RAW)
+            {
+                var bakedModel = new ChunkFragmentModel(m.Key, m.Value);
+                
+                model.Add(m.Key, bakedModel);
+
+                modelVaoIDs.Add(bakedModel.rawModel.vaoID);
+            }
+
+            return model;
         }
     }
 }

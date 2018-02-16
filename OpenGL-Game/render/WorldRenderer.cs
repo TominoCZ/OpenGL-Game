@@ -9,7 +9,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game
 {
-    class BlockRenderer
+    class WorldRenderer
     {
         private Dictionary<EnumBlock, List<BlockPos>> blocks = new Dictionary<EnumBlock, List<BlockPos>>();
         private EnumBlock[] keys;
@@ -20,7 +20,7 @@ namespace OpenGL_Game
 
         public BlockPos PreviewModelPos;
 
-        public BlockRenderer()
+        public WorldRenderer()
         {
             modelLight = new ModelLight(new Vector3(-25, 120, -100), Vector3.One);
             //selectionLight = new ModelLight(Vector3.Zero, Vector3.One);
@@ -28,7 +28,7 @@ namespace OpenGL_Game
             keys = new EnumBlock[1];
         }
 
-        private void beginRendering(BlockModel m)
+        private void beginRendering(IModel m)
         {
             GL.BindVertexArray(m.rawModel.vaoID);
 
@@ -49,14 +49,48 @@ namespace OpenGL_Game
             GL.BindVertexArray(0);
         }
 
-        public void render(Camera c)
+        public void render(Matrix4 viewMatrix)
         {
-            var viewMatrix = MatrixHelper.createViewMatrix(c);
+            var chunks = Game.INSTANCE.world.loadedChunks.Keys.ToArray();
 
-            for (int i = 0; i < keys.Length; i++)
+            for (int i = 0; i < Game.INSTANCE.world.loadedChunks.Count; i++)
+            {
+                var chunk = chunks[i];
+
+                Game.INSTANCE.world.loadedChunks.TryGetValue(chunk, out var model);
+
+                var shaders = model.Keys.ToArray();
+
+                for (int j = 0; j < shaders.Length; j++)
+                {
+                    var shader = shaders[j];
+
+                    if (model.TryGetValue(shader, out var chunkModel))
+                    {
+                        beginRendering(chunkModel);
+
+                        shader.start();
+                        shader.loadLight(modelLight);
+                        shader.loadViewMatrix(viewMatrix);
+
+                        shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(chunk.chunkPos.vector));
+                        GL.DrawArrays(PrimitiveType.Quads, 0, chunkModel.rawModel.vertexCount);
+
+                        finishRendering();
+                        shader.stop();
+                    }
+                }
+            }
+
+            
+            /*for (int i = 0; i < keys.Length; i++)
             {
                 var blockType = keys[i];
+
                 var model = ModelRegistry.getModelForBlock(blockType);
+
+                if (model == null)
+                    continue;
 
                 beginRendering(model);
 
@@ -76,7 +110,7 @@ namespace OpenGL_Game
 
                 finishRendering();
                 model.shader.stop();
-            }
+            }*/
         }
 
         [Obsolete]

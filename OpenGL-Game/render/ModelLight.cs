@@ -7,7 +7,7 @@ using OpenTK;
 
 namespace OpenGL_Game
 {
-    class ModelLight
+    public class ModelLight
     {
         public Vector3 pos;
 

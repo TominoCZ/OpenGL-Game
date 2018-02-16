@@ -11,7 +11,7 @@ namespace OpenGL_Game
 
         private float _pitch = MathHelper.PiOver6, _yaw = MathHelper.PiOver2 + MathHelper.PiOver4, speed = 0.15f;
 
-        public Vector3 pos { get; private set; }
+        public Vector3 pos;
 
         public float pitch
         {

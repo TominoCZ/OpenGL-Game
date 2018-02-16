@@ -7,19 +7,16 @@ namespace OpenGL_Game
         public int vaoID { get; }
         public int vertexCount { get; }
 
-        public Dictionary<ShaderProgram, List<RawQuad>> model;
+        public List<RawQuad> model;
 
-        public RawChunkModel(int vaoID, Dictionary<ShaderProgram, List<RawQuad>> model)
+        public RawChunkModel(int vaoID, List<RawQuad> model)
         {
             this.vaoID = vaoID;
             this.model = model;
 
-            foreach (var list in model.Values)
+            foreach (var quad in model)
             {
-                foreach (var quad in list)
-                {
-                    vertexCount += quad.vertices.Length / 3;
-                }
+                vertexCount += quad.vertices.Length / 3;
             }
         }
     }

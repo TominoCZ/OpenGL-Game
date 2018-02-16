@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace OpenGL_Game
 {
-    enum EnumBlock
+    public enum EnumBlock
     {
         AIR,
         STONE,

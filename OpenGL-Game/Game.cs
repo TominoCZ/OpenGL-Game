@@ -17,12 +17,12 @@ namespace OpenGL_Game
         [STAThread]
         static void Main()
         {
-            var window = new MainWindow();
+            var window = new Game();
             window.Run(0);
         }
     }
 
-    public sealed class MainWindow : GameWindow
+    public sealed class Game : GameWindow
     {
         private WindowState lastWindowState;
 
@@ -31,15 +31,19 @@ namespace OpenGL_Game
         private Renderer renderer;
         private Camera camera;
 
-        private World world;
+        public World world;
 
         private Point mouseLast;
 
         private Stopwatch sw;
         private int frames;
 
-        public MainWindow()
+        public static Game INSTANCE;
+
+        public Game()
         {
+            INSTANCE = this;
+
             Title = "OpenGL Game";
 
             MakeCurrent();
@@ -89,7 +93,7 @@ namespace OpenGL_Game
                                 pos.Y = (float)Math.Floor(pos.Y);
                                 pos.Z = (float)Math.Floor(pos.Z);
 
-                                renderer.blockRenderer.PreviewModelPos = new BlockPos(pos);
+                                renderer.worldRenderer.PreviewModelPos = new BlockPos(pos);
 
                                 i = 0;
                             }
@@ -115,6 +119,8 @@ namespace OpenGL_Game
             camera = new Camera();
             renderer = new Renderer(this, shader, camera);
 
+            world = new World();
+
             var stoneModel = new BlockModel(EnumBlock.STONE, shader);
             var dirtModel = new BlockModel(EnumBlock.DIRT, shader);
             var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader);
@@ -127,6 +133,8 @@ namespace OpenGL_Game
 
             var rand = new Random();
 
+            camera.pos += Vector3.UnitY * 8;
+
             for (int y = 0; y < 5; y++)
             {
                 var layer = EnumBlock.STONE;
@@ -136,14 +144,18 @@ namespace OpenGL_Game
                 else if (y == 4)
                     layer = EnumBlock.DIRT;
 
-                for (int x = 0; x < 32; x++)
+                for (int x = 0; x < 16; x++)
                 {
-                    for (int z = 0; z < 32; z++)
+                    for (int z = 0; z < 16; z++)
                     {
-                        renderer.blockRenderer.setBlock((rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer, new BlockPos(x, y - 8, z));
+                        var block = (rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer;
+
+                        world.setBlock(block, new BlockPos(x, y, z), false);
                     }
                 }
             }
+
+            world.generateChunkModels();
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -187,16 +199,16 @@ namespace OpenGL_Game
 
             if (e.IsPressed)
             {
-                var target = renderer.blockRenderer.PreviewModelPos;
+                var target = renderer.worldRenderer.PreviewModelPos;
 
                 if (e.Button == MouseButton.Right)
                 {
-                    if (renderer.blockRenderer.getBlock(target) == EnumBlock.AIR)
-                        renderer.blockRenderer.setBlock(EnumBlock.STONE, target);
+                    if (world.getBlock(target) == EnumBlock.AIR)
+                        world.setBlock(EnumBlock.STONE, target, true);
                 }
                 else if (e.Button == MouseButton.Left)
                 {
-                    renderer.blockRenderer.setBlock(EnumBlock.AIR, target);
+                    world.setBlock(EnumBlock.AIR, target, true);
                 }
             }
         }

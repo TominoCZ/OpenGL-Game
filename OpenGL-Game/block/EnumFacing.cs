@@ -1,6 +1,6 @@
 ﻿namespace OpenGL_Game
 {
-    enum EnumFacing
+    public enum EnumFacing
     {
         NORTH,
         SOUTH,

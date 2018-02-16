@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace OpenGL_Game
 {
-    struct BlockPos
+    public struct BlockPos
     {
         public int x { get; }
         public int y { get; }
@@ -14,6 +14,11 @@ namespace OpenGL_Game
         public static BlockPos operator -(BlockPos p1, BlockPos p2)
         {
             return new BlockPos(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);
+        }
+
+        public static BlockPos operator +(BlockPos p1, BlockPos p2)
+        {
+            return new BlockPos(p1.x + p2.x, p1.y + p2.y, p1.z + p2.z);
         }
 
         public BlockPos(int x, int y, int z)

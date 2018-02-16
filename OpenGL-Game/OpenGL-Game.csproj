@@ -50,17 +50,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="block\BlockPos.cs" />
-    <Compile Include="render\BlockRenderer.cs" />
+    <Compile Include="render\WorldRenderer.cs" />
     <Compile Include="render\Camera.cs" />
     <Compile Include="world\Chunk.cs" />
-    <Compile Include="model\ChunkModel.cs" />
+    <Compile Include="model\ChunkFragmentModel.cs" />
     <Compile Include="block\EnumFacing.cs" />
     <Compile Include="model\IModel.cs" />
     <Compile Include="model\IRawModel.cs" />
     <Compile Include="util\ModelHelper.cs" />
     <Compile Include="render\ModelLight.cs" />
     <Compile Include="registry\ModelRegistry.cs" />
-    <Compile Include="GameMain.cs" />
+    <Compile Include="Game.cs" />
     <Compile Include="gpu\Loader.cs" />
     <Compile Include="util\MatrixHelper.cs" />
     <Compile Include="model\BlockModel.cs" />

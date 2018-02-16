@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace OpenGL_Game
 {
-    class World
+    public class World
     {
-        private List<Chunk> loadedChunks;
+        public Dictionary<Chunk, Dictionary<ShaderProgram, ChunkFragmentModel>> loadedChunks;
 
         public World()
         {
-            loadedChunks = new List<Chunk>();
+            loadedChunks = new Dictionary<Chunk, Dictionary<ShaderProgram, ChunkFragmentModel>>();
+
+            loadedChunks.Add(new Chunk(new BlockPos(0, 0, 0)), new Dictionary<ShaderProgram, ChunkFragmentModel>());
         }
 
         public Chunk getChunkFromPos(BlockPos pos)
@@ -22,25 +24,60 @@ namespace OpenGL_Game
 
             lock (loadedChunks)
             {
-                for (int i = 0; i < loadedChunks.Count; i++)
+                foreach (var chunk in loadedChunks)
                 {
-                    var chunk = loadedChunks[i];
-
-                    var chunkX = Math.Floor(chunk.chunkPos.x / 16.0);
-                    var chunkZ = Math.Floor(chunk.chunkPos.z / 16.0);
+                    var chunkX = (int)Math.Floor(chunk.Key.chunkPos.x / 16.0);
+                    var chunkZ = (int)Math.Floor(chunk.Key.chunkPos.z / 16.0);
 
                     if (x == chunkX && z == chunkZ)
-                        return chunk;
+                        return chunk.Key;
                 }
             }
 
             return null;
         }
 
-        public void setBlock(BlockPos pos, EnumBlock blockType)
+        public void setBlock(EnumBlock blockType, BlockPos pos, bool redraw)
         {
             var chunk = getChunkFromPos(pos);
-            chunk.setBlock(pos - chunk.chunkPos, blockType);
+            if (chunk == null)
+                return;
+            
+            chunk.setBlock(pos - chunk.chunkPos, blockType, redraw);
+
+            if (!redraw)
+                return;
+
+            updateModelForChunk(chunk);
+        }
+
+        public EnumBlock getBlock(BlockPos pos)
+        {
+            var chunk = getChunkFromPos(pos);
+            if (chunk == null)
+                return EnumBlock.AIR;
+
+            return chunk.getBlock(pos - chunk.chunkPos);
+        }
+
+        private void updateModelForChunk(Chunk chunk)
+        {
+            if (loadedChunks.ContainsKey(chunk))
+                loadedChunks.Remove(chunk);
+
+            var model = chunk.generateModel();
+
+            loadedChunks.Add(chunk, model);
+        }
+
+        public void generateChunkModels()
+        {
+            var keys = loadedChunks.Keys.ToArray();
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                updateModelForChunk(keys[i]);
+            }
         }
     }
 }

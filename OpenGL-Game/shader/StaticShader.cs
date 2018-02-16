@@ -31,7 +31,7 @@ namespace OpenGL_Game
             loc_lightColor = getUniformLocation("lightColor");
         }
 
-        public void loadTransformationMatrix(Matrix4 mat)
+        public override void loadTransformationMatrix(Matrix4 mat)
         {
             loadMatrix4(loc_transformationMatrix, mat);
         }
@@ -41,12 +41,12 @@ namespace OpenGL_Game
             loadMatrix4(loc_projectionMatrix, mat);
         }
 
-        public void loadViewMatrix(Matrix4 mat)
+        public override void loadViewMatrix(Matrix4 mat)
         {
             loadMatrix4(loc_viewMatrix, mat);
         }
 
-        public void loadLight(ModelLight light)
+        public override void loadLight(ModelLight light)
         {
             loadVector(loc_lightPosition, light.pos);
             loadVector(loc_lightColor, light.color);

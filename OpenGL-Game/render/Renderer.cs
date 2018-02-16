@@ -15,7 +15,7 @@ namespace OpenGL_Game
         
         private Matrix4 projectionMatrix;
 
-        public BlockRenderer blockRenderer;
+        public WorldRenderer worldRenderer;
 
         public float NEAR_PLANE = 0.1f;
         public float FAR_PLANE = 100f;
@@ -27,7 +27,7 @@ namespace OpenGL_Game
             this.window = window;
             this.camera = camera;
 
-            blockRenderer = new BlockRenderer();
+            worldRenderer = new WorldRenderer();
 
             window.Resize += (s, e) =>
             {
@@ -53,8 +53,8 @@ namespace OpenGL_Game
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             //prepare();
-
-            blockRenderer.render(camera);
+            var viewMatrix = MatrixHelper.createViewMatrix(camera);
+            worldRenderer.render(viewMatrix);
         }
 
         private void createProjectionMatrix()

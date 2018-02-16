@@ -11,7 +11,7 @@ namespace OpenGL_Game
         static List<int> VAOs = new List<int>();
         static List<int> VBOs = new List<int>();
 
-        public static RawBlockModel loadBlockModelToVAO(List<RawQuad> quads)
+        public static RawBlockModel loadBlockModelToVAO(Dictionary<EnumFacing, RawQuad> quads)
         {
             int vaoID = createVAO();
 
@@ -21,9 +21,9 @@ namespace OpenGL_Game
 
             foreach (var q in quads)
             {
-                vertices.AddRange(q.vertices);
-                normals.AddRange(q.normal);
-                UVs.AddRange(q.UVs);
+                vertices.AddRange(q.Value.vertices);
+                normals.AddRange(q.Value.normal);
+                UVs.AddRange(q.Value.UVs);
             }
 
             storeDataInAttributeList(0, 3, vertices.ToArray());
@@ -32,10 +32,10 @@ namespace OpenGL_Game
 
             unbindVAO();
 
-            return new RawBlockModel(vaoID);
+            return new RawBlockModel(vaoID, quads);
         }
 
-        public static RawChunkModel loadChunkModelToVAO(Dictionary<ShaderProgram, List<RawQuad>> model)
+        public static RawChunkModel loadChunkModelToVAO(List<RawQuad> model)
         {
             int vaoID = createVAO();
 
@@ -43,14 +43,11 @@ namespace OpenGL_Game
             List<float> normals = new List<float>();
             List<float> UVs = new List<float>();
 
-            foreach (var list in model.Values)
+            foreach (var quad in model)
             {
-                foreach (var quad in list)
-                {
-                    vertices.AddRange(quad.vertices);
-                    normals.AddRange(quad.normal);
-                    UVs.AddRange(quad.UVs);
-                }
+                vertices.AddRange(quad.vertices);
+                normals.AddRange(quad.normal);
+                UVs.AddRange(quad.UVs);
             }
 
             storeDataInAttributeList(0, 3, vertices.ToArray());

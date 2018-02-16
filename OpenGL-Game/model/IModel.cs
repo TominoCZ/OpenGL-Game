@@ -3,5 +3,6 @@
     interface IModel
     {
         IRawModel rawModel { get; }
+        ShaderProgram shader { get; }
     }
 }

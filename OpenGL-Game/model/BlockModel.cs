@@ -9,18 +9,18 @@ namespace OpenGL_Game
     {
         public IRawModel rawModel { get; }
 
-        public StaticShader shader { get; }
+        public ShaderProgram shader { get; }
 
         public EnumBlock block { get; }
 
-        public BlockModel(EnumBlock block, StaticShader shader)
+        public BlockModel(EnumBlock block, ShaderProgram shader)
         {
             this.shader = shader;
             this.block = block;
 
             var cube = ModelRegistry.createCubeModel(block);
 
-            rawModel = Loader.loadBlockModelToVAO(cube.Values.ToList());
+            rawModel = Loader.loadBlockModelToVAO(cube);
         }
     }
 }

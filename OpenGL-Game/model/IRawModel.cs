@@ -1,6 +1,6 @@
 ﻿namespace OpenGL_Game
 {
-    interface IRawModel
+    public interface IRawModel
     {
         int vaoID { get; }
         int vertexCount { get; }

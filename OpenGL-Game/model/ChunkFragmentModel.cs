@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 namespace OpenGL_Game
 {
-    class ChunkModel : IModel
+    public class ChunkFragmentModel : IModel
     {
         public IRawModel rawModel { get; }
+        public ShaderProgram shader { get; }
 
-        public ChunkModel(Dictionary<ShaderProgram, List<RawQuad>> model)
+        public ChunkFragmentModel(ShaderProgram shader, List<RawQuad> model)
         {
+            this.shader = shader;
+
             rawModel = Loader.loadChunkModelToVAO(model);
         }
     }

@@ -6,7 +6,7 @@ using GL = OpenTK.Graphics.OpenGL.GL;
 
 namespace OpenGL_Game
 {
-    abstract class ShaderProgram
+    public abstract class ShaderProgram
     {
         public int ProgramID { get; }
         public int VertexShaderID { get; }
@@ -98,6 +98,10 @@ namespace OpenGL_Game
                 return -1;
             }
         }
+
+        public abstract void loadTransformationMatrix(Matrix4 mat);
+        public abstract void loadViewMatrix(Matrix4 mat);
+        public abstract void loadLight(ModelLight light);
 
         protected abstract void getAllUniformLocations();
         protected abstract void bindAttributes();
