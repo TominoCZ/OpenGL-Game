@@ -26,7 +26,7 @@ namespace OpenGL_Game
 
         private static Bitmap generateTextureMap()
         {
-            Bitmap map = new Bitmap(64, 64);
+            Bitmap map = new Bitmap(256, 256);
 
             var blocks = Enum.GetValues(typeof(EnumBlock));
             var sides = Enum.GetValues(typeof(EnumFacing));
@@ -42,73 +42,105 @@ namespace OpenGL_Game
             int countX = 0;
             int countY = 0;
 
-            float sizeXY = 16f / map.Size.Width;
+            var size = new Vector2(16f / map.Size.Width, 16f / map.Size.Height);
 
             using (map)
             {
-                using (var g = Graphics.FromImage(map))
+                foreach (EnumBlock block in blocks)
                 {
-                    foreach (EnumBlock block in blocks)
+                    var name = block.ToString().ToLower();
+
+                    if (containsContaining(files, name))
                     {
-                        var name = block.ToString().ToLower();
+                        var uvs = new BlockTextureUV();
 
-                        if (containsContaining(files, name))
+                        if (files.Contains(name))
                         {
-                            var uvs = new BlockTextureUV();
-
-                            if (files.Contains(name))
+                            if (countX * 16 >= map.Size.Width)
                             {
-                                if (countX * 16 >= map.Width)
+                                countX = 0;
+                                countY++;
+                            }
+
+                            var pos = new Vector2(countX * size.X, countY * size.Y);
+                            var end = pos + size;
+
+                            uvs.fill(pos, end);
+
+                            using (var bmp = Image.FromFile(dir + name + ".png"))
+                            {
+                                using (var g = Graphics.FromImage(map))
+                                {
+                                    g.DrawImage(bmp, countX * 16, countY * 16, 16, 16);
+                                }
+                            }
+
+                            countX++;
+                        }
+
+                        var textureName = "";
+
+                        if (files.Contains(textureName = name + "_side"))
+                        {
+                            if (countX * 16 >= map.Size.Width)
+                            {
+                                countX = 0;
+                                countY++;
+                            }
+
+                            var pos = new Vector2(countX * size.X, countY * size.Y);
+                            var end = pos + size;
+
+                            uvs.setUVForSide(EnumFacing.NORTH, pos, end);
+                            uvs.setUVForSide(EnumFacing.SOUTH, pos, end);
+                            uvs.setUVForSide(EnumFacing.WEST, pos, end);
+                            uvs.setUVForSide(EnumFacing.EAST, pos, end);
+
+                            using (var bmp = Image.FromFile(dir + textureName + ".png"))
+                            {
+                                using (var g = Graphics.FromImage(map))
+                                {
+                                    g.DrawImage(bmp, countX * 16, countY * 16, 16, 16);
+                                }
+                            }
+
+                            countX++;
+                        }
+
+                        foreach (EnumFacing side in sides)
+                        {
+                            var sideName = side.ToString().ToLower();
+
+                            if (files.Contains(textureName = name + "_" + sideName))
+                            {
+                                if (countX * 16 >= map.Size.Width)
                                 {
                                     countX = 0;
                                     countY++;
                                 }
 
-                                var pos = new Vector2(countX, countY) * sizeXY;
-                                var end = pos + Vector2.One * sizeXY;
+                                var pos = new Vector2(countX * size.X, countY * size.Y);
+                                var end = pos + size;
 
-                                uvs.fill(pos, end);
+                                uvs.setUVForSide(side, pos, end);
 
-                                using (var bmp = Image.FromFile(dir + name + ".png"))
+                                using (var bmp = Image.FromFile(dir + textureName + ".png"))
                                 {
-                                    g.DrawImageUnscaled(bmp, countX * 16, countY * 16);
+                                    using (var g = Graphics.FromImage(map))
+                                    {
+                                        g.DrawImage(bmp, countX * 16, countY * 16, 16, 16);
+                                    }
                                 }
 
                                 countX++;
                             }
-
-                            foreach (EnumFacing side in sides)
-                            {
-                                var sideName = side.ToString().ToLower();
-
-                                if (files.Contains(name + "_" + sideName))
-                                {
-                                    if (countX * 16 >= map.Size.Width)
-                                    {
-                                        countX = 0;
-                                        countY++;
-                                    }
-
-                                    var pos = new Vector2(countX, countY) * sizeXY;
-                                    var end = pos + Vector2.One * sizeXY;
-
-                                    uvs.setUVForSide(side, pos, end);
-
-                                    using (var bmp = Image.FromFile(dir + name + "_" + sideName + ".png"))
-                                    {
-                                        g.DrawImageUnscaled(bmp, countX * 16, countY * 16);
-                                    }
-
-                                    countX++;
-                                }
-                            }
-
-                            UVs.Add(block, uvs);
                         }
+
+                        UVs.Add(block, uvs);
                     }
                 }
 
-                map.Save("file.png");
+                map.Save("terrain_debug.png");
 
                 return (Bitmap)map.Clone();
             }
@@ -154,9 +186,14 @@ namespace OpenGL_Game
 
         public static BlockTextureUV getUVsFromBlock(EnumBlock block)
         {
-            UVs.TryGetValue(block, out var uvs);
+            BlockTextureUV uv;
 
-            return uvs;
+            UVs.TryGetValue(block, out uv);
+
+            if (uv == null)
+                UVs.TryGetValue(EnumBlock.MISSING, out uv);
+
+            return uv;
         }
     }
 

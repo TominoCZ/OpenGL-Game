@@ -12,7 +12,8 @@ namespace OpenGL_Game
         STONE,
         DIRT,
         BEDROCK,
-        RARE
+        RARE,
+        MISSING
     }
 
     class ModelRegistry
@@ -91,7 +92,10 @@ namespace OpenGL_Game
             {
                 if (CUBE.TryGetValue(face, out var data))
                 {
-                    quads.Add(face, new RawQuad(data, uvs.getUVForSide(face).ToArray(), ModelHelper.calculateNormals(data)));
+                    var uvNode = uvs.getUVForSide(face);
+
+                    if (uvNode != null)
+                        quads.Add(face, new RawQuad(data, uvNode.ToArray(), ModelHelper.calculateNormals(data)));
                 }
             }
 

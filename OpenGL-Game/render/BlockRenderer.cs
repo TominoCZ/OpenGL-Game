@@ -52,29 +52,6 @@ namespace OpenGL_Game
         public void render(Camera c)
         {
             var viewMatrix = MatrixHelper.createViewMatrix(c);
-            /*
-            if (PreviewModel != null)
-            {
-                beginRendering(PreviewModel);
-
-                selectionLight.pos = Camera.INSTANCE.pos;
-
-                PreviewModel.shader.start();
-                PreviewModel.shader.loadViewMatrix(viewMatrix);
-                PreviewModel.shader.loadLight(selectionLight);
-                PreviewModel.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(PreviewModelPos.vector + Vector3.One * -0.0125f, 1.025f));
-
-                GL.Disable(EnableCap.CullFace);
-                GL.DrawArrays(PrimitiveType.Quads, 0, PreviewModel.RawBlockModel.vertexCount);
-                GL.Enable(EnableCap.CullFace);
-
-                finishRendering();
-                PreviewModel.shader.stop();
-            }
-            else
-            {
-                PreviewModel = ModelRegistry.getModelForBlock(EnumBlock.SELECTION);
-            }*/
 
             for (int i = 0; i < keys.Length; i++)
             {
@@ -92,8 +69,8 @@ namespace OpenGL_Game
                     foreach (var pos in positions)
                     {
                         model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos.vector));
-                        
-                        GL.DrawArrays(PrimitiveType.Quads, 0, 24);
+
+                        GL.DrawArrays(PrimitiveType.Quads, 0, model.rawModel.vertexCount);
                     }
                 }
 
@@ -106,7 +83,7 @@ namespace OpenGL_Game
         public void setBlock(EnumBlock blockType, BlockPos pos)
         {
             //if (blockType == EnumBlock.SELECTION)
-                //return;
+            //return;
 
             lock (blocks)
             {
