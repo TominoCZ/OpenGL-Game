@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -34,8 +35,10 @@ namespace OpenGL_Game
 
         private Point mouseLast;
 
-        private Stopwatch sw;
+        private Stopwatch timer = new Stopwatch();
         private int frames;
+
+        public MouseOverObject mouseOverObject = new MouseOverObject();
 
         public static Game INSTANCE { get; private set; }
 
@@ -44,17 +47,15 @@ namespace OpenGL_Game
             INSTANCE = this;
 
             Title = "OpenGL Game";
-
-            MakeCurrent();
-
             CursorVisible = false;
             VSync = VSyncMode.Off;
+            MakeCurrent();
 
             TextureRegistry.stitchTextures();
 
             init();
 
-            sw = new Stopwatch();
+            world.setBlock(EnumBlock.RARE, new BlockPos(0, 11, 0), true);
 
             new Thread(() =>
                 {
@@ -78,6 +79,8 @@ namespace OpenGL_Game
 
                             if (b)
                             {
+                                getMouseOverObject();
+
                                 var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
 
                                 player.camera.yaw -= delta.X / 1000f;
@@ -94,31 +97,108 @@ namespace OpenGL_Game
 
             new Thread(() =>
                 {
-                    long counter = 0;
+                    int counter = 0;
+
                     while (true)
                     {
                         if (Visible)
                             GameLoop();
 
-                        sw.Start();
+                        timer.Restart();
+
                         Thread.Sleep(50);
-                        sw.Reset();
+
                         counter++;
 
-                        if (counter % 20 == 0)
+                        if (counter >= 20)
                         {
-                            Console.WriteLine(frames.ToString("N1"));
+                            Console.WriteLine(frames);
                             frames = 0;
+                            counter = 0;
                         }
                     }
                 })
             { IsBackground = true }.Start();
         }
 
+        private void getMouseOverObject()
+        {
+            int radius = 4;
+
+            //Vector3 hitVec = Vector3.Zero;
+            //object hit = null;
+            //EnumFacing sideHit = EnumFacing.UP;
+
+            List<MouseOverObject> moos = new List<MouseOverObject>();
+
+            for (int x = -(radius); x <= radius; x++)
+            {
+                for (int y = -(radius); y <= radius; y++)
+                {
+                    for (int z = -(radius); z <= radius; z++)
+                    {
+                        var pos = new BlockPos(player.camera.pos.X + x, player.camera.pos.Y + y, player.camera.pos.Z + z);
+                        var block = world.getBlock(pos);
+
+                        if (block != EnumBlock.AIR)
+                        {
+                            var model = ModelRegistry.getModelForBlock(EnumBlock.RARE);
+                            var bb = model.boundingBox.offset(pos.vector);
+
+                            var hitSomething = Ray.RayAABB(player.camera.pos, player.camera.getLookVec(), bb, out var hitPos, out var normal);
+
+                            if (hitSomething)
+                            {
+                                var sideHit = EnumFacing.UP;
+
+                                if (normal.X < 0)
+                                    sideHit = EnumFacing.WEST;
+                                else if (normal.X > 0)
+                                    sideHit = EnumFacing.EAST;
+                                if (normal.Y < 0)
+                                    sideHit = EnumFacing.DOWN;
+                                else if (normal.Y > 0)
+                                    sideHit = EnumFacing.UP;
+                                if (normal.Z < 0)
+                                    sideHit = EnumFacing.NORTH;
+                                else if (normal.Z > 0)
+                                    sideHit = EnumFacing.SOUTH;
+
+                                moos.Add(new MouseOverObject { hit = block, hitVec = hitPos - normal * 0.5f, sideHit = sideHit });
+                            }
+                        }
+                    }
+                }
+            }
+
+            float dist = float.MaxValue;
+
+            MouseOverObject closest = null;
+
+            foreach (var moo in moos)
+            {
+                var l = Math.Abs((player.camera.pos - moo.hitVec).Length);
+
+                if (l < dist && (EnumBlock)moo.hit != EnumBlock.AIR)
+                {
+                    dist = l;
+
+                    closest = moo;
+                }
+            }
+
+            if (closest != null)
+            {
+                mouseOverObject.sideHit = closest.sideHit;
+                mouseOverObject.hitVec = closest.hitVec;
+            }
+
+            mouseOverObject.hit = closest?.hit;
+        }
+
         public float getRenderPartialTicks()
         {
-            var time = (float)sw.Elapsed.TotalMilliseconds / 50;
-            return time == 0 ? 1 : time;
+            return (float)timer.Elapsed.Milliseconds / 50;
         }
 
         private void init()
@@ -126,7 +206,7 @@ namespace OpenGL_Game
             player = new EntityPlayerSP(Vector3.UnitZ);
             shader = new StaticShader("block");
 
-            renderer = new Renderer(this, shader, player.camera);
+            renderer = new Renderer(shader, player.camera);
 
             world = WorldGenerator.generate(0);
 
@@ -157,6 +237,11 @@ namespace OpenGL_Game
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            if (mouseOverObject.hit is EnumBlock)
+            {
+                //TODO RENDER BLOCK SELECTION
+            }
+
             renderer.render(getRenderPartialTicks());
 
             SwapBuffers();
@@ -188,16 +273,29 @@ namespace OpenGL_Game
 
             if (e.IsPressed)
             {
-                var pos = new BlockPos(player.camera.pos + player.camera.getLookVec() * 3.5f);
+                getMouseOverObject();
 
-                if (e.Button == MouseButton.Right)
+                if (mouseOverObject.hit is EnumBlock)
                 {
-                    if (world.getBlock(pos) == EnumBlock.AIR)
-                        world.setBlock(EnumBlock.STONE, pos, true);
-                }
-                else if (e.Button == MouseButton.Left)
-                {
-                    world.setBlock(EnumBlock.AIR, pos, true);
+                    if (player.getEquippedItem() is ItemBlock itemBlock)
+                    {
+                        var pos = new BlockPos(mouseOverObject.hitVec);
+
+                        if (e.Button == MouseButton.Right)
+                        {
+                            pos = pos.offset(mouseOverObject.sideHit);
+
+                            var blockAtPos = world.getBlock(pos);
+
+                            var heldBlock = itemBlock.getBlock();
+                            var blockBB = ModelRegistry.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
+
+                            if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntityBBs(blockBB).Count == 0)
+                                world.setBlock(heldBlock, pos, true);
+                        }
+                        else if (e.Button == MouseButton.Left)
+                            world.setBlock(EnumBlock.AIR, pos, true);
+                    }
                 }
             }
         }

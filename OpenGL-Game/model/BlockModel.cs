@@ -8,6 +8,8 @@
 
         public EnumBlock block { get; }
 
+        public AxisAlignedBB boundingBox { get; }
+
         public BlockModel(EnumBlock block, ShaderProgram shader)
         {
             this.shader = shader;
@@ -16,6 +18,13 @@
             var cube = ModelRegistry.createCubeModel(block);
 
             rawModel = Loader.loadBlockModelToVAO(cube);
+
+            boundingBox = AxisAlignedBB.BLOCK_FULL;
+        }
+
+        public BlockModel(EnumBlock block, ShaderProgram shader, AxisAlignedBB bb) : this(block, shader)
+        {
+            boundingBox = bb;
         }
     }
 }

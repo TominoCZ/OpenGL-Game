@@ -4,6 +4,8 @@ namespace OpenGL_Game
 {
     class Entity
     {
+        protected AxisAlignedBB boundingBox;
+
         public Vector3 pos;
         public Vector3 lastPos;
 
@@ -14,6 +16,7 @@ namespace OpenGL_Game
         protected Entity(Vector3 pos)
         {
             this.pos = pos;
+            boundingBox = AxisAlignedBB.BLOCK_FULL;
         }
 
         public virtual void Update()
@@ -56,6 +59,11 @@ namespace OpenGL_Game
         public virtual void Render(float particalTicks)
         {
 
+        }
+
+        public AxisAlignedBB getBoundingBox()
+        {
+            return boundingBox.offset(pos);
         }
     }
 }

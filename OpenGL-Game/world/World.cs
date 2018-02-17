@@ -40,7 +40,7 @@ namespace OpenGL_Game
                     _entities.Add(e);
             }
         }
-      
+
         public void updateEntities()
         {
             lock (_entities)
@@ -50,6 +50,24 @@ namespace OpenGL_Game
                     _entities[i].Update();
                 }
             }
+        }
+
+        public List<AxisAlignedBB> getIntersectingEntityBBs(AxisAlignedBB with)
+        {
+            List<AxisAlignedBB> bbs = new List<AxisAlignedBB>();
+
+            lock (_entities)
+            {
+                for (int i = 0; i < _entities.Count; i++)
+                {
+                    var bb = _entities[i].getBoundingBox();
+
+                    if (bb.isIntersectingWith(with))
+                        bbs.Add(bb);
+                }
+            }
+
+            return bbs;
         }
 
         public Chunk getChunkFromPos(BlockPos pos)
@@ -92,7 +110,6 @@ namespace OpenGL_Game
                 updateModelForChunk(chunk);
         }
 
-        //TODO NOT WORKING
         public EnumBlock getBlock(BlockPos pos)
         {
             var chunk = getChunkFromPos(pos);

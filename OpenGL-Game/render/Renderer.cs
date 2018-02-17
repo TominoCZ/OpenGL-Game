@@ -9,8 +9,6 @@ namespace OpenGL_Game
 {
     class Renderer
     {
-        private GameWindow window;
-
         private Camera camera;
         
         private Matrix4 projectionMatrix;
@@ -23,15 +21,14 @@ namespace OpenGL_Game
 
         private int FOV = 70;
 
-        public Renderer(GameWindow window, StaticShader sp, Camera camera)
+        public Renderer(StaticShader sp, Camera camera)
         {
-            this.window = window;
             this.camera = camera;
 
             worldRenderer = new WorldRenderer();
             entityRenderer = new EntityRenderer();
 
-            window.Resize += (s, e) =>
+            Game.INSTANCE.Resize += (s, e) =>
             {
                 createProjectionMatrix();
                 sp.start();
@@ -66,7 +63,7 @@ namespace OpenGL_Game
         {
             projectionMatrix = new Matrix4();
 
-            float aspectRatio = (float)window.Width / window.Height;
+            float aspectRatio = (float)Game.INSTANCE.Width / Game.INSTANCE.Height;
             float y_scale = (float)(1f / Math.Tan(MathHelper.DegreesToRadians(FOV / 2f)));
             float x_scale = y_scale / aspectRatio;
             float frustum_length = FAR_PLANE - NEAR_PLANE;

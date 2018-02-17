@@ -54,6 +54,7 @@
     <Compile Include="entity\EntityPlayerSP.cs" />
     <Compile Include="model\ChunkModel.cs" />
     <Compile Include="render\EntityRenderer.cs" />
+    <Compile Include="util\Ray.cs" />
     <Compile Include="world\ChunkData.cs" />
     <Compile Include="world\WorldGenerator.cs" />
     <Compile Include="render\WorldRenderer.cs" />

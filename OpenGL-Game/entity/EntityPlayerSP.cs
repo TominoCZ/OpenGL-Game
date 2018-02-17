@@ -11,7 +11,7 @@ namespace OpenGL_Game
     class EntityPlayerSP : Entity
     {
         public Camera camera;
-        public float moveSpeed = 0.225f;
+        public float moveSpeed = 0.25f;
 
         private bool wasSpaceDown;
 
@@ -19,13 +19,16 @@ namespace OpenGL_Game
         {
             camera = new Camera();
             camera.pos = pos;
+
+            boundingBox = new AxisAlignedBB(Vector3.Zero, new Vector3(0.25f, 2, 0.25f));
         }
 
         public override void Update()
         {
             lastPos = new Vector3(pos);
 
-            UpdateCamera();
+            if (Game.INSTANCE.Focused)
+                UpdateCamera();
 
             motion.Xz *= 0.9124021f;
 
@@ -98,7 +101,6 @@ namespace OpenGL_Game
                 motion.Xz = vec;
 
             //check for block collisions
-
             for (int yOffset = 0; yOffset <= 1; yOffset++)
             {
                 if (Game.INSTANCE.world.getBlock(new BlockPos(pos + new Vector3(motion.X + (motion.X > 0 ? 0.25f : -0.25f), yOffset, 0))) != EnumBlock.AIR)
@@ -138,5 +140,46 @@ namespace OpenGL_Game
                 motion.Y = -moveSpeed;
             }*/
         }
+
+        public Item getEquippedItem()
+        {
+            return new ItemBlock(EnumBlock.STONE);
+        }
+
+        public void setEquippedItem()
+        {
+
+        }
+    }
+
+    abstract class Item
+    {
+        protected object item { get; }
+
+        string displayName { get; }
+
+        protected Item(string displayName, object item)
+        {
+            this.item = item;
+            this.displayName = displayName;
+        }
+    }
+
+    class ItemBlock : Item
+    {
+        public ItemBlock(EnumBlock block) : base(block.ToString(), block)
+        {
+            
+        }
+
+        public EnumBlock getBlock()
+        {
+            return (EnumBlock)item;
+        }
+    }
+
+    enum EnumItem
+    {
+
     }
 }

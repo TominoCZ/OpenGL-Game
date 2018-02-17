@@ -98,5 +98,20 @@ namespace OpenGL_Game
 
             return quads;
         }
+
+        public static Dictionary<EnumFacing, RawQuad> createCubeModel()
+        {
+            var quads = new Dictionary<EnumFacing, RawQuad>();
+
+            foreach (var face in CUBE.Keys)
+            {
+                if (CUBE.TryGetValue(face, out var data))
+                {
+                    quads.Add(face, new RawQuad(data));
+                }
+            }
+
+            return quads;
+        }
     }
 }

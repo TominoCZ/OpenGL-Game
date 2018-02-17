@@ -13,6 +13,14 @@
             this.UVs = UVs;
         }
 
+        public RawQuad(float[] vertices)
+        {
+            this.vertices = vertices;
+
+            normal = new float[] { };
+            UVs = new float[] { };
+        }
+
         public RawQuad offset(BlockPos pos)
         {
             float[] newVertices = new float[vertices.Length];
