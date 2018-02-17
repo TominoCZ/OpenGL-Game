@@ -1,9 +1,6 @@
-﻿using System.Data;
-using OpenTK;
-
-namespace OpenGL_Game
+﻿namespace OpenGL_Game
 {
-    public class RawQuad
+    class RawQuad
     {
         public float[] vertices { get; }
         public float[] normal { get; }
@@ -16,15 +13,15 @@ namespace OpenGL_Game
             this.UVs = UVs;
         }
 
-        public RawQuad offset(int x, int y, int z)
+        public RawQuad offset(BlockPos pos)
         {
             float[] newVertices = new float[vertices.Length];
 
             for (int i = 0; i < newVertices.Length; i += 3)
             {
-                newVertices[i] = vertices[i] + x;
-                newVertices[i + 1] = vertices[i + 1] + y;
-                newVertices[i + 2] = vertices[i + 2] + z;
+                newVertices[i] = vertices[i] + pos.x;
+                newVertices[i + 1] = vertices[i + 1] + pos.y;
+                newVertices[i + 2] = vertices[i + 2] + pos.z;
             }
 
             return new RawQuad(newVertices, UVs, normal);

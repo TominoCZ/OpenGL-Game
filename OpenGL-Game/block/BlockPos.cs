@@ -11,14 +11,20 @@ namespace OpenGL_Game
 
         public Vector3 vector => new Vector3(x, y, z);
 
+        public BlockPos ChunkPos => new BlockPos((int)Math.Floor(x / 16f) * 16, (int)Math.Floor(y / 16f) * 16, (int)Math.Floor(z / 16f)* 16) ;
+
         public static BlockPos operator -(BlockPos p1, BlockPos p2)
         {
             return new BlockPos(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);
         }
 
-        public static BlockPos operator +(BlockPos p1, BlockPos p2)
+        public static bool operator ==(BlockPos p1, BlockPos p2)
         {
-            return new BlockPos(p1.x + p2.x, p1.y + p2.y, p1.z + p2.z);
+            return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
+        }
+        public static bool operator !=(BlockPos p1, BlockPos p2)
+        {
+            return p1.x != p2.x || p1.y != p2.y || p1.z != p2.z;
         }
 
         public BlockPos(int x, int y, int z)
@@ -26,6 +32,13 @@ namespace OpenGL_Game
             this.x = x;
             this.y = y;
             this.z = z;
+        }
+
+        public BlockPos(float x, float y, float z)
+        {
+            this.x = (int)Math.Floor(x);
+            this.y = (int)Math.Floor(y);
+            this.z = (int)Math.Floor(z);
         }
 
         public BlockPos(Vector3 vec)

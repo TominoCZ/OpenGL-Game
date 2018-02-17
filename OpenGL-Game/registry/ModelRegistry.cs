@@ -1,8 +1,4 @@
-﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
-using OpenTK;
+﻿using System.Collections.Generic;
 
 namespace OpenGL_Game
 {
@@ -10,6 +6,7 @@ namespace OpenGL_Game
     {
         AIR,
         STONE,
+        GRASS,
         DIRT,
         BEDROCK,
         RARE,

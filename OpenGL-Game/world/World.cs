@@ -1,40 +1,83 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OpenTK;
 
 namespace OpenGL_Game
 {
-    public class World
+    class World
     {
-        public Dictionary<Chunk, Dictionary<ShaderProgram, ChunkFragmentModel>> loadedChunks;
+        private Dictionary<BlockPos, ChunkData> _chunks;
 
-        public World()
+        public List<Entity> _entities;
+
+        public World(int sizeInChunks)
         {
-            loadedChunks = new Dictionary<Chunk, Dictionary<ShaderProgram, ChunkFragmentModel>>();
+            _chunks = new Dictionary<BlockPos, ChunkData>();
 
-            loadedChunks.Add(new Chunk(new BlockPos(0, 0, 0)), new Dictionary<ShaderProgram, ChunkFragmentModel>());
+            _entities = new List<Entity>();
+
+            int half = sizeInChunks / 2;
+
+            for (int z = -half; z < half; z++)
+            {
+                for (int x = -half; x < half; x++)
+                {
+                    var pos = new BlockPos(x * 16, 0, z * 16);
+                    var chunk = new Chunk(pos);
+                    var model = new ChunkModel();
+
+                    _chunks.Add(pos, new ChunkData(chunk, model));
+                }
+            }
+        }
+
+        public void addEntity(Entity e)
+        {
+            lock (_entities)
+            {
+                if (!_entities.Contains(e))
+                    _entities.Add(e);
+            }
+        }
+      
+        public void updateEntities()
+        {
+            lock (_entities)
+            {
+                for (int i = 0; i < _entities.Count; i++)
+                {
+                    _entities[i].Update();
+                }
+            }
         }
 
         public Chunk getChunkFromPos(BlockPos pos)
         {
-            var x = Math.Floor(pos.x / 16.0);
-            var z = Math.Floor(pos.z / 16.0);
-
-            lock (loadedChunks)
-            {
-                foreach (var chunk in loadedChunks)
-                {
-                    var chunkX = (int)Math.Floor(chunk.Key.chunkPos.x / 16.0);
-                    var chunkZ = (int)Math.Floor(chunk.Key.chunkPos.z / 16.0);
-
-                    if (x == chunkX && z == chunkZ)
-                        return chunk.Key;
-                }
-            }
+            if (_chunks.TryGetValue(pos.ChunkPos, out var chunkData))
+                return chunkData.chunk;
 
             return null;
+        }
+
+        public Chunk[] getChunks()
+        {
+            var positions = _chunks.Keys.ToArray();
+
+            List<Chunk> chunks = new List<Chunk>();
+
+            foreach (var position in positions)
+            {
+                if (_chunks.TryGetValue(position, out var chunk))
+                    chunks.Add(chunk.chunk);
+            }
+
+            return chunks.ToArray();
+        }
+
+        public ChunkData[] getChunkDataNodes()
+        {
+            return _chunks.Values.ToArray();
         }
 
         public void setBlock(EnumBlock blockType, BlockPos pos, bool redraw)
@@ -42,15 +85,14 @@ namespace OpenGL_Game
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
                 return;
-            
+
             chunk.setBlock(pos - chunk.chunkPos, blockType, redraw);
 
-            if (!redraw)
-                return;
-
-            updateModelForChunk(chunk);
+            if (redraw)
+                updateModelForChunk(chunk);
         }
 
+        //TODO NOT WORKING
         public EnumBlock getBlock(BlockPos pos)
         {
             var chunk = getChunkFromPos(pos);
@@ -60,23 +102,45 @@ namespace OpenGL_Game
             return chunk.getBlock(pos - chunk.chunkPos);
         }
 
+        public int getHeightAtPos(int x, int z)
+        {
+            for (int y = 255; y >= 0; y--)
+            {
+                var block = getBlock(new BlockPos(x, y, z));
+
+                if (block != EnumBlock.AIR)
+                    return y;
+            }
+
+            return -1;
+        }
+
         private void updateModelForChunk(Chunk chunk)
         {
-            if (loadedChunks.ContainsKey(chunk))
-                loadedChunks.Remove(chunk);
+            var dataNodes = getChunkDataNodes();
 
-            var model = chunk.generateModel();
-
-            loadedChunks.Add(chunk, model);
+            foreach (var node in dataNodes)
+            {
+                if (node.chunk == chunk)
+                {
+                    node.model = node.chunk.generateModel();
+                    break;
+                }
+            }
         }
 
         public void generateChunkModels()
         {
-            var keys = loadedChunks.Keys.ToArray();
+            var chunkDatas = _chunks.Values.ToArray();
 
-            for (int i = 0; i < keys.Length; i++)
+            for (int i = 0; i < chunkDatas.Length; i++)
             {
-                updateModelForChunk(keys[i]);
+                var chunkData = chunkDatas[i];
+
+                if (chunkData.chunk.unloaded)
+                    continue;
+
+                chunkData.model = chunkData.chunk.generateModel();
             }
         }
     }

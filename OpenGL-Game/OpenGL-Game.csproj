@@ -50,6 +50,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="block\BlockPos.cs" />
+    <Compile Include="entity\Entity.cs" />
+    <Compile Include="entity\EntityPlayerSP.cs" />
+    <Compile Include="model\ChunkModel.cs" />
+    <Compile Include="render\EntityRenderer.cs" />
+    <Compile Include="world\ChunkData.cs" />
+    <Compile Include="world\WorldGenerator.cs" />
     <Compile Include="render\WorldRenderer.cs" />
     <Compile Include="render\Camera.cs" />
     <Compile Include="world\Chunk.cs" />

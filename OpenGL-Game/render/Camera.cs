@@ -7,9 +7,7 @@ namespace OpenGL_Game
 {
     class Camera
     {
-        public static Camera INSTANCE;
-
-        private float _pitch = MathHelper.PiOver6, _yaw = MathHelper.PiOver2 + MathHelper.PiOver4, speed = 0.15f;
+        private float _pitch = MathHelper.PiOver6, _yaw = MathHelper.PiOver2 + MathHelper.PiOver4;
 
         public Vector3 pos;
 
@@ -25,50 +23,6 @@ namespace OpenGL_Game
             get => _yaw;
 
             set => _yaw = value;
-        }
-
-        public Camera()
-        {
-            INSTANCE = this;
-        }
-
-        public void move()
-        {
-            var state = Keyboard.GetState();
-
-            if (state.IsKeyDown(Key.W))
-            {
-                var delta = forward;
-
-                pos += new Vector3(delta.X * speed, 0, delta.Y * speed);
-            }
-            if (state.IsKeyDown(Key.S))
-            {
-                var delta = -forward;
-
-                pos += new Vector3(delta.X * speed, 0, delta.Y * speed);
-            }
-            if (state.IsKeyDown(Key.A))
-            {
-                var delta = left;
-
-                pos += new Vector3(delta.X * speed, 0, delta.Y * speed);
-            }
-            if (state.IsKeyDown(Key.D))
-            {
-                var delta = -left;
-
-                pos += new Vector3(delta.X * speed, 0, delta.Y * speed);
-            }
-
-            if (state.IsKeyDown(Key.Space))
-            {
-                pos += Vector3.UnitY * speed;
-            }
-            if (state.IsKeyDown(Key.LControl) || state.IsKeyDown(Key.LShift))
-            {
-                pos -= Vector3.UnitY * speed;
-            }
         }
 
         public Vector3 getLookVec()
@@ -88,7 +42,7 @@ namespace OpenGL_Game
             return vec;
         }
 
-        Vector2 left
+        public Vector2 left
         {
             get
             {
@@ -99,7 +53,7 @@ namespace OpenGL_Game
             }
         }
 
-        Vector2 forward
+        public Vector2 forward
         {
             get
             {

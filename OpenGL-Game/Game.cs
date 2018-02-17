@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Text;
 using System.Threading;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -22,14 +20,15 @@ namespace OpenGL_Game
         }
     }
 
-    public sealed class Game : GameWindow
+    sealed class Game : GameWindow
     {
         private WindowState lastWindowState;
 
         private StaticShader shader;
 
         private Renderer renderer;
-        private Camera camera;
+
+        public EntityPlayerSP player;
 
         public World world;
 
@@ -38,7 +37,7 @@ namespace OpenGL_Game
         private Stopwatch sw;
         private int frames;
 
-        public static Game INSTANCE;
+        public static Game INSTANCE { get; private set; }
 
         public Game()
         {
@@ -56,124 +55,114 @@ namespace OpenGL_Game
             init();
 
             sw = new Stopwatch();
-            sw.Start();
 
             new Thread(() =>
-            {
-                int i = 0;
-
-                while (true)
                 {
-                    if (Visible)
+                    while (true)
                     {
-                        var state = OpenTK.Input.Mouse.GetState();
-                        var stateScreen = OpenTK.Input.Mouse.GetCursorState();
-
-                        var point = new Point(state.X, state.Y);
-
-                        var clientPoint = PointToClient(new Point(stateScreen.X, stateScreen.Y));
-
-                        bool outside = clientPoint.X < 0 || clientPoint.Y < 0 ||
-                                       clientPoint.X > ClientRectangle.Width || clientPoint.Y > ClientRectangle.Height;
-
-                        var b = Focused && !outside;
-
-                        CursorVisible = !b;
-
-                        if (b)
+                        if (Visible)
                         {
-                            // every 16ms
-                            if (++i >= 2)
+                            var state = OpenTK.Input.Mouse.GetState();
+                            var stateScreen = OpenTK.Input.Mouse.GetCursorState();
+
+                            var point = new Point(state.X, state.Y);
+
+                            var clientPoint = PointToClient(new Point(stateScreen.X, stateScreen.Y));
+
+                            bool outside = clientPoint.X < 0 || clientPoint.Y < 0 ||
+                                           clientPoint.X > ClientRectangle.Width || clientPoint.Y > ClientRectangle.Height;
+
+                            var b = Focused && !outside;
+
+                            CursorVisible = !b;
+
+                            if (b)
                             {
-                                camera.move();
+                                var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
 
-                                var pos = Camera.INSTANCE.pos + Camera.INSTANCE.getLookVec() * 3.5f;
-
-                                pos.X = (float)Math.Floor(pos.X);
-                                pos.Y = (float)Math.Floor(pos.Y);
-                                pos.Z = (float)Math.Floor(pos.Z);
-
-                                renderer.worldRenderer.PreviewModelPos = new BlockPos(pos);
-
-                                i = 0;
+                                player.camera.yaw -= delta.X / 1000f;
+                                player.camera.pitch -= delta.Y / 1000f;
                             }
 
-                            var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
-
-                            camera.yaw -= delta.X / 1000f;
-                            camera.pitch -= delta.Y / 1000f;
+                            mouseLast = point;
                         }
 
-                        mouseLast = point;
+                        Thread.Sleep(16);
                     }
+                })
+            { IsBackground = true }.Start();
 
-                    Thread.Sleep(8);
-                }
-            })
+            new Thread(() =>
+                {
+                    long counter = 0;
+                    while (true)
+                    {
+                        if (Visible)
+                            GameLoop();
+
+                        sw.Start();
+                        Thread.Sleep(50);
+                        sw.Reset();
+                        counter++;
+
+                        if (counter % 20 == 0)
+                        {
+                            Console.WriteLine(frames.ToString("N1"));
+                            frames = 0;
+                        }
+                    }
+                })
             { IsBackground = true }.Start();
         }
 
-        void init()
+        public float getRenderPartialTicks()
         {
-            shader = new StaticShader("block");
-            camera = new Camera();
-            renderer = new Renderer(this, shader, camera);
+            var time = (float)sw.Elapsed.TotalMilliseconds / 50;
+            return time == 0 ? 1 : time;
+        }
 
-            world = new World();
+        private void init()
+        {
+            player = new EntityPlayerSP(Vector3.UnitZ);
+            shader = new StaticShader("block");
+
+            renderer = new Renderer(this, shader, player.camera);
+
+            world = WorldGenerator.generate(0);
 
             var stoneModel = new BlockModel(EnumBlock.STONE, shader);
+            var grassModel = new BlockModel(EnumBlock.GRASS, shader);
             var dirtModel = new BlockModel(EnumBlock.DIRT, shader);
             var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader);
             var rareModel = new BlockModel(EnumBlock.RARE, shader);
 
             ModelRegistry.registerBlockModel(stoneModel);
+            ModelRegistry.registerBlockModel(grassModel);
             ModelRegistry.registerBlockModel(dirtModel);
             ModelRegistry.registerBlockModel(bedrockModel);
             ModelRegistry.registerBlockModel(rareModel);
 
-            var rand = new Random();
+            var pos = new BlockPos(player.pos);
 
-            camera.pos += Vector3.UnitY * 8;
-
-            for (int y = 0; y < 5; y++)
-            {
-                var layer = EnumBlock.STONE;
-
-                if (y == 0)
-                    layer = EnumBlock.BEDROCK;
-                else if (y == 4)
-                    layer = EnumBlock.DIRT;
-
-                for (int x = 0; x < 16; x++)
-                {
-                    for (int z = 0; z < 16; z++)
-                    {
-                        var block = (rand.NextDouble() >= 0.95 && y != 0 && y != 4) ? EnumBlock.RARE : layer;
-
-                        world.setBlock(block, new BlockPos(x, y, z), false);
-                    }
-                }
-            }
+            player.pos = Vector3.UnitY * (world.getHeightAtPos(pos.x, pos.z) + 1);
 
             world.generateChunkModels();
+            world.addEntity(player);
+        }
+
+        private void GameLoop()
+        {
+            world.updateEntities();
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            frames++;
-
-            if (sw.ElapsedMilliseconds >= 1000)
-            {
-                Console.WriteLine(frames + " FPS");
-
-                frames = 0;
-                sw.Restart();
-            }
-
-            renderer.render();
+            renderer.render(getRenderPartialTicks());
 
             SwapBuffers();
             ProcessEvents(false);
+
+            frames++;
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -199,16 +188,16 @@ namespace OpenGL_Game
 
             if (e.IsPressed)
             {
-                var target = renderer.worldRenderer.PreviewModelPos;
+                var pos = new BlockPos(player.camera.pos + player.camera.getLookVec() * 3.5f);
 
                 if (e.Button == MouseButton.Right)
                 {
-                    if (world.getBlock(target) == EnumBlock.AIR)
-                        world.setBlock(EnumBlock.STONE, target, true);
+                    if (world.getBlock(pos) == EnumBlock.AIR)
+                        world.setBlock(EnumBlock.STONE, pos, true);
                 }
                 else if (e.Button == MouseButton.Left)
                 {
-                    world.setBlock(EnumBlock.AIR, target, true);
+                    world.setBlock(EnumBlock.AIR, pos, true);
                 }
             }
         }
