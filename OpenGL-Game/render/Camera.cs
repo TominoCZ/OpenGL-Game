@@ -27,7 +27,7 @@ namespace OpenGL_Game
 
         public Vector3 getLookVec()
         {
-            return rotate(Vector3.UnitZ, _pitch, _yaw, 0);
+            return rotate(Vector3.UnitZ, _pitch, _yaw, 0).Normalized();
         }
 
         public static Vector3 rotate(Vector3 vec, float AngleX, float AngleY, float AngleZ)

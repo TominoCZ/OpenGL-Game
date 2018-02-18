@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net.Configuration;
 
 namespace OpenGL_Game
 {
@@ -13,13 +14,13 @@ namespace OpenGL_Game
         MISSING
     }
 
-    class ModelRegistry
+    class ModelManager
     {
         private static Dictionary<EnumBlock, BlockModel> models = new Dictionary<EnumBlock, BlockModel>();
 
         private static Dictionary<EnumFacing, float[]> CUBE = new Dictionary<EnumFacing, float[]>();
 
-        static ModelRegistry()
+        static ModelManager()
         {
             CUBE.Add(EnumFacing.NORTH, new float[]
             {
@@ -80,10 +81,10 @@ namespace OpenGL_Game
             return model;
         }
 
-        public static Dictionary<EnumFacing, RawQuad> createCubeModel(EnumBlock block)
+        public static Dictionary<EnumFacing, RawQuad> createTexturedCubeModel(EnumBlock block)
         {
             var quads = new Dictionary<EnumFacing, RawQuad>();
-            var uvs = TextureRegistry.getUVsFromBlock(block);
+            var uvs = TextureManager.getUVsFromBlock(block);
 
             foreach (var face in CUBE.Keys)
             {
@@ -99,19 +100,27 @@ namespace OpenGL_Game
             return quads;
         }
 
-        public static Dictionary<EnumFacing, RawQuad> createCubeModel()
+        public static List<ShaderProgram> getAllRegisteredShaders()
         {
-            var quads = new Dictionary<EnumFacing, RawQuad>();
+            List<ShaderProgram> shaders = new List<ShaderProgram>();
 
-            foreach (var face in CUBE.Keys)
+            foreach (var model in models)
             {
-                if (CUBE.TryGetValue(face, out var data))
-                {
-                    quads.Add(face, new RawQuad(data));
-                }
+                shaders.Add(model.Value.shader);
             }
 
-            return quads;
+            return shaders;
+        }
+
+        public static void cleanUp()
+        {
+            var shaders = getAllRegisteredShaders();
+
+            foreach (var shader in shaders)
+            {
+                shader.stop();
+                shader.cleanUp();
+            }
         }
     }
 }

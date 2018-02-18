@@ -52,9 +52,21 @@
     <Compile Include="block\BlockPos.cs" />
     <Compile Include="entity\Entity.cs" />
     <Compile Include="entity\EntityPlayerSP.cs" />
+    <Compile Include="gui\Gui.cs" />
+    <Compile Include="gui\GuiCrosshair.cs" />
+    <Compile Include="gui\GuiIngameMenu.cs" />
+    <Compile Include="gui\GuiScreen.cs" />
+    <Compile Include="render\GuiRenderer.cs" />
+    <Compile Include="gui\GuiTexture.cs" />
     <Compile Include="model\ChunkModel.cs" />
+    <Compile Include="model\RawModel.cs" />
     <Compile Include="render\EntityRenderer.cs" />
-    <Compile Include="util\Ray.cs" />
+    <Compile Include="shader\GuiShader.cs" />
+    <Compile Include="util\AxisAlignedBB.cs" />
+    <Compile Include="texture\BlockTextureUV.cs" />
+    <Compile Include="util\MouseOverObject.cs" />
+    <Compile Include="util\RayHelper.cs" />
+    <Compile Include="texture\TextureUVNode.cs" />
     <Compile Include="world\ChunkData.cs" />
     <Compile Include="world\WorldGenerator.cs" />
     <Compile Include="render\WorldRenderer.cs" />
@@ -65,20 +77,19 @@
     <Compile Include="model\IModel.cs" />
     <Compile Include="model\IRawModel.cs" />
     <Compile Include="util\ModelHelper.cs" />
-    <Compile Include="render\ModelLight.cs" />
-    <Compile Include="registry\ModelRegistry.cs" />
+    <Compile Include="model\ModelLight.cs" />
+    <Compile Include="model\ModelManager.cs" />
     <Compile Include="Game.cs" />
-    <Compile Include="gpu\Loader.cs" />
+    <Compile Include="util\GraphicsManager.cs" />
     <Compile Include="util\MatrixHelper.cs" />
     <Compile Include="model\BlockModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="model\RawBlockModel.cs" />
-    <Compile Include="model\RawChunkModel.cs" />
     <Compile Include="model\RawQuad.cs" />
-    <Compile Include="render\Renderer.cs" />
+    <Compile Include="render\GameRenderer.cs" />
     <Compile Include="shader\ShaderProgram.cs" />
-    <Compile Include="shader\StaticShader.cs" />
-    <Compile Include="registry\TextureRegistry.cs" />
+    <Compile Include="shader\BlockShader.cs" />
+    <Compile Include="texture\TextureManager.cs" />
     <Compile Include="world\World.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -86,5 +97,6 @@
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

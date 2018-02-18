@@ -4,5 +4,8 @@
     {
         int vaoID { get; }
         int vertexCount { get; }
+
+        bool hasNormals();
+        bool hasUVs();
     }
 }

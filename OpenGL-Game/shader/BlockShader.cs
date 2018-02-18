@@ -2,7 +2,7 @@
 
 namespace OpenGL_Game
 {
-    class StaticShader : ShaderProgram
+    class BlockShader : ShaderProgram
     {
         private int loc_transformationMatrix;
         private int loc_projectionMatrix;
@@ -10,7 +10,7 @@ namespace OpenGL_Game
         private int loc_lightPosition;
         private int loc_lightColor;
 
-        public StaticShader(string shaderName) : base(shaderName)
+        public BlockShader(string shaderName) : base(shaderName)
         {
 
         }
@@ -33,17 +33,17 @@ namespace OpenGL_Game
 
         public override void loadTransformationMatrix(Matrix4 mat)
         {
-            loadMatrix4(loc_transformationMatrix, mat);
+            loadMatrix(loc_transformationMatrix, mat);
         }
 
         public void loadProjectionMatrix(Matrix4 mat)
         {
-            loadMatrix4(loc_projectionMatrix, mat);
+            loadMatrix(loc_projectionMatrix, mat);
         }
 
         public override void loadViewMatrix(Matrix4 mat)
         {
-            loadMatrix4(loc_viewMatrix, mat);
+            loadMatrix(loc_viewMatrix, mat);
         }
 
         public override void loadLight(ModelLight light)

@@ -35,7 +35,7 @@ namespace OpenGL_Game
             Move();
 
             if (!OnGround)
-                motion.Y -= 0.075f;
+                motion.Y -= 0.0515f;
 
             if (OnGround)
             {
@@ -55,7 +55,7 @@ namespace OpenGL_Game
             if (state.IsKeyDown(Key.Space) && !wasSpaceDown && OnGround)
             {
                 wasSpaceDown = true;
-                motion.Y = 0.475F;
+                motion.Y = 0.325F;
             }
             else if ((!state.IsKeyDown(Key.Space) || OnGround) && wasSpaceDown)
                 wasSpaceDown = false;
@@ -63,44 +63,27 @@ namespace OpenGL_Game
 
         private void UpdateCamera()
         {
+            if (Game.INSTANCE.guiScreen != null)
+                return;
+
             var state = Keyboard.GetState();
 
             Vector2 vec = Vector2.Zero;
 
             if (state.IsKeyDown(Key.W))
-            {
-                var delta = camera.forward;
-
-                vec.X += delta.X * moveSpeed;
-                vec.Y += delta.Y * moveSpeed;
-            }
+                vec += camera.forward;
             else if (state.IsKeyDown(Key.S))
-            {
-                var delta = -camera.forward;
-
-                vec.X += delta.X * moveSpeed;
-                vec.Y += delta.Y * moveSpeed;
-            }
+                vec += -camera.forward;
 
             if (state.IsKeyDown(Key.A))
-            {
-                var delta = camera.left;
-
-                vec.X += delta.X * moveSpeed;
-                vec.Y += delta.Y * moveSpeed;
-            }
+                vec += camera.left;
             else if (state.IsKeyDown(Key.D))
-            {
-                var delta = -camera.left;
-
-                vec.X += delta.X * moveSpeed;
-                vec.Y += delta.Y * moveSpeed;
-            }
+                vec += -camera.left;
 
             if (vec != Vector2.Zero)
-                motion.Xz = vec;
+                motion.Xz = vec.Normalized() * moveSpeed;
 
-            //check for block collisions
+            //check for block collisions TODO - use the AABB method
             for (int yOffset = 0; yOffset <= 1; yOffset++)
             {
                 if (Game.INSTANCE.world.getBlock(new BlockPos(pos + new Vector3(motion.X + (motion.X > 0 ? 0.25f : -0.25f), yOffset, 0))) != EnumBlock.AIR)

@@ -7,33 +7,41 @@ using GL = OpenTK.Graphics.OpenGL.GL;
 
 namespace OpenGL_Game
 {
-    class Renderer
+    class GameRenderer
     {
         private Camera camera;
-        
+
         private Matrix4 projectionMatrix;
 
         public WorldRenderer worldRenderer;
         public EntityRenderer entityRenderer;
+        public GuiRenderer guiRenderer;
 
         public float NEAR_PLANE = 0.1f;
         public float FAR_PLANE = 100f;
 
         private int FOV = 70;
 
-        public Renderer(StaticShader sp, Camera camera)
+        public GameRenderer(Camera camera)
         {
             this.camera = camera;
 
             worldRenderer = new WorldRenderer();
             entityRenderer = new EntityRenderer();
+            guiRenderer = new GuiRenderer();
 
             Game.INSTANCE.Resize += (s, e) =>
             {
+                var shaders = ModelManager.getAllRegisteredShaders();
                 createProjectionMatrix();
-                sp.start();
-                sp.loadProjectionMatrix(projectionMatrix);
-                sp.stop();
+
+                foreach (var shader in shaders)
+                {
+                    shader.start();
+                    if (shader is BlockShader bShader)
+                        bShader.loadProjectionMatrix(projectionMatrix);
+                    shader.stop();
+                }
             };
 
             prepare();
@@ -57,6 +65,16 @@ namespace OpenGL_Game
             worldRenderer.render(viewMatrix);
 
             entityRenderer.render(partialTicks);
+
+            //render other gui
+            guiRenderer.renderCrosshair();
+
+            //render gui screen
+            if (Game.INSTANCE.guiScreen != null)
+            {
+                Game.INSTANCE.CursorVisible = true;
+                guiRenderer.render(Game.INSTANCE.guiScreen);
+            }
         }
 
         private void createProjectionMatrix()

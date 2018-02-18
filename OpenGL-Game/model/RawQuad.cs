@@ -13,12 +13,14 @@
             this.UVs = UVs;
         }
 
-        public RawQuad(float[] vertices)
+        public RawQuad(float[] vertices, float[] UVs) : this(vertices, UVs, new float[0])
         {
-            this.vertices = vertices;
 
-            normal = new float[] { };
-            UVs = new float[] { };
+        }
+
+        public RawQuad(float[] vertices) : this(vertices, new float[0], new float[0])
+        {
+
         }
 
         public RawQuad offset(BlockPos pos)

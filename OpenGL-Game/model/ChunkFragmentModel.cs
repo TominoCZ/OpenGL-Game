@@ -12,7 +12,7 @@ namespace OpenGL_Game
         {
             this.shader = shader;
 
-            rawModel = Loader.loadChunkModelToVAO(model);
+            rawModel = GraphicsManager.loadModelToVAO(model, 3);
         }
     }
 }

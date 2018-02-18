@@ -22,18 +22,24 @@ namespace OpenGL_Game
             GL.BindVertexArray(m.rawModel.vaoID);
 
             GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-            GL.EnableVertexAttribArray(2);
+
+            if (m.rawModel.hasUVs())
+                GL.EnableVertexAttribArray(1);
+            if (m.rawModel.hasNormals())
+                GL.EnableVertexAttribArray(2);
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, TextureRegistry.textureAtlasID);
+            GL.BindTexture(TextureTarget.Texture2D, TextureManager.blockTextureAtlasID);
         }
 
-        private void finishRendering()
+        private void finishRendering(IModel m)
         {
             GL.DisableVertexAttribArray(0);
-            GL.DisableVertexAttribArray(1);
-            GL.DisableVertexAttribArray(2);
+
+            if (m.rawModel.hasUVs())
+                GL.DisableVertexAttribArray(1);
+            if (m.rawModel.hasNormals())
+                GL.EnableVertexAttribArray(2);
 
             GL.BindVertexArray(0);
         }
@@ -61,7 +67,7 @@ namespace OpenGL_Game
                         shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(node.chunk.chunkPos.vector));
                         GL.DrawArrays(PrimitiveType.Quads, 0, chunkModel.rawModel.vertexCount);
 
-                        finishRendering();
+                        finishRendering(chunkModel);
                         shader.stop();
                     }
                 }

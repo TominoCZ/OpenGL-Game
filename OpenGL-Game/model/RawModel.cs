@@ -1,30 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace OpenGL_Game
 {
-    class RawBlockModel : IRawModel
+    class RawModel : IRawModel
     {
         public int vaoID { get; }
+
         public int vertexCount { get; }
 
-        private Dictionary<EnumFacing, RawQuad> quads;
+        public List<RawQuad> quads;
 
-        public RawBlockModel(int vaoID, Dictionary<EnumFacing, RawQuad> quads)
+        public RawModel(int vaoID, int valuesPerVertice, List<RawQuad> quads)
         {
             this.vaoID = vaoID;
             this.quads = quads;
 
-            foreach (var value in quads)
+            foreach (var quad in quads)
             {
-                vertexCount += value.Value.vertices.Length / 3;
+                vertexCount += quad.vertices.Length / valuesPerVertice;
             }
-        }
-
-        public RawQuad getQuadForSide(EnumFacing side)
-        {
-            quads.TryGetValue(side, out var quad);
-
-            return quad;
         }
 
         public bool hasNormals()

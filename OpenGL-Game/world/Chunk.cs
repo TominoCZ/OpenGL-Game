@@ -60,7 +60,7 @@ namespace OpenGL_Game
                         if (block == EnumBlock.AIR)
                             continue;
 
-                        var blockModel = ModelRegistry.getModelForBlock(block);
+                        var blockModel = ModelManager.getModelForBlock(block);
 
                         foreach (EnumFacing dir in possibleDirections)
                         {
@@ -82,7 +82,7 @@ namespace OpenGL_Game
 
             foreach (var id in modelVaoIDs)
             {
-                Loader.deleteVAO(id);
+                GraphicsManager.deleteVAO(id);
             }
 
             modelVaoIDs.Clear();

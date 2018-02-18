@@ -15,9 +15,9 @@
             this.shader = shader;
             this.block = block;
 
-            var cube = ModelRegistry.createCubeModel(block);
+            var cube = ModelManager.createTexturedCubeModel(block);
 
-            rawModel = Loader.loadBlockModelToVAO(cube);
+            rawModel = GraphicsManager.loadBlockModelToVAO(cube);
 
             boundingBox = AxisAlignedBB.BLOCK_FULL;
         }

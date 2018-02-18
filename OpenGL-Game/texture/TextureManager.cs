@@ -13,15 +13,16 @@ using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game
 {
-    class TextureRegistry
+    class TextureManager
     {
-        public static int textureAtlasID;
+        public static int blockTextureAtlasID;
 
         private static Dictionary<EnumBlock, BlockTextureUV> UVs = new Dictionary<EnumBlock, BlockTextureUV>();
+        private static List<int> textures = new List<int>();
 
         public static void stitchTextures()
         {
-            textureAtlasID = loadTextureMap(generateTextureMap());
+            blockTextureAtlasID = GraphicsManager.loadTexture(generateTextureMap());
         }
 
         private static Bitmap generateTextureMap()
@@ -146,31 +147,16 @@ namespace OpenGL_Game
             }
         }
 
-        public static int loadTextureMap(Bitmap textureMap)
+        public static BlockTextureUV getUVsFromBlock(EnumBlock block)
         {
-            GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
+            BlockTextureUV uv;
 
-            int texID = GL.GenTexture();
+            UVs.TryGetValue(block, out uv);
 
-            GL.BindTexture(TextureTarget.Texture2D, texID);
+            if (uv == null)
+                UVs.TryGetValue(EnumBlock.MISSING, out uv);
 
-            BitmapData data = textureMap.LockBits(new Rectangle(0, 0, textureMap.Width, textureMap.Height),
-                ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
-                OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-            textureMap.UnlockBits(data);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                (int)TextureWrapMode.MirroredRepeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                (int)TextureWrapMode.MirroredRepeat);
-
-            return texID;
+            return uv;
         }
 
         private static bool containsContaining(Array a, string s)
@@ -184,74 +170,12 @@ namespace OpenGL_Game
             return false;
         }
 
-        public static BlockTextureUV getUVsFromBlock(EnumBlock block)
+        public static void cleanUp()
         {
-            BlockTextureUV uv;
-
-            UVs.TryGetValue(block, out uv);
-
-            if (uv == null)
-                UVs.TryGetValue(EnumBlock.MISSING, out uv);
-
-            return uv;
-        }
-    }
-
-    class BlockTextureUV
-    {
-        private Dictionary<EnumFacing, TextureUVNode> UVs;
-
-        public BlockTextureUV()
-        {
-            UVs = new Dictionary<EnumFacing, TextureUVNode>();
-        }
-
-        public void setUVForSide(EnumFacing side, Vector2 from, Vector2 to)
-        {
-            if (UVs.ContainsKey(side))
-                UVs.Remove(side);
-
-            UVs.Add(side, new TextureUVNode(from, to));
-        }
-
-        public TextureUVNode getUVForSide(EnumFacing side)
-        {
-            UVs.TryGetValue(side, out var uv);
-
-            return uv;
-        }
-
-        public void fill(Vector2 from, Vector2 to)
-        {
-            var values = Enum.GetValues(typeof(EnumFacing));
-
-            foreach (EnumFacing side in values)
+            foreach (var id in textures)
             {
-                setUVForSide(side, from, to);
+                GL.DeleteTexture(id);
             }
-        }
-    }
-
-    class TextureUVNode
-    {
-        public Vector2 start;
-        public Vector2 end;
-
-        public TextureUVNode(Vector2 start, Vector2 end)
-        {
-            this.start = start;
-            this.end = end;
-        }
-
-        public float[] ToArray()
-        {
-            return new[]
-            {
-                start.X, start.Y,
-                start.X, end.Y,
-                end.X, end.Y,
-                end.X, start.Y
-            };
         }
     }
 }

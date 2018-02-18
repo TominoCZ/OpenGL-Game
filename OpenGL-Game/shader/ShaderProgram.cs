@@ -19,8 +19,8 @@ namespace OpenGL_Game
             VertexShaderID = loadShader(ShaderType.VertexShader, file);
             FragmentShaderID = loadShader(ShaderType.FragmentShader, file);
 
-            Console.WriteLine($"vertex: {(VertexShaderID != -1 ? "OK" : "ERR")}");
-            Console.WriteLine($"fragment: {(FragmentShaderID != -1 ? "OK" : "ERR")}");
+            Console.WriteLine($"{shaderName} vertex shader: {(VertexShaderID != -1 ? "OK" : "ERR")}");
+            Console.WriteLine($"{shaderName} fragment shader: {(FragmentShaderID != -1 ? "OK" : "ERR")}");
 
             ProgramID = GL.CreateProgram();
 
@@ -40,7 +40,7 @@ namespace OpenGL_Game
             return GL.GetUniformLocation(ProgramID, uniform);
         }
 
-        protected void loadMatrix4(int location, Matrix4 mat)
+        protected void loadMatrix(int location, Matrix4 mat)
         {
             GL.UniformMatrix4(location, false, ref mat);
         }
@@ -60,7 +60,7 @@ namespace OpenGL_Game
             GL.UseProgram(0);
         }
 
-        public void DetachShader()
+        public void cleanUp()
         {
             stop();
 
@@ -80,7 +80,7 @@ namespace OpenGL_Game
         {
             try
             {
-                string ext = type == ShaderType.VertexShader ? ".vs" : ".fs";
+                string ext = type == ShaderType.VertexShader ? ".vsh" : ".fsh";
 
                 int ID = GL.CreateShader(type);
 
@@ -102,7 +102,6 @@ namespace OpenGL_Game
         public abstract void loadTransformationMatrix(Matrix4 mat);
         public abstract void loadViewMatrix(Matrix4 mat);
         public abstract void loadLight(ModelLight light);
-
         protected abstract void getAllUniformLocations();
         protected abstract void bindAttributes();
     }

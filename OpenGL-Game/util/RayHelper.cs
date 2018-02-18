@@ -9,9 +9,9 @@ using OpenTK.Graphics.ES20;
 
 namespace OpenGL_Game
 {
-    class Ray
+    class RayHelper
     {
-        public static bool RayAABB(Vector3 /*ray*/origin, Vector3 /*ray*/direction, AxisAlignedBB bb, out Vector3 hitPosition, out Vector3 hitNormal)
+        public static bool rayIntersectsBB(Vector3 /*ray*/origin, Vector3 /*ray*/direction, AxisAlignedBB bb, out Vector3 hitPosition, out Vector3 hitNormal)
         {
             direction = direction.Normalized();
             hitNormal = Vector3.One.Normalized();
@@ -113,97 +113,6 @@ namespace OpenGL_Game
             else hitNormal[maxDir] = -1.0f;
 
             return true;
-        }
-        /*
-        public string intersects(BoundingBox bb)
-        {
-            float tmin = (bb.min.X - orig.X) / dir.X;
-            float tmax = (bb.max.X - orig.X) / dir.X;
-
-            if (tmin > tmax)
-            {
-                var _tmin = tmin;
-
-                tmin = tmax;
-                tmax = _tmin;
-            }
-
-            float tymin = (bb.min.Y - orig.Y) / dir.Y;
-            float tymax = (bb.max.Y - orig.Y) / dir.Y;
-
-            if (tymin > tymax)
-            {
-                var _tymin = tymin;
-
-                tymin = tymax;
-                tymax = _tymin;
-            }
-
-            if ((tmin > tymax) || (tymin > tmax))
-                return "";//Vector3.Zero;
-
-            if (tymin > tmin)
-                tmin = tymin;
-
-            if (tymax < tmax)
-                tmax = tymax;
-
-            float tzmin = (bb.min.Z - orig.Z) / dir.Z;
-            float tzmax = (bb.max.Z - orig.Z) / dir.Z;
-
-            if (tzmin > tzmax)
-            {
-                var _tzmin = tzmin;
-
-                tzmin = tzmax;
-                tzmax = _tzmin;
-            }
-
-            if ((tmin > tzmax) || (tzmin > tmax))
-                return "";//Vector3.Zero;
-            
-            if (tzmin > tmin)
-                tmin = tzmin;
-
-            if (tzmax < tmax)
-                tmax = tzmax;
-
-            return $"vector: {tmin.ToString("##.###")}, {tmax.ToString("##.###")}, {tymin.ToString("##.###")}, {tymax.ToString("##.###")}, {tzmin.ToString("##.###")}, {tzmin.ToString("##.###")}, {tzmax.ToString("##.###")}"; //new Vector3(tmax, tymax, tmax);
-        }*/
-    }
-
-    class MouseOverObject
-    {
-        public EnumFacing sideHit;
-
-        public Vector3 hitVec;
-
-        public object hit;
-    }
-
-    class AxisAlignedBB
-    {
-        public static AxisAlignedBB BLOCK_FULL = new AxisAlignedBB(Vector3.Zero, Vector3.One);
-
-        public Vector3 min { get; }
-        public Vector3 max { get; }
-
-        public AxisAlignedBB(Vector3 min, Vector3 max)
-        {
-            this.min = min;
-            this.max = max;
-        }
-
-        public AxisAlignedBB offset(Vector3 by)
-        {
-            return new AxisAlignedBB(min + by, max + by);
-        }
-
-        public bool isIntersectingWith(AxisAlignedBB other)
-        {
-            return (min.X <= other.max.X && max.X >= other.min.X) &&
-                   (min.Y <= other.max.Y && max.Y >= other.min.Y) &&
-                   (min.Z <= other.max.Z && max.Z >= other.min.Z);
         }
     }
 }

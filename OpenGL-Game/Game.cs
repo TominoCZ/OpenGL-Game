@@ -25,20 +25,18 @@ namespace OpenGL_Game
     {
         private WindowState lastWindowState;
 
-        private StaticShader shader;
-
-        private Renderer renderer;
-
-        public EntityPlayerSP player;
-
-        public World world;
-
-        private Point mouseLast;
-
         private Stopwatch timer = new Stopwatch();
+        private Point mouseLast;
         private int frames;
 
         public MouseOverObject mouseOverObject = new MouseOverObject();
+
+        private GameRenderer _gameRenderer;
+
+        public EntityPlayerSP player;
+        public World world;
+
+        public GuiScreen guiScreen { get; private set; }
 
         public static Game INSTANCE { get; private set; }
 
@@ -51,7 +49,7 @@ namespace OpenGL_Game
             VSync = VSyncMode.Off;
             MakeCurrent();
 
-            TextureRegistry.stitchTextures();
+            TextureManager.stitchTextures();
 
             init();
 
@@ -68,23 +66,27 @@ namespace OpenGL_Game
 
                             var point = new Point(state.X, state.Y);
 
-                            var clientPoint = PointToClient(new Point(stateScreen.X, stateScreen.Y));
-
-                            bool outside = clientPoint.X < 0 || clientPoint.Y < 0 ||
-                                           clientPoint.X > ClientRectangle.Width || clientPoint.Y > ClientRectangle.Height;
-
-                            var b = Focused && !outside;
-
-                            CursorVisible = !b;
-
-                            if (b)
+                            if (guiScreen == null)
                             {
-                                getMouseOverObject();
+                                var clientPoint = PointToClient(new Point(stateScreen.X, stateScreen.Y));
 
-                                var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
+                                bool outside = clientPoint.X < 0 || clientPoint.Y < 0 ||
+                                               clientPoint.X > ClientRectangle.Width ||
+                                               clientPoint.Y > ClientRectangle.Height;
 
-                                player.camera.yaw -= delta.X / 1000f;
-                                player.camera.pitch -= delta.Y / 1000f;
+                                var b = Focused && !outside;
+
+                                CursorVisible = !b;
+
+                                if (b)
+                                {
+                                    getMouseOverObject();
+
+                                    var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
+
+                                    player.camera.yaw -= delta.X / 1000f;
+                                    player.camera.pitch -= delta.Y / 1000f;
+                                }
                             }
 
                             mouseLast = point;
@@ -121,6 +123,39 @@ namespace OpenGL_Game
             { IsBackground = true }.Start();
         }
 
+        private void init()
+        {
+            var shader = new BlockShader("block");
+            var stoneModel = new BlockModel(EnumBlock.STONE, shader);
+            var grassModel = new BlockModel(EnumBlock.GRASS, shader);
+            var dirtModel = new BlockModel(EnumBlock.DIRT, shader);
+            var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader);
+            var rareModel = new BlockModel(EnumBlock.RARE, shader);
+
+            ModelManager.registerBlockModel(stoneModel);
+            ModelManager.registerBlockModel(grassModel);
+            ModelManager.registerBlockModel(dirtModel);
+            ModelManager.registerBlockModel(bedrockModel);
+            ModelManager.registerBlockModel(rareModel);
+
+            player = new EntityPlayerSP(Vector3.UnitZ);
+
+            _gameRenderer = new GameRenderer(player.camera);
+
+            world = WorldGenerator.generate(0);
+
+            var pos = new BlockPos(player.pos);
+            player.pos = Vector3.UnitY * (world.getHeightAtPos(pos.x, pos.z) + 1);
+
+            world.generateChunkModels();
+            world.addEntity(player);
+        }
+
+        private void GameLoop()
+        {
+            world.updateEntities();
+        }
+
         private void getMouseOverObject()
         {
             int radius = 4;
@@ -142,10 +177,10 @@ namespace OpenGL_Game
 
                         if (block != EnumBlock.AIR)
                         {
-                            var model = ModelRegistry.getModelForBlock(EnumBlock.RARE);
+                            var model = ModelManager.getModelForBlock(EnumBlock.RARE);
                             var bb = model.boundingBox.offset(pos.vector);
 
-                            var hitSomething = Ray.RayAABB(player.camera.pos, player.camera.getLookVec(), bb, out var hitPos, out var normal);
+                            var hitSomething = RayHelper.rayIntersectsBB(player.camera.pos, player.camera.getLookVec(), bb, out var hitPos, out var normal);
 
                             if (hitSomething)
                             {
@@ -201,48 +236,12 @@ namespace OpenGL_Game
             return (float)timer.Elapsed.Milliseconds / 50;
         }
 
-        private void init()
-        {
-            player = new EntityPlayerSP(Vector3.UnitZ);
-            shader = new StaticShader("block");
-
-            renderer = new Renderer(shader, player.camera);
-
-            world = WorldGenerator.generate(0);
-
-            var stoneModel = new BlockModel(EnumBlock.STONE, shader);
-            var grassModel = new BlockModel(EnumBlock.GRASS, shader);
-            var dirtModel = new BlockModel(EnumBlock.DIRT, shader);
-            var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader);
-            var rareModel = new BlockModel(EnumBlock.RARE, shader);
-
-            ModelRegistry.registerBlockModel(stoneModel);
-            ModelRegistry.registerBlockModel(grassModel);
-            ModelRegistry.registerBlockModel(dirtModel);
-            ModelRegistry.registerBlockModel(bedrockModel);
-            ModelRegistry.registerBlockModel(rareModel);
-
-            var pos = new BlockPos(player.pos);
-
-            player.pos = Vector3.UnitY * (world.getHeightAtPos(pos.x, pos.z) + 1);
-
-            world.generateChunkModels();
-            world.addEntity(player);
-        }
-
-        private void GameLoop()
-        {
-            world.updateEntities();
-        }
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (mouseOverObject.hit is EnumBlock)
-            {
-                //TODO RENDER BLOCK SELECTION
-            }
+            if (!Focused && guiScreen == null)
+                openGuiScreen(new GuiScreen());
 
-            renderer.render(getRenderPartialTicks());
+            _gameRenderer.render(getRenderPartialTicks());
 
             SwapBuffers();
             ProcessEvents(false);
@@ -250,8 +249,37 @@ namespace OpenGL_Game
             frames++;
         }
 
+        public void closeGuiScreen()
+        {
+            guiScreen?.onClose();
+            guiScreen = null;
+
+            CursorVisible = false;
+        }
+
+        public void openGuiScreen(GuiScreen guiScreen)
+        {
+            this.guiScreen = guiScreen;
+
+            if (guiScreen is GuiIngameMenu)
+            {
+                var middle = new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
+                middle = PointToScreen(middle);
+
+                OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
+            }
+        }
+
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
+            if (Keyboard.GetState().IsKeyDown(Key.Escape))
+            {
+                if (guiScreen != null)
+                    closeGuiScreen();
+                else
+                    openGuiScreen(new GuiIngameMenu());
+            }
+
             if (Keyboard.GetState().IsKeyDown(Key.LAlt | Key.F4))
                 Exit();
 
@@ -273,28 +301,31 @@ namespace OpenGL_Game
 
             if (e.IsPressed)
             {
-                getMouseOverObject();
-
-                if (mouseOverObject.hit is EnumBlock)
+                if (guiScreen == null)
                 {
-                    if (player.getEquippedItem() is ItemBlock itemBlock)
+                    getMouseOverObject();
+
+                    if (mouseOverObject.hit is EnumBlock)
                     {
-                        var pos = new BlockPos(mouseOverObject.hitVec);
-
-                        if (e.Button == MouseButton.Right)
+                        if (player.getEquippedItem() is ItemBlock itemBlock)
                         {
-                            pos = pos.offset(mouseOverObject.sideHit);
+                            var pos = new BlockPos(mouseOverObject.hitVec);
 
-                            var blockAtPos = world.getBlock(pos);
+                            if (e.Button == MouseButton.Right)
+                            {
+                                pos = pos.offset(mouseOverObject.sideHit);
 
-                            var heldBlock = itemBlock.getBlock();
-                            var blockBB = ModelRegistry.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
+                                var blockAtPos = world.getBlock(pos);
 
-                            if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntityBBs(blockBB).Count == 0)
-                                world.setBlock(heldBlock, pos, true);
+                                var heldBlock = itemBlock.getBlock();
+                                var blockBB = ModelManager.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
+
+                                if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntityBBs(blockBB).Count == 0)
+                                    world.setBlock(heldBlock, pos, true);
+                            }
+                            else if (e.Button == MouseButton.Left)
+                                world.setBlock(EnumBlock.AIR, pos, true);
                         }
-                        else if (e.Button == MouseButton.Left)
-                            world.setBlock(EnumBlock.AIR, pos, true);
                     }
                 }
             }
@@ -307,7 +338,7 @@ namespace OpenGL_Game
             GL.Viewport(ClientRectangle);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
-            GL.Ortho(0, ClientRectangle.Width, ClientRectangle.Height, 0, renderer.NEAR_PLANE, renderer.FAR_PLANE);
+            GL.Ortho(0, ClientRectangle.Width, ClientRectangle.Height, 0, _gameRenderer.NEAR_PLANE, _gameRenderer.FAR_PLANE);
         }
 
         protected override void OnMove(EventArgs e)
@@ -319,8 +350,10 @@ namespace OpenGL_Game
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            shader.DetachShader();
-            Loader.cleanUp();
+            ModelManager.cleanUp();
+            TextureManager.cleanUp();
+
+            GraphicsManager.cleanUp();
         }
     }
 }
