@@ -20,7 +20,7 @@ namespace OpenGL_Game
         public float NEAR_PLANE = 0.1f;
         public float FAR_PLANE = 100f;
 
-        private int FOV = 70;
+        private int FOV = 65;
 
         public GameRenderer(Camera camera)
         {
@@ -58,17 +58,15 @@ namespace OpenGL_Game
         public void render(float partialTicks)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            prepare();
 
-            //prepare();
             var viewMatrix = MatrixHelper.createViewMatrix(camera);
 
             worldRenderer.render(viewMatrix);
-
             entityRenderer.render(partialTicks);
 
             //render other gui
             guiRenderer.renderCrosshair();
-
             //render gui screen
             if (Game.INSTANCE.guiScreen != null)
             {

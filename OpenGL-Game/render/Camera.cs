@@ -49,7 +49,7 @@ namespace OpenGL_Game
                 var s = (float)Math.Sin(-(_yaw + MathHelper.PiOver2));
                 var c = (float)Math.Cos((_yaw + MathHelper.PiOver2));
 
-                return new Vector2(s, c);
+                return new Vector2(s, c).Normalized();
             }
         }
 
@@ -60,7 +60,7 @@ namespace OpenGL_Game
                 var s = -(float)Math.Sin(-_yaw);
                 var c = -(float)Math.Cos(_yaw);
 
-                return new Vector2(s, c);
+                return new Vector2(s, c).Normalized();
             }
         }
     }

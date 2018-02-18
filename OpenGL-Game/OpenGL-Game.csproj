@@ -64,6 +64,7 @@
     <Compile Include="shader\GuiShader.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
     <Compile Include="texture\BlockTextureUV.cs" />
+    <Compile Include="util\MathUtil.cs" />
     <Compile Include="util\MouseOverObject.cs" />
     <Compile Include="util\RayHelper.cs" />
     <Compile Include="texture\TextureUVNode.cs" />

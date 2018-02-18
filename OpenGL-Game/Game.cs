@@ -40,6 +40,8 @@ namespace OpenGL_Game
 
         public static Game INSTANCE { get; private set; }
 
+        private DateTime lastTick;
+
         public Game()
         {
             INSTANCE = this;
@@ -53,7 +55,7 @@ namespace OpenGL_Game
 
             init();
 
-            world.setBlock(EnumBlock.RARE, new BlockPos(0, 11, 0), true);
+            //world.setBlock(EnumBlock.RARE, new BlockPos(0, 11, 0), true);
 
             new Thread(() =>
                 {
@@ -99,25 +101,13 @@ namespace OpenGL_Game
 
             new Thread(() =>
                 {
-                    int counter = 0;
-
                     while (true)
                     {
-                        if (Visible)
+                        if (Visible) 
                             GameLoop();
 
-                        timer.Restart();
-
+                        lastTick = DateTime.Now;
                         Thread.Sleep(50);
-
-                        counter++;
-
-                        if (counter >= 20)
-                        {
-                            Console.WriteLine(frames);
-                            frames = 0;
-                            counter = 0;
-                        }
                     }
                 })
             { IsBackground = true }.Start();
@@ -147,6 +137,7 @@ namespace OpenGL_Game
             var pos = new BlockPos(player.pos);
             player.pos = Vector3.UnitY * (world.getHeightAtPos(pos.x, pos.z) + 1);
 
+            world.setBlock(EnumBlock.RARE, new BlockPos(player.pos), false);
             world.generateChunkModels();
             world.addEntity(player);
         }
@@ -159,10 +150,6 @@ namespace OpenGL_Game
         private void getMouseOverObject()
         {
             int radius = 4;
-
-            //Vector3 hitVec = Vector3.Zero;
-            //object hit = null;
-            //EnumFacing sideHit = EnumFacing.UP;
 
             List<MouseOverObject> moos = new List<MouseOverObject>();
 
@@ -233,7 +220,7 @@ namespace OpenGL_Game
 
         public float getRenderPartialTicks()
         {
-            return (float)timer.Elapsed.Milliseconds / 50;
+            return (float)(TimeSpan.FromTicks((DateTime.Now - lastTick).Ticks).TotalMilliseconds / 50);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -320,7 +307,7 @@ namespace OpenGL_Game
                                 var heldBlock = itemBlock.getBlock();
                                 var blockBB = ModelManager.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
 
-                                if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntityBBs(blockBB).Count == 0)
+                                if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntitiesBBs(blockBB).Count == 0)
                                     world.setBlock(heldBlock, pos, true);
                             }
                             else if (e.Button == MouseButton.Left)

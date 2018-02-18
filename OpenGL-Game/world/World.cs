@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using OpenTK;
 
 namespace OpenGL_Game
@@ -34,63 +36,63 @@ namespace OpenGL_Game
 
         public void addEntity(Entity e)
         {
-            lock (_entities)
-            {
-                if (!_entities.Contains(e))
-                    _entities.Add(e);
-            }
+            if (!_entities.Contains(e))
+                _entities.Add(e);
         }
 
         public void updateEntities()
         {
-            lock (_entities)
+            for (int i = 0; i < _entities.Count; i++)
             {
-                for (int i = 0; i < _entities.Count; i++)
-                {
-                    _entities[i].Update();
-                }
+                _entities[i].Update();
             }
         }
 
-        public List<AxisAlignedBB> getIntersectingEntityBBs(AxisAlignedBB with)
+        public List<AxisAlignedBB> getIntersectingEntitiesBBs(AxisAlignedBB with)
         {
             List<AxisAlignedBB> bbs = new List<AxisAlignedBB>();
 
-            lock (_entities)
+            for (int i = 0; i < _entities.Count; i++)
             {
-                for (int i = 0; i < _entities.Count; i++)
-                {
-                    var bb = _entities[i].getBoundingBox();
+                var bb = _entities[i].getBoundingBox();
 
-                    if (bb.isIntersectingWith(with))
-                        bbs.Add(bb);
-                }
+                if (bb.intersectsWith(with))
+                    bbs.Add(bb);
             }
 
             return bbs;
         }
 
-        public Chunk getChunkFromPos(BlockPos pos)
+        public List<AxisAlignedBB> getBlockCollisionBoxes(AxisAlignedBB box)
         {
-            if (_chunks.TryGetValue(pos.ChunkPos, out var chunkData))
-                return chunkData.chunk;
+            List<AxisAlignedBB> blocks = new List<AxisAlignedBB>();
 
-            return null;
-        }
+            var bb = box.union(box);
 
-        public Chunk[] getChunks()
-        {
-            var positions = _chunks.Keys.ToArray();
-
-            List<Chunk> chunks = new List<Chunk>();
-
-            foreach (var position in positions)
+            for (int x = (int)bb.min.X, maxX = (int)bb.max.X; x < maxX; x++)
             {
-                if (_chunks.TryGetValue(position, out var chunk))
-                    chunks.Add(chunk.chunk);
+                for (int y = (int)bb.min.Y, maxY = (int)bb.max.Y; y < maxY; y++)
+                {
+                    for (int z = (int)bb.min.Z, maxZ = (int)bb.max.Z; z < maxZ; z++)
+                    {
+                        var pos = new BlockPos(x, y, z);
+                        var block = Game.INSTANCE.world.getBlock(pos);
+                        if (block == EnumBlock.AIR)
+                            continue;
+
+                        blocks.Add(ModelManager.getModelForBlock(block).boundingBox.offset(pos.vector));
+                    }
+                }
             }
 
-            return chunks.ToArray();
+            return blocks;
+        }
+
+        public Chunk getChunkFromPos(BlockPos pos)
+        {
+            _chunks.TryGetValue(pos.ChunkPos, out var chunkData);
+
+            return chunkData?.chunk;
         }
 
         public ChunkData[] getChunkDataNodes()
@@ -100,6 +102,8 @@ namespace OpenGL_Game
 
         public void setBlock(EnumBlock blockType, BlockPos pos, bool redraw)
         {
+            var sw = new Stopwatch();
+            sw.Start();
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
                 return;
@@ -107,7 +111,26 @@ namespace OpenGL_Game
             chunk.setBlock(pos - chunk.chunkPos, blockType, redraw);
 
             if (redraw)
+            {
                 updateModelForChunk(chunk);
+
+                var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+
+                for (var index = 0; index < sides.Length; index++)
+                {
+                    EnumFacing side = sides[index];
+
+                    var p = pos.offset(side);
+
+                    var ch = getChunkFromPos(p);
+
+                    if (ch != chunk)
+                        updateModelForChunk(ch);
+                }
+            }
+            sw.Stop();
+
+            Console.WriteLine($"DEBUG: rebuilding terrain took {sw.ElapsedMilliseconds}ms");
         }
 
         public EnumBlock getBlock(BlockPos pos)
@@ -136,8 +159,10 @@ namespace OpenGL_Game
         {
             var dataNodes = getChunkDataNodes();
 
-            foreach (var node in dataNodes)
+            for (var index = 0; index < dataNodes.Length; index++)
             {
+                var node = dataNodes[index];
+
                 if (node.chunk == chunk)
                 {
                     node.model = node.chunk.generateModel();
@@ -150,9 +175,9 @@ namespace OpenGL_Game
         {
             var chunkDatas = _chunks.Values.ToArray();
 
-            for (int i = 0; i < chunkDatas.Length; i++)
+            for (var index = 0; index < chunkDatas.Length; index++)
             {
-                var chunkData = chunkDatas[i];
+                var chunkData = chunkDatas[index];
 
                 if (chunkData.chunk.unloaded)
                     continue;

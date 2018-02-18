@@ -13,7 +13,7 @@ namespace OpenGL_Game
 
             World world = new World(size / 16);
 
-            Random rand = new Random();
+            Random rand = new Random(seed);
 
             for (int y = 0; y < totalHeight; y++)
             {

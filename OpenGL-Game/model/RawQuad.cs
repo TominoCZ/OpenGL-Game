@@ -22,7 +22,7 @@
         {
 
         }
-
+        
         public RawQuad offset(BlockPos pos)
         {
             float[] newVertices = new float[vertices.Length];

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Input;
 
 namespace OpenGL_Game
@@ -11,7 +6,7 @@ namespace OpenGL_Game
     class EntityPlayerSP : Entity
     {
         public Camera camera;
-        public float moveSpeed = 0.25f;
+        public float moveSpeed = 0.3f;
 
         private bool wasSpaceDown;
 
@@ -20,28 +15,31 @@ namespace OpenGL_Game
             camera = new Camera();
             camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(Vector3.Zero, new Vector3(0.25f, 2, 0.25f));
+            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 2, 0.25f));
         }
 
         public override void Update()
         {
-            lastPos = new Vector3(pos);
-
             if (Game.INSTANCE.Focused)
                 UpdateCamera();
 
-            motion.Xz *= 0.9124021f;
+            #region if player gets stuck in a block;
+            var box = getBoundingBox();
+            var center = box.getCenter();
 
-            Move();
+            var boxes = Game.INSTANCE.world.getBlockCollisionBoxes(box);
 
-            if (!OnGround)
-                motion.Y -= 0.0515f;
-
-            if (OnGround)
+            foreach (var bb in boxes)
             {
-                pos.Y = (int)pos.Y;
-                motion.Xz *= 0.4221f;
+                var block_center = bb.getCenter();
+
+                var dir = (center.Xz - block_center.Xz).Normalized();
+
+                motion.Xz += dir * 0.25f;
             }
+            #endregion
+
+            base.Update();
         }
 
         public override void Render(float particalTicks)
@@ -52,12 +50,12 @@ namespace OpenGL_Game
 
             var state = Keyboard.GetState();
 
-            if (state.IsKeyDown(Key.Space) && !wasSpaceDown && OnGround)
+            if (state.IsKeyDown(Key.Space) && !wasSpaceDown && onGround)
             {
                 wasSpaceDown = true;
-                motion.Y = 0.325F;
+                motion.Y = 0.4F;
             }
-            else if ((!state.IsKeyDown(Key.Space) || OnGround) && wasSpaceDown)
+            else if ((!state.IsKeyDown(Key.Space) || onGround) && wasSpaceDown)
                 wasSpaceDown = false;
         }
 
@@ -82,46 +80,6 @@ namespace OpenGL_Game
 
             if (vec != Vector2.Zero)
                 motion.Xz = vec.Normalized() * moveSpeed;
-
-            //check for block collisions TODO - use the AABB method
-            for (int yOffset = 0; yOffset <= 1; yOffset++)
-            {
-                if (Game.INSTANCE.world.getBlock(new BlockPos(pos + new Vector3(motion.X + (motion.X > 0 ? 0.25f : -0.25f), yOffset, 0))) != EnumBlock.AIR)
-                {
-                    if (motion.X < 0)
-                        pos.X = (float)Math.Floor(pos.X);
-                    else
-                        pos.X = (float)Math.Ceiling(pos.X);
-
-                    pos.X += (motion.X > 0 ? -0.25f : 0.25f);
-
-                    motion.X = 0;
-                }
-
-                if (Game.INSTANCE.world.getBlock(new BlockPos(pos + new Vector3(0, yOffset, motion.Z + (motion.Z > 0 ? 0.25f : -0.25f)))) != EnumBlock.AIR)
-                {
-                    if (motion.Z < 0)
-                        pos.Z = (float)Math.Floor(pos.Z);
-                    else
-                        pos.Z = (float)Math.Ceiling(pos.Z);
-
-                    pos.Z += (motion.Z > 0 ? -0.25f : 0.25f);
-
-                    motion.Z = 0;
-                }
-            }
-
-            if (Game.INSTANCE.world.getBlock(new BlockPos(pos + Vector3.UnitY * (motion.Y + 1.7f))) !=
-                    EnumBlock.AIR && motion.Y > 0)
-            {
-                pos.Y = (int)Math.Ceiling(pos.Y);
-                motion.Y = 0;
-            }
-
-            /*if (state.IsKeyDown(Key.LControl) || state.IsKeyDown(Key.LShift))
-            {
-                motion.Y = -moveSpeed;
-            }*/
         }
 
         public Item getEquippedItem()
@@ -152,7 +110,7 @@ namespace OpenGL_Game
     {
         public ItemBlock(EnumBlock block) : base(block.ToString(), block)
         {
-            
+
         }
 
         public EnumBlock getBlock()

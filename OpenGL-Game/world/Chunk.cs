@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace OpenGL_Game
 {
@@ -39,14 +40,26 @@ namespace OpenGL_Game
             if (thisChunk)
                 return (EnumBlock)_blocks[pos.x, pos.y, pos.z];
 
-            return EnumBlock.AIR;
+            var block = Game.INSTANCE.world.getBlock(pos + chunkPos);
+
+            return block;
         }
 
         public ChunkModel generateModel()
         {
+            for (var index = 0; index < modelVaoIDs.Count; index++)
+            {
+                var id = modelVaoIDs[index];
+                GraphicsManager.deleteVAO(id);
+            }
+
+            modelVaoIDs.Clear();
+
             Dictionary<ShaderProgram, List<RawQuad>> MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
 
-            var possibleDirections = Enum.GetValues(typeof(EnumFacing));
+            var possibleDirections = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
+            var pos = new BlockPos();
+            List<RawQuad> quads;
 
             for (int y = 0; y < _blocks.GetLength(1); y++)
             {
@@ -54,7 +67,8 @@ namespace OpenGL_Game
                 {
                     for (int z = 0; z < _blocks.GetLength(2); z++)
                     {
-                        var pos = new BlockPos(x, y, z);
+                        pos.setPos(x, y, z);
+
                         var block = getBlock(pos);
 
                         if (block == EnumBlock.AIR)
@@ -62,30 +76,23 @@ namespace OpenGL_Game
 
                         var blockModel = ModelManager.getModelForBlock(block);
 
-                        foreach (EnumFacing dir in possibleDirections)
+                        if (!MODEL_RAW.ContainsKey(blockModel.shader))
+                            MODEL_RAW.Add(blockModel.shader, quads = new List<RawQuad>());
+                        else
+                            MODEL_RAW.TryGetValue(blockModel.shader, out quads);
+
+                        for (int i = 0; i < possibleDirections.Length; i++)
                         {
+                            var dir = possibleDirections[i];
+
                             if (getBlock(pos.offset(dir)) == EnumBlock.AIR)
                             {
-                                List<RawQuad> quads;
-
-                                if (!MODEL_RAW.ContainsKey(blockModel.shader))
-                                    MODEL_RAW.Add(blockModel.shader, quads = new List<RawQuad>());
-                                else
-                                    MODEL_RAW.TryGetValue(blockModel.shader, out quads);
-
                                 quads?.Add(((RawBlockModel)blockModel.rawModel).getQuadForSide(dir).offset(pos));
                             }
                         }
                     }
                 }
             }
-
-            foreach (var id in modelVaoIDs)
-            {
-                GraphicsManager.deleteVAO(id);
-            }
-
-            modelVaoIDs.Clear();
 
             ChunkModel model = new ChunkModel();
 

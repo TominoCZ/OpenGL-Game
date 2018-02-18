@@ -14,7 +14,7 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-25, 120, -100), Vector3.One);
+            modelLight = new ModelLight(new Vector3(-25, 100, -75), Vector3.One);
         }
 
         private void beginRendering(IModel m)

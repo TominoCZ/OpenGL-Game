@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Xml.Linq;
 using OpenTK;
 
 namespace OpenGL_Game
 {
     public struct BlockPos
     {
-        public int x { get; }
-        public int y { get; }
-        public int z { get; }
+        public int x { get; private set; }
+        public int y { get; private set; }
+        public int z { get; private set; }
 
         public Vector3 vector => new Vector3(x, y, z);
 
@@ -18,10 +19,16 @@ namespace OpenGL_Game
             return new BlockPos(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);
         }
 
+        public static BlockPos operator +(BlockPos p1, BlockPos p2)
+        {
+            return new BlockPos(p1.x + p2.x, p1.y + p2.y, p1.z + p2.z);
+        }
+
         public static bool operator ==(BlockPos p1, BlockPos p2)
         {
             return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
         }
+
         public static bool operator !=(BlockPos p1, BlockPos p2)
         {
             return p1.x != p2.x || p1.y != p2.y || p1.z != p2.z;
@@ -67,6 +74,13 @@ namespace OpenGL_Game
 
                 default: return this;
             }
+        }
+
+        public void setPos(int x, int y, int z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
     }
 }
