@@ -54,6 +54,7 @@
     <Compile Include="entity\EntityPlayerSP.cs" />
     <Compile Include="gui\Gui.cs" />
     <Compile Include="gui\GuiCrosshair.cs" />
+    <Compile Include="gui\GuiHUD.cs" />
     <Compile Include="gui\GuiIngameMenu.cs" />
     <Compile Include="gui\GuiScreen.cs" />
     <Compile Include="render\GuiRenderer.cs" />

@@ -51,11 +51,10 @@ namespace OpenGL_Game
             VSync = VSyncMode.Off;
             MakeCurrent();
 
+            Console.WriteLine("DEBUG: stitching textures");
             TextureManager.stitchTextures();
 
             init();
-
-            //world.setBlock(EnumBlock.RARE, new BlockPos(0, 11, 0), true);
 
             new Thread(() =>
                 {
@@ -82,12 +81,12 @@ namespace OpenGL_Game
 
                                 if (b)
                                 {
-                                    getMouseOverObject();
-
                                     var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
 
                                     player.camera.yaw -= delta.X / 1000f;
                                     player.camera.pitch -= delta.Y / 1000f;
+
+                                    getMouseOverObject();
                                 }
                             }
 
@@ -101,13 +100,25 @@ namespace OpenGL_Game
 
             new Thread(() =>
                 {
+                    int counter = 0;
+
                     while (true)
                     {
-                        if (Visible) 
+                        timer.Reset();
+
+                        if (Visible)
                             GameLoop();
 
-                        lastTick = DateTime.Now;
+                        timer.Start();
                         Thread.Sleep(50);
+                        counter++;
+
+                        if (counter >= 20)
+                        {
+                            Console.WriteLine($"FPS: {frames}");
+                            counter = 0;
+                            frames = 0;
+                        }
                     }
                 })
             { IsBackground = true }.Start();
@@ -115,6 +126,7 @@ namespace OpenGL_Game
 
         private void init()
         {
+            Console.WriteLine("DEBUG: loading models");
             var shader = new BlockShader("block");
             var stoneModel = new BlockModel(EnumBlock.STONE, shader);
             var grassModel = new BlockModel(EnumBlock.GRASS, shader);
@@ -128,18 +140,18 @@ namespace OpenGL_Game
             ModelManager.registerBlockModel(bedrockModel);
             ModelManager.registerBlockModel(rareModel);
 
-            player = new EntityPlayerSP(Vector3.UnitZ);
-
-            _gameRenderer = new GameRenderer(player.camera);
+            Console.WriteLine("DEBUG: generating world");
 
             world = WorldGenerator.generate(0);
 
-            var pos = new BlockPos(player.pos);
-            player.pos = Vector3.UnitY * (world.getHeightAtPos(pos.x, pos.z) + 1);
+            player = new EntityPlayerSP(Vector3.UnitY * (world.getHeightAtPos(0, 0) + 1));
+            player.setEquippedItem(new ItemBlock(EnumBlock.STONE));
 
-            world.setBlock(EnumBlock.RARE, new BlockPos(player.pos), false);
+            _gameRenderer = new GameRenderer(player.camera);
+
             world.generateChunkModels();
             world.addEntity(player);
+            Console.WriteLine("DEBUG: ---DONE---");
         }
 
         private void GameLoop()
@@ -220,7 +232,7 @@ namespace OpenGL_Game
 
         public float getRenderPartialTicks()
         {
-            return (float)(TimeSpan.FromTicks((DateTime.Now - lastTick).Ticks).TotalMilliseconds / 50);
+            return timer.ElapsedMilliseconds / 50f;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -290,10 +302,19 @@ namespace OpenGL_Game
             {
                 if (guiScreen == null)
                 {
-                    getMouseOverObject();
-
                     if (mouseOverObject.hit is EnumBlock)
                     {
+                        if (e.Button == MouseButton.Middle)
+                        {
+                            var pos = new BlockPos(mouseOverObject.hitVec);
+                            var clickedBlock = world.getBlock(pos);
+
+                            if (clickedBlock != EnumBlock.AIR)
+                            {
+                                player.setEquippedItem(new ItemBlock(clickedBlock));
+                            }
+                        }
+
                         if (player.getEquippedItem() is ItemBlock itemBlock)
                         {
                             var pos = new BlockPos(mouseOverObject.hitVec);

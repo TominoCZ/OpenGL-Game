@@ -12,6 +12,7 @@ namespace OpenGL_Game
     {
         static List<int> VAOs = new List<int>();
         static List<int> VBOs = new List<int>();
+        static List<int> textures = new List<int>();
 
         public static RawBlockModel loadBlockModelToVAO(Dictionary<EnumFacing, RawQuad> quads)
         {
@@ -45,8 +46,10 @@ namespace OpenGL_Game
             List<float> normals = new List<float>();
             List<float> UVs = new List<float>();
 
-            foreach (var quad in quads)
+            for (var index = 0; index < quads.Count; index++)
             {
+                var quad = quads[index];
+
                 vertices.AddRange(quad.vertices);
                 normals.AddRange(quad.normal);
                 UVs.AddRange(quad.UVs);
@@ -69,6 +72,7 @@ namespace OpenGL_Game
             GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
 
             int texID = GL.GenTexture();
+            textures.Add(texID);
 
             GL.BindTexture(TextureTarget.Texture2D, texID);
 
@@ -146,6 +150,10 @@ namespace OpenGL_Game
             foreach (var item in VBOs)
             {
                 GL.DeleteBuffer(item);
+            }
+            foreach (var item in textures)
+            {
+                GL.DeleteTexture(item);
             }
 
             GL.DeleteTexture(TextureManager.blockTextureAtlasID);

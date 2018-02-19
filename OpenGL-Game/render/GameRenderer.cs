@@ -67,6 +67,8 @@ namespace OpenGL_Game
 
             //render other gui
             guiRenderer.renderCrosshair();
+            //guiRenderer.renderHUD(); //TODO
+
             //render gui screen
             if (Game.INSTANCE.guiScreen != null)
             {

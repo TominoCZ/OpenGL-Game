@@ -90,7 +90,9 @@ namespace OpenGL_Game
 
         public Chunk getChunkFromPos(BlockPos pos)
         {
-            _chunks.TryGetValue(pos.ChunkPos, out var chunkData);
+            pos.setPos((int)Math.Floor(pos.x / 16f) * 16, (int)Math.Floor(pos.y / 16f) * 16, (int)Math.Floor(pos.z / 16f) * 16);
+
+            _chunks.TryGetValue(pos, out var chunkData);
 
             return chunkData?.chunk;
         }
@@ -102,8 +104,6 @@ namespace OpenGL_Game
 
         public void setBlock(EnumBlock blockType, BlockPos pos, bool redraw)
         {
-            var sw = new Stopwatch();
-            sw.Start();
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
                 return;
@@ -112,11 +112,16 @@ namespace OpenGL_Game
 
             if (redraw)
             {
+                var sw = new Stopwatch();
+                sw.Start();
+
                 updateModelForChunk(chunk);
 
                 var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
 
-                for (var index = 0; index < sides.Length; index++)
+                int chunksUpdated = 1;
+
+                for (var index = 0; index < sides.Length - 2; index++)
                 {
                     EnumFacing side = sides[index];
 
@@ -125,12 +130,16 @@ namespace OpenGL_Game
                     var ch = getChunkFromPos(p);
 
                     if (ch != chunk)
+                    {
                         updateModelForChunk(ch);
+                        chunksUpdated++;
+                    }
                 }
-            }
-            sw.Stop();
 
-            Console.WriteLine($"DEBUG: rebuilding terrain took {sw.ElapsedMilliseconds}ms");
+                sw.Stop();
+
+                Console.WriteLine($"DEBUG: built terrain model [{sw.Elapsed.TotalMilliseconds:##.000}ms] ({chunksUpdated} {(chunksUpdated > 1 ? "chunks" : "chunk")})");
+            }
         }
 
         public EnumBlock getBlock(BlockPos pos)

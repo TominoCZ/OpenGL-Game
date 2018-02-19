@@ -18,7 +18,6 @@ namespace OpenGL_Game
         public static int blockTextureAtlasID;
 
         private static Dictionary<EnumBlock, BlockTextureUV> UVs = new Dictionary<EnumBlock, BlockTextureUV>();
-        private static List<int> textures = new List<int>();
 
         public static void stitchTextures()
         {
@@ -172,10 +171,7 @@ namespace OpenGL_Game
 
         public static void cleanUp()
         {
-            foreach (var id in textures)
-            {
-                GL.DeleteTexture(id);
-            }
+            GL.DeleteTexture(blockTextureAtlasID);
         }
     }
 }

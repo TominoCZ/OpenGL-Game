@@ -19,8 +19,8 @@ namespace OpenGL_Game
             VertexShaderID = loadShader(ShaderType.VertexShader, file);
             FragmentShaderID = loadShader(ShaderType.FragmentShader, file);
 
-            Console.WriteLine($"{shaderName} vertex shader: {(VertexShaderID != -1 ? "OK" : "ERR")}");
-            Console.WriteLine($"{shaderName} fragment shader: {(FragmentShaderID != -1 ? "OK" : "ERR")}");
+            Console.WriteLine($"DEBUG: '{shaderName}' vertex shader: {(VertexShaderID != -1 ? "OK" : "ERROR")}");
+            Console.WriteLine($"DEBUG: '{shaderName}' fragment shader: {(FragmentShaderID != -1 ? "OK" : "ERROR")}");
 
             ProgramID = GL.CreateProgram();
 

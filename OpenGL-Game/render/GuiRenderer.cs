@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using OpenGL_Game.gui;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -11,6 +12,7 @@ namespace OpenGL_Game
         private GuiShader shader;
 
         private GuiCrosshair crosshairGui;
+        private GuiHUD hudGui;
 
         public GuiRenderer()
         {
@@ -31,6 +33,8 @@ namespace OpenGL_Game
                 var tex = new GuiTexture(texture.textureID, texture.textureSize, Vector2.Zero, Vector2.One * 1.4f);
                 crosshairGui = new GuiCrosshair(tex);
             }
+
+            hudGui = new GuiHUD();
         }
 
         public void render(Gui gui)
@@ -60,6 +64,11 @@ namespace OpenGL_Game
         public void renderCrosshair()
         {
             render(crosshairGui);
+        }
+
+        public void renderHUD()
+        {
+            render(hudGui);
         }
 
         public void cleanUp()

@@ -45,80 +45,88 @@ namespace OpenGL_Game
             return new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
         }
 
-        public Vector3 calculateOffset(AxisAlignedBB other, Vector3 offset)
+        public float calculateYOffset(AxisAlignedBB other, float offset)
         {
-            var result = Vector3.One * offset;
-
             //Y
             if (other.max.X > min.X && other.min.X < max.X && other.max.Z > min.Z && other.min.Z < max.Z)
             {
-                if (result.Y > 0.0D && other.max.Y <= min.Y)
+                if (offset > 0.0D && other.max.Y <= min.Y)
                 {
                     float d1 = min.Y - other.max.Y;
 
-                    if (d1 < result.Y)
+                    if (d1 < offset)
                     {
-                        result.Y = d1;
+                        offset = d1;
                     }
                 }
-                else if (result.Y < 0.0D && other.min.Y >= max.Y)
+                else if (offset < 0.0D && other.min.Y >= this.max.Y)
                 {
                     float d0 = max.Y - other.min.Y;
 
-                    if (d0 > result.Y)
+                    if (d0 > offset)
                     {
-                        result.Y = d0;
+                        offset = d0;
                     }
                 }
             }
 
+            return offset;
+        }
+
+        public float calculateXOffset(AxisAlignedBB other, float offset)
+        {
             //X
             if (other.max.Y > min.Y && other.min.Y < max.Y && other.max.Z > min.Z && other.min.Z < max.Z)
             {
-                if (result.X > 0.0D && other.max.X <= min.X)
+                if (offset > 0.0D && other.max.X <= min.X)
                 {
                     float d1 = min.X - other.max.X;
 
-                    if (d1 < result.X)
+                    if (d1 < offset)
                     {
-                        result.X = d1;
+                        offset = d1;
                     }
                 }
-                else if (result.X < 0.0D && other.min.X >= max.X)
+                else if (offset < 0.0D && other.min.X >= max.X)
                 {
                     float d0 = max.X - other.min.X;
 
-                    if (d0 > result.X)
+                    if (d0 > offset)
                     {
-                        result.X = d0;
+                        offset = d0;
                     }
                 }
             }
 
+            return offset;
+        }
+
+        public float calculateZOffset(AxisAlignedBB other, float offset)
+        {
             //Z
             if (other.max.X > min.X && other.min.X < max.X && other.max.Y > min.Y && other.min.Y < max.Y)
             {
-                if (result.Z > 0.0D && other.max.Z <= min.Z)
+                if (offset > 0.0D && other.max.Z <= min.Z)
                 {
                     float d1 = min.Z - other.max.Z;
 
-                    if (d1 < result.Z)
+                    if (d1 < offset)
                     {
-                        result.Z = d1;
+                        offset = d1;
                     }
                 }
-                else if (result.Z < 0.0D && other.min.Z >= max.Z)
+                else if (offset < 0.0D && other.min.Z >= max.Z)
                 {
                     float d0 = max.Z - other.min.Z;
 
-                    if (d0 > result.Z)
+                    if (d0 > offset)
                     {
-                        result.Z = d0;
+                        offset = d0;
                     }
                 }
             }
 
-            return result;
+            return offset;
         }
 
         public Vector3 getCenter()
@@ -128,9 +136,9 @@ namespace OpenGL_Game
 
         public bool intersectsWith(AxisAlignedBB other)
         {
-            return (min.X <= other.max.X && max.X >= other.min.X) &&
-                   (min.Y <= other.max.Y && max.Y >= other.min.Y) &&
-                   (min.Z <= other.max.Z && max.Z >= other.min.Z);
+            return (min.X < other.max.X && max.X > other.min.X) &&
+                   (min.Y < other.max.Y && max.Y > other.min.Y) &&
+                   (min.Z < other.max.Z && max.Z > other.min.Z);
         }
     }
 }

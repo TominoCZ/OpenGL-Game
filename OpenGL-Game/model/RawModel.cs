@@ -19,8 +19,9 @@ namespace OpenGL_Game
             this.vaoID = vaoID;
             this.quads = quads;
 
-            foreach (var quad in quads)
+            for (var index = 0; index < quads.Count; index++)
             {
+                var quad = quads[index];
                 vertexCount += quad.vertices.Length / valuesPerVertice;
             }
         }

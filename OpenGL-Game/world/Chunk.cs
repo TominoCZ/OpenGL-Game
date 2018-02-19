@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace OpenGL_Game
@@ -18,7 +19,7 @@ namespace OpenGL_Game
         {
             this.chunkPos = chunkPos;
 
-            _blocks = new int[16, 256, 16];
+            _blocks = new int[16, 16, 16];
 
             modelVaoIDs = new List<int>();
         }
@@ -55,17 +56,21 @@ namespace OpenGL_Game
 
             modelVaoIDs.Clear();
 
-            Dictionary<ShaderProgram, List<RawQuad>> MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
+            var MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
 
-            var possibleDirections = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
+            var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             var pos = new BlockPos();
             List<RawQuad> quads;
 
-            for (int y = 0; y < _blocks.GetLength(1); y++)
+            var l_x = _blocks.GetLength(0);
+            var l_y = _blocks.GetLength(1);
+            var l_z = _blocks.GetLength(2);
+
+            for (int z = 0; z < l_z; z++)
             {
-                for (int x = 0; x < _blocks.GetLength(0); x++)
+                for (int y = 0; y < l_y; y++)
                 {
-                    for (int z = 0; z < _blocks.GetLength(2); z++)
+                    for (int x = 0; x < l_x; x++)
                     {
                         pos.setPos(x, y, z);
 
@@ -76,10 +81,8 @@ namespace OpenGL_Game
 
                         var blockModel = ModelManager.getModelForBlock(block);
 
-                        if (!MODEL_RAW.ContainsKey(blockModel.shader))
+                        if (!MODEL_RAW.TryGetValue(blockModel.shader, out quads))
                             MODEL_RAW.Add(blockModel.shader, quads = new List<RawQuad>());
-                        else
-                            MODEL_RAW.TryGetValue(blockModel.shader, out quads);
 
                         for (int i = 0; i < possibleDirections.Length; i++)
                         {

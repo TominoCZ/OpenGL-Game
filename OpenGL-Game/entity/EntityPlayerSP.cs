@@ -6,38 +6,26 @@ namespace OpenGL_Game
     class EntityPlayerSP : Entity
     {
         public Camera camera;
-        public float moveSpeed = 0.3f;
+
+        public float maxMoveSpeed = 0.275f;
+        public float moveSpeed;
 
         private bool wasSpaceDown;
+
+        private Item equipped;
 
         public EntityPlayerSP(Vector3 pos) : base(pos)
         {
             camera = new Camera();
             camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 2, 0.25f));
+            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 2, 0.25f)).offset(pos);
         }
 
         public override void Update()
         {
             if (Game.INSTANCE.Focused)
                 UpdateCamera();
-
-            #region if player gets stuck in a block;
-            var box = getBoundingBox();
-            var center = box.getCenter();
-
-            var boxes = Game.INSTANCE.world.getBlockCollisionBoxes(box);
-
-            foreach (var bb in boxes)
-            {
-                var block_center = bb.getCenter();
-
-                var dir = (center.Xz - block_center.Xz).Normalized();
-
-                motion.Xz += dir * 0.25f;
-            }
-            #endregion
 
             base.Update();
         }
@@ -53,7 +41,7 @@ namespace OpenGL_Game
             if (state.IsKeyDown(Key.Space) && !wasSpaceDown && onGround)
             {
                 wasSpaceDown = true;
-                motion.Y = 0.4F;
+                motion.Y = 0.45F;
             }
             else if ((!state.IsKeyDown(Key.Space) || onGround) && wasSpaceDown)
                 wasSpaceDown = false;
@@ -70,26 +58,31 @@ namespace OpenGL_Game
 
             if (state.IsKeyDown(Key.W))
                 vec += camera.forward;
-            else if (state.IsKeyDown(Key.S))
+            if (state.IsKeyDown(Key.S))
                 vec += -camera.forward;
 
             if (state.IsKeyDown(Key.A))
                 vec += camera.left;
-            else if (state.IsKeyDown(Key.D))
+            if (state.IsKeyDown(Key.D))
                 vec += -camera.left;
 
             if (vec != Vector2.Zero)
+            {
+                moveSpeed = MathHelper.Clamp(moveSpeed + 0.0875f, 0, maxMoveSpeed);
                 motion.Xz = vec.Normalized() * moveSpeed;
+            }
+            else
+                moveSpeed = 0;
         }
 
         public Item getEquippedItem()
         {
-            return new ItemBlock(EnumBlock.STONE);
+            return equipped;
         }
 
-        public void setEquippedItem()
+        public void setEquippedItem(Item i)
         {
-
+            equipped = i;
         }
     }
 
