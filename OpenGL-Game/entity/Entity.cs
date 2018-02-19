@@ -26,7 +26,7 @@ namespace OpenGL_Game
         {
             lastPos = new Vector3(pos);
 
-            motion.Y -= 0.0625f;
+            motion.Y -= 0.0675f;
 
             Move();
 

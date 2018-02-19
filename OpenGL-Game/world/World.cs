@@ -16,7 +16,6 @@ namespace OpenGL_Game
         public World(int sizeInChunks)
         {
             _chunks = new Dictionary<BlockPos, ChunkData>();
-
             _entities = new List<Entity>();
 
             int half = sizeInChunks / 2;
@@ -32,6 +31,27 @@ namespace OpenGL_Game
                     _chunks.Add(pos, new ChunkData(chunk, model));
                 }
             }
+        }
+
+        private World(List<ChunkCache> caches)
+        {
+            _chunks = new Dictionary<BlockPos, ChunkData>();
+            _entities = new List<Entity>();
+
+            foreach (var cache in caches)
+            {
+                var pos = cache.chunkPos;
+
+                var chunk = Chunk.CreateFromCache(cache);
+                var model = new ChunkModel();
+
+                _chunks.Add(pos, new ChunkData(chunk, model));
+            }
+        }
+
+        public static World Create(List<ChunkCache> caches)
+        {
+            return new World(caches);
         }
 
         public void addEntity(Entity e)
@@ -88,11 +108,11 @@ namespace OpenGL_Game
             return blocks;
         }
 
+        
+
         public Chunk getChunkFromPos(BlockPos pos)
         {
-            pos.setPos((int)Math.Floor(pos.x / 16f) * 16, (int)Math.Floor(pos.y / 16f) * 16, (int)Math.Floor(pos.z / 16f) * 16);
-
-            _chunks.TryGetValue(pos, out var chunkData);
+            _chunks.TryGetValue(pos.ChunkPos, out var chunkData);
 
             return chunkData?.chunk;
         }

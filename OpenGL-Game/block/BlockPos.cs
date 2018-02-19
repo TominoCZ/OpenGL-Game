@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Xml.Linq;
 using OpenTK;
 
 namespace OpenGL_Game
 {
+    [Serializable]
     public struct BlockPos
     {
         public int x { get; private set; }
@@ -12,7 +12,7 @@ namespace OpenGL_Game
 
         public Vector3 vector => new Vector3(x, y, z);
 
-        //public BlockPos ChunkPos => new BlockPos((int)Math.Floor(x / 16f) * 16, (int)Math.Floor(y / 16f) * 16, (int)Math.Floor(z / 16f) * 16);
+        public BlockPos ChunkPos => new BlockPos((int)Math.Floor(x / 16f) * 16, (int)Math.Floor(y / 16f) * 16, (int)Math.Floor(z / 16f) * 16);
 
         public static BlockPos operator -(BlockPos p1, BlockPos p2)
         {

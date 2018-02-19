@@ -23,9 +23,9 @@ namespace OpenGL_Game
 
             GL.EnableVertexAttribArray(0);
 
-            if (m.rawModel.hasUVs())
+            if (m.rawModel.hasUVs)
                 GL.EnableVertexAttribArray(1);
-            if (m.rawModel.hasNormals())
+            if (m.rawModel.hasNormals)
                 GL.EnableVertexAttribArray(2);
 
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -36,9 +36,9 @@ namespace OpenGL_Game
         {
             GL.DisableVertexAttribArray(0);
 
-            if (m.rawModel.hasUVs())
+            if (m.rawModel.hasUVs)
                 GL.DisableVertexAttribArray(1);
-            if (m.rawModel.hasNormals())
+            if (m.rawModel.hasNormals)
                 GL.EnableVertexAttribArray(2);
 
             GL.BindVertexArray(0);
@@ -48,8 +48,9 @@ namespace OpenGL_Game
         {
             var nodes = Game.INSTANCE.world.getChunkDataNodes();
 
-            foreach (var node in nodes)
+            for (var index = 0; index < nodes.Length; index++)
             {
+                var node = nodes[index];
                 var shaders = node.model.getShadersPresent();
 
                 for (int j = 0; j < shaders.Length; j++)

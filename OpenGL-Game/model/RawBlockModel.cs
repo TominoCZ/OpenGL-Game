@@ -7,6 +7,10 @@ namespace OpenGL_Game
         public int vaoID { get; }
         public int vertexCount { get; }
 
+        public bool hasUVs { get; }
+
+        public bool hasNormals { get; }
+
         private Dictionary<EnumFacing, RawQuad> quads;
 
         public RawBlockModel(int vaoID, Dictionary<EnumFacing, RawQuad> quads)
@@ -17,6 +21,14 @@ namespace OpenGL_Game
             foreach (var value in quads)
             {
                 vertexCount += value.Value.vertices.Length / 3;
+
+                var uv = value.Value.UVs.Length > 0;
+                var normal = value.Value.normal.Length > 0;
+
+                if (uv)
+                    hasUVs = true;
+                if (normal)
+                    hasNormals = true;
             }
         }
 
@@ -25,16 +37,6 @@ namespace OpenGL_Game
             quads.TryGetValue(side, out var quad);
 
             return quad;
-        }
-
-        public bool hasNormals()
-        {
-            return quads.Count > 0 && quads[0].normal.Length > 0;
-        }
-
-        public bool hasUVs()
-        {
-            return quads.Count > 0 && quads[0].UVs.Length > 0;
         }
     }
 }

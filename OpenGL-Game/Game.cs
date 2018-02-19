@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
+using OpenGL_Game.world;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
@@ -73,11 +76,19 @@ namespace OpenGL_Game
             ModelManager.registerBlockModel(bedrockModel);
             ModelManager.registerBlockModel(rareModel);
 
-            Console.WriteLine("DEBUG: generating world");
+            var loadedWorld = WorldLoader.loadWorld();
 
-            world = WorldGenerator.generate(0);
+            if (loadedWorld == null)
+            {
+                Console.WriteLine("DEBUG: generating world");
+                world = WorldGenerator.generate(0);
+                player = new EntityPlayerSP(Vector3.UnitY * (world.getHeightAtPos(0, 0) + 1));
+            }
+            else
+            {
+                world = loadedWorld;
+            }
 
-            player = new EntityPlayerSP(Vector3.UnitY * (world.getHeightAtPos(0, 0) + 1));
             player.setEquippedItem(new ItemBlock(EnumBlock.STONE));
 
             _gameRenderer = new GameRenderer(player.camera);
@@ -108,6 +119,8 @@ namespace OpenGL_Game
 
             new Thread(() =>
                 {
+                    bool wasSpaceDown = false;
+
                     while (true)
                     {
                         if (Visible)
@@ -136,6 +149,16 @@ namespace OpenGL_Game
                                     player.camera.yaw -= delta.X / 1000f;
                                     player.camera.pitch -= delta.Y / 1000f;
 
+                                    var keyboardState = Keyboard.GetState();
+
+                                    if (keyboardState.IsKeyDown(Key.Space) && !wasSpaceDown && player.onGround)
+                                    {
+                                        wasSpaceDown = true;
+                                        player.motion.Y = 0.475F;
+                                    }
+                                    else if ((!keyboardState.IsKeyDown(Key.Space) || player.onGround) && wasSpaceDown)
+                                        wasSpaceDown = false;
+
                                     getMouseOverObject();
                                 }
                             }
@@ -152,6 +175,27 @@ namespace OpenGL_Game
         private void GameLoop()
         {
             world.updateEntities();
+        }
+
+        public void closeGuiScreen()
+        {
+            guiScreen?.onClose();
+            guiScreen = null;
+
+            CursorVisible = false;
+        }
+
+        public void openGuiScreen(GuiScreen guiScreen)
+        {
+            this.guiScreen = guiScreen;
+
+            if (guiScreen is GuiIngameMenu)
+            {
+                var middle = new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
+                middle = PointToScreen(middle);
+
+                OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
+            }
         }
 
         private void getMouseOverObject()
@@ -260,27 +304,6 @@ namespace OpenGL_Game
             ProcessEvents(false);
         }
 
-        public void closeGuiScreen()
-        {
-            guiScreen?.onClose();
-            guiScreen = null;
-
-            CursorVisible = false;
-        }
-
-        public void openGuiScreen(GuiScreen guiScreen)
-        {
-            this.guiScreen = guiScreen;
-
-            if (guiScreen is GuiIngameMenu)
-            {
-                var middle = new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
-                middle = PointToScreen(middle);
-
-                OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
-            }
-        }
-
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
             if (Keyboard.GetState().IsKeyDown(Key.Escape))
@@ -382,6 +405,8 @@ namespace OpenGL_Game
             TextureManager.cleanUp();
 
             GraphicsManager.cleanUp();
+
+            WorldLoader.saveWorld(world);
         }
     }
 }

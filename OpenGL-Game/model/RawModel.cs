@@ -12,6 +12,10 @@ namespace OpenGL_Game
 
         public int vertexCount { get; }
 
+        public bool hasUVs { get; }
+
+        public bool hasNormals { get; }
+
         public List<RawQuad> quads;
 
         public RawModel(int vaoID, int valuesPerVertice, List<RawQuad> quads)
@@ -19,21 +23,18 @@ namespace OpenGL_Game
             this.vaoID = vaoID;
             this.quads = quads;
 
-            for (var index = 0; index < quads.Count; index++)
+            foreach (var quad in quads)
             {
-                var quad = quads[index];
                 vertexCount += quad.vertices.Length / valuesPerVertice;
+
+                var uv = quads[0].UVs.Length > 0;
+                var normal = quads[0].normal.Length > 0;
+
+                if (uv)
+                    hasUVs = true;
+                if (normal)
+                    hasNormals = true;
             }
-        }
-
-        public bool hasNormals()
-        {
-            return quads.Count > 0 && quads[0].normal.Length > 0;
-        }
-
-        public bool hasUVs()
-        {
-            return quads.Count > 0 && quads[0].UVs.Length > 0;
         }
     }
 }

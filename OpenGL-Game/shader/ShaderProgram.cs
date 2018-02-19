@@ -34,7 +34,7 @@ namespace OpenGL_Game
 
             getAllUniformLocations();
         }
-        
+
         protected int getUniformLocation(string uniform)
         {
             return GL.GetUniformLocation(ProgramID, uniform);

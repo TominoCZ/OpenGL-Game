@@ -7,10 +7,8 @@ namespace OpenGL_Game
     {
         public Camera camera;
 
-        public float maxMoveSpeed = 0.275f;
+        public float maxMoveSpeed = 0.255f;
         public float moveSpeed;
-
-        private bool wasSpaceDown;
 
         private Item equipped;
 
@@ -35,16 +33,6 @@ namespace OpenGL_Game
             var interpolatedPos = lastPos + (pos - lastPos) * particalTicks;
 
             camera.pos = interpolatedPos + Vector3.UnitY * 1.725f;
-
-            var state = Keyboard.GetState();
-
-            if (state.IsKeyDown(Key.Space) && !wasSpaceDown && onGround)
-            {
-                wasSpaceDown = true;
-                motion.Y = 0.45F;
-            }
-            else if ((!state.IsKeyDown(Key.Space) || onGround) && wasSpaceDown)
-                wasSpaceDown = false;
         }
 
         private void UpdateCamera()

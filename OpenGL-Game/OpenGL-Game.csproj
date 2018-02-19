@@ -70,11 +70,11 @@
     <Compile Include="util\MouseOverObject.cs" />
     <Compile Include="util\RayHelper.cs" />
     <Compile Include="texture\TextureUVNode.cs" />
-    <Compile Include="world\ChunkData.cs" />
+    <Compile Include="world\chunk\ChunkData.cs" />
     <Compile Include="world\WorldGenerator.cs" />
     <Compile Include="render\WorldRenderer.cs" />
     <Compile Include="render\Camera.cs" />
-    <Compile Include="world\Chunk.cs" />
+    <Compile Include="world\chunk\Chunk.cs" />
     <Compile Include="model\ChunkFragmentModel.cs" />
     <Compile Include="block\EnumFacing.cs" />
     <Compile Include="model\IModel.cs" />
@@ -94,6 +94,7 @@
     <Compile Include="shader\BlockShader.cs" />
     <Compile Include="texture\TextureManager.cs" />
     <Compile Include="world\World.cs" />
+    <Compile Include="world\WorldLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
