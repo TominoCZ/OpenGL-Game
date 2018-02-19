@@ -62,6 +62,7 @@
     <Compile Include="model\ChunkModel.cs" />
     <Compile Include="model\RawModel.cs" />
     <Compile Include="render\EntityRenderer.cs" />
+    <Compile Include="shader\BlockShaderUnlit.cs" />
     <Compile Include="shader\GuiShader.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
     <Compile Include="texture\BlockTextureUV.cs" />

@@ -26,7 +26,7 @@ namespace OpenGL_Game
 
             shader = new GuiShader("gui");
 
-            var texture = GraphicsManager.loadTexture("gui/cross");
+            var texture = GraphicsManager.loadTexture("gui/cross", true);
 
             if (texture != null)
             {

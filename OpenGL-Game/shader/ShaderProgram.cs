@@ -100,6 +100,7 @@ namespace OpenGL_Game
         }
 
         public abstract void loadTransformationMatrix(Matrix4 mat);
+        public abstract void loadProjectionMatrix(Matrix4 mat);
         public abstract void loadViewMatrix(Matrix4 mat);
         public abstract void loadLight(ModelLight light);
         protected abstract void getAllUniformLocations();

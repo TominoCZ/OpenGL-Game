@@ -21,7 +21,7 @@ namespace OpenGL_Game
 
         public static void stitchTextures()
         {
-            blockTextureAtlasID = GraphicsManager.loadTexture(generateTextureMap());
+            blockTextureAtlasID = GraphicsManager.loadTexture(generateTextureMap(), false);
         }
 
         private static Bitmap generateTextureMap()

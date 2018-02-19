@@ -67,7 +67,7 @@ namespace OpenGL_Game
             return new RawModel(vaoID, coordSize, quads);
         }
 
-        public static int loadTexture(Bitmap textureMap)
+        public static int loadTexture(Bitmap textureMap, bool smooth)
         {
             GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
 
@@ -84,9 +84,9 @@ namespace OpenGL_Game
             textureMap.UnlockBits(data);
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                (int)TextureMinFilter.Nearest);
+                (int)(smooth ? TextureMinFilter.Linear : TextureMinFilter.Nearest));
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                (int)TextureMagFilter.Nearest);
+                (int)(smooth ? TextureMagFilter.Linear : TextureMagFilter.Nearest));
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
                 (int)TextureWrapMode.MirroredRepeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
@@ -95,13 +95,13 @@ namespace OpenGL_Game
             return texID;
         }
 
-        public static Texture loadTexture(string textureName)
+        public static Texture loadTexture(string textureName, bool smooth)
         {
             try
             {
                 var bmp = (Bitmap)Image.FromFile($"assets/textures/{textureName}.png");
 
-                int id = loadTexture(bmp);
+                int id = loadTexture(bmp, smooth);
 
                 return new Texture(id, bmp.Size);
             }

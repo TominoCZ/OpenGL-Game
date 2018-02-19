@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using OpenTK;
-using OpenTK.Input;
 
 namespace OpenGL_Game
 {

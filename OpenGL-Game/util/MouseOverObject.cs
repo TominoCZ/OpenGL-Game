@@ -8,6 +8,10 @@ namespace OpenGL_Game
 
         public Vector3 hitVec;
 
+        public Vector3 normal;
+
+        public BlockPos blockPos;
+
         public object hit;
     }
 }

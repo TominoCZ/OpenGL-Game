@@ -26,10 +26,9 @@ namespace OpenGL_Game
             return new AxisAlignedBB(min + by, max + by);
         }
 
-        public AxisAlignedBB grow(float f)
+        public AxisAlignedBB shrink(Vector3 by)
         {
-            var vec = Vector3.One * f;
-            return new AxisAlignedBB(min - vec, max + vec);
+            return new AxisAlignedBB(min, max - by);
         }
 
         public AxisAlignedBB union(AxisAlignedBB other)

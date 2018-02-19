@@ -38,8 +38,7 @@ namespace OpenGL_Game
                 foreach (var shader in shaders)
                 {
                     shader.start();
-                    if (shader is BlockShader bShader)
-                        bShader.loadProjectionMatrix(projectionMatrix);
+                    shader.loadProjectionMatrix(projectionMatrix);
                     shader.stop();
                 }
             };

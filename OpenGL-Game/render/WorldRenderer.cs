@@ -14,7 +14,7 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-25, 100, -75), Vector3.One);
+            modelLight = new ModelLight(new Vector3(-25, 100, -75) * 5, Vector3.One);
         }
 
         private void beginRendering(IModel m)
@@ -56,18 +56,20 @@ namespace OpenGL_Game
                 {
                     var shader = shaders[j];
 
-                    if (node.model.getFragmentModelWithShader(shader, out var chunkModel))
+                    if (node.model.getFragmentModelWithShader(shader, out var chunkFragmentModel))
                     {
-                        beginRendering(chunkModel);
+                        beginRendering(chunkFragmentModel);
 
                         shader.start();
+
                         shader.loadLight(modelLight);
                         shader.loadViewMatrix(viewMatrix);
 
                         shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(node.chunk.chunkPos.vector));
-                        GL.DrawArrays(PrimitiveType.Quads, 0, chunkModel.rawModel.vertexCount);
 
-                        finishRendering(chunkModel);
+                        GL.DrawArrays(PrimitiveType.Quads, 0, chunkFragmentModel.rawModel.vertexCount);
+
+                        finishRendering(chunkFragmentModel);
                         shader.stop();
                     }
                 }
