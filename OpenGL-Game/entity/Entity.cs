@@ -24,7 +24,7 @@ namespace OpenGL_Game
 
         public virtual void Update()
         {
-            lastPos = pos;
+            lastPos = new Vector3(pos);
 
             motion.Y -= 0.0625f;
 

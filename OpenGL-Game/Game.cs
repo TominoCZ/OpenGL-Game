@@ -40,8 +40,6 @@ namespace OpenGL_Game
 
         public static Game INSTANCE { get; private set; }
 
-        private DateTime lastTick;
-
         public Game()
         {
             INSTANCE = this;
@@ -104,12 +102,10 @@ namespace OpenGL_Game
 
                     while (true)
                     {
-                        timer.Reset();
-
                         if (Visible)
                             GameLoop();
 
-                        timer.Start();
+                        timer.Restart();
                         Thread.Sleep(50);
                         counter++;
 
@@ -151,7 +147,6 @@ namespace OpenGL_Game
 
             world.generateChunkModels();
             world.addEntity(player);
-            Console.WriteLine("DEBUG: ---DONE---");
         }
 
         private void GameLoop()
@@ -161,44 +156,56 @@ namespace OpenGL_Game
 
         private void getMouseOverObject()
         {
-            int radius = 4;
+            int radius = 5;
 
             List<MouseOverObject> moos = new List<MouseOverObject>();
 
-            for (int x = -(radius); x <= radius; x++)
+            for (int z = -radius; z <= radius; z++)
             {
-                for (int y = -(radius); y <= radius; y++)
+                for (int y = -radius; y <= radius; y++)
                 {
-                    for (int z = -(radius); z <= radius; z++)
+                    for (int x = -radius; x <= radius; x++)
                     {
-                        var pos = new BlockPos(player.camera.pos.X + x, player.camera.pos.Y + y, player.camera.pos.Z + z);
-                        var block = world.getBlock(pos);
+                        var vec = new Vector3(x, y, z) + Vector3.One * 0.5f + player.camera.pos;
+                        float f = (vec - player.camera.pos).LengthFast;
 
-                        if (block != EnumBlock.AIR)
+                        if (f <= radius)
                         {
-                            var model = ModelManager.getModelForBlock(EnumBlock.RARE);
-                            var bb = model.boundingBox.offset(pos.vector);
+                            var pos = new BlockPos(vec);
+                            var block = world.getBlock(pos);
 
-                            var hitSomething = RayHelper.rayIntersectsBB(player.camera.pos, player.camera.getLookVec(), bb, out var hitPos, out var normal);
-
-                            if (hitSomething)
+                            if (block != EnumBlock.AIR)
                             {
-                                var sideHit = EnumFacing.UP;
+                                var model = ModelManager.getModelForBlock(EnumBlock.RARE);
+                                var bb = model.boundingBox.offset(pos.vector);
 
-                                if (normal.X < 0)
-                                    sideHit = EnumFacing.WEST;
-                                else if (normal.X > 0)
-                                    sideHit = EnumFacing.EAST;
-                                if (normal.Y < 0)
-                                    sideHit = EnumFacing.DOWN;
-                                else if (normal.Y > 0)
-                                    sideHit = EnumFacing.UP;
-                                if (normal.Z < 0)
-                                    sideHit = EnumFacing.NORTH;
-                                else if (normal.Z > 0)
-                                    sideHit = EnumFacing.SOUTH;
+                                var hitSomething = RayHelper.rayIntersectsBB(player.camera.pos,
+                                    player.camera.getLookVec(), bb, out var hitPos, out var normal);
 
-                                moos.Add(new MouseOverObject { hit = block, hitVec = hitPos - normal * 0.5f, sideHit = sideHit });
+                                if (hitSomething)
+                                {
+                                    var sideHit = EnumFacing.UP;
+
+                                    if (normal.X < 0)
+                                        sideHit = EnumFacing.WEST;
+                                    else if (normal.X > 0)
+                                        sideHit = EnumFacing.EAST;
+                                    if (normal.Y < 0)
+                                        sideHit = EnumFacing.DOWN;
+                                    else if (normal.Y > 0)
+                                        sideHit = EnumFacing.UP;
+                                    if (normal.Z < 0)
+                                        sideHit = EnumFacing.NORTH;
+                                    else if (normal.Z > 0)
+                                        sideHit = EnumFacing.SOUTH;
+
+                                    moos.Add(new MouseOverObject
+                                    {
+                                        hit = block,
+                                        hitVec = hitPos - normal * 0.5f,
+                                        sideHit = sideHit
+                                    });
+                                }
                             }
                         }
                     }
@@ -209,11 +216,12 @@ namespace OpenGL_Game
 
             MouseOverObject closest = null;
 
-            foreach (var moo in moos)
+            for (var index = 0; index < moos.Count; index++)
             {
+                var moo = moos[index];
                 var l = Math.Abs((player.camera.pos - moo.hitVec).Length);
 
-                if (l < dist && (EnumBlock)moo.hit != EnumBlock.AIR)
+                if (l < dist && (EnumBlock) moo.hit != EnumBlock.AIR)
                 {
                     dist = l;
 
