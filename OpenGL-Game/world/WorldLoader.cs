@@ -15,22 +15,22 @@ namespace OpenGL_Game.world
 
         public static void saveWorld(World w)
         {
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            var nodes = w.getChunkDataNodes();
-
-            List<ChunkCache> caches = new List<ChunkCache>();
-
-            foreach (var node in nodes)
-            {
-                var cache = node.chunk.createChunkCache();
-
-                caches.Add(cache);
-            }
-
             try
             {
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                var nodes = w.getChunkDataNodes();
+
+                List<ChunkCache> caches = new List<ChunkCache>();
+
+                foreach (var node in nodes)
+                {
+                    var cache = node.chunk.createChunkCache();
+
+                    caches.Add(cache);
+                }
+
                 var wcn = new WorldCacheNode(caches, Game.INSTANCE.player.pos);
 
                 var bf = new BinaryFormatter();

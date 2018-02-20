@@ -10,10 +10,13 @@
 
         public AxisAlignedBB boundingBox { get; }
 
-        public BlockModel(EnumBlock block, ShaderProgram shader)
+        public bool canBeInteractedWith { get; }
+
+        public BlockModel(EnumBlock block, ShaderProgram shader, bool canBeInteractedWith)
         {
             this.shader = shader;
             this.block = block;
+            this.canBeInteractedWith = canBeInteractedWith;
 
             var cube = ModelManager.createTexturedCubeModel(block);
 
@@ -22,7 +25,7 @@
             boundingBox = AxisAlignedBB.BLOCK_FULL;
         }
 
-        public BlockModel(EnumBlock block, ShaderProgram shader, AxisAlignedBB bb) : this(block, shader)
+        public BlockModel(EnumBlock block, ShaderProgram shader, AxisAlignedBB bb, bool canBeInteractedWith) : this(block, shader, canBeInteractedWith)
         {
             boundingBox = bb;
         }

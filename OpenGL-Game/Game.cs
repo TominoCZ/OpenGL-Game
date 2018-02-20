@@ -29,7 +29,7 @@ namespace OpenGL_Game
     {
         private WindowState lastWindowState;
 
-        private Stopwatch queueTimer = Stopwatch.StartNew();
+        private Stopwatch frameTimer = Stopwatch.StartNew();
         private Stopwatch timer = Stopwatch.StartNew();
         private Point mouseLast;
 
@@ -39,6 +39,8 @@ namespace OpenGL_Game
 
         public EntityPlayerSP player;
         public World world;
+
+        private int FPS;
 
         public GuiScreen guiScreen { get; private set; }
 
@@ -68,18 +70,31 @@ namespace OpenGL_Game
             var shader = new BlockShader("block");
             var shader_unlit = new BlockShaderUnlit("block_unlit");
 
-            var stoneModel = new BlockModel(EnumBlock.STONE, shader);
-            var grassModel = new BlockModel(EnumBlock.GRASS, shader);
-            var dirtModel = new BlockModel(EnumBlock.DIRT, shader);
-            var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader);
-            var rareModel = new BlockModel(EnumBlock.RARE, shader_unlit);
+            var stoneModel = new BlockModel(EnumBlock.STONE, shader, false);
+            var grassModel = new BlockModel(EnumBlock.GRASS, shader, false);
+            var dirtModel = new BlockModel(EnumBlock.DIRT, shader, false);
+            var craftingTableModel = new BlockModel(EnumBlock.CRAFTING_TABLE, shader, true);
+            var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader, false);
+            var rareModel = new BlockModel(EnumBlock.RARE, shader_unlit, false);
 
             ModelManager.registerBlockModel(stoneModel);
             ModelManager.registerBlockModel(grassModel);
             ModelManager.registerBlockModel(dirtModel);
+            ModelManager.registerBlockModel(craftingTableModel);
             ModelManager.registerBlockModel(bedrockModel);
             ModelManager.registerBlockModel(rareModel);
 
+            _gameRenderer = new GameRenderer();
+            player = new EntityPlayerSP();
+            _gameRenderer.setCamera(player.camera);
+
+            openGuiScreen(new GuiScreenMainMenu());
+
+            //startGame();
+        }
+
+        public void startGame()
+        {
             var loadedWorld = WorldLoader.loadWorld();
 
             if (loadedWorld == null)
@@ -95,9 +110,11 @@ namespace OpenGL_Game
 
             player.setEquippedItem(new ItemBlock(EnumBlock.STONE));
 
-            _gameRenderer = new GameRenderer(player.camera);
+            _gameRenderer.setCamera(player.camera);
 
+            world.setBlock(EnumBlock.CRAFTING_TABLE, new BlockPos(player.camera.pos + Vector3.UnitY * 2), false);
             world.generateChunkModels();
+
             world.addEntity(player);
 
             runUpdateThreads();
@@ -114,23 +131,12 @@ namespace OpenGL_Game
                         if (Visible)
                         {
                             var state = OpenTK.Input.Mouse.GetState();
-                            var stateScreen = OpenTK.Input.Mouse.GetCursorState();
 
                             var point = new Point(state.X, state.Y);
 
                             if (guiScreen == null)
                             {
-                                var clientPoint = PointToClient(new Point(stateScreen.X, stateScreen.Y));
-
-                                bool outside = clientPoint.X < 0 || clientPoint.Y < 0 ||
-                                               clientPoint.X > ClientRectangle.Width ||
-                                               clientPoint.Y > ClientRectangle.Height;
-
-                                var b = Focused && !outside;
-
-                                CursorVisible = !b;
-
-                                if (b)
+                                if (!(CursorVisible = !Focused))
                                 {
                                     var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
 
@@ -148,6 +154,9 @@ namespace OpenGL_Game
                                         wasSpaceDown = false;
 
                                     getMouseOverObject();
+
+                                    var middle = PointToScreen(new Point(ClientSize.Width / 2, ClientSize.Height / 2));
+                                    OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
                                 }
                             }
 
@@ -162,7 +171,7 @@ namespace OpenGL_Game
 
         private void GameLoop()
         {
-            world.updateEntities();
+            world?.updateEntities();
         }
 
         public void closeGuiScreen()
@@ -177,7 +186,7 @@ namespace OpenGL_Game
         {
             this.guiScreen = guiScreen;
 
-            if (guiScreen is GuiIngameMenu)
+            if (guiScreen is GuiScreenIngameMenu)
             {
                 var middle = new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
                 middle = PointToScreen(middle);
@@ -284,13 +293,10 @@ namespace OpenGL_Game
             if (timer.ElapsedMilliseconds >= 50)
             {
                 GameLoop();
-                timer.Reset();
+                timer.Restart();
             }
 
             float partialTicks = getRenderPartialTicks();
-
-            if (!timer.IsRunning)
-                timer.Start();
 
             if (!Focused && guiScreen == null)
                 openGuiScreen(new GuiScreen());
@@ -310,19 +316,31 @@ namespace OpenGL_Game
 
                     MAIN_THREAD_QUEUE.Remove(task);
                 }
-
-                queueTimer.Restart();
             }
+
+            if (frameTimer.ElapsedMilliseconds >= 1000)
+            {
+                frameTimer.Restart();
+
+                Console.WriteLine($"{FPS} FPS");
+
+                FPS = 0;
+            }
+
+            FPS++;
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
             if (Keyboard.GetState().IsKeyDown(Key.Escape))
             {
+                if (guiScreen is GuiScreenMainMenu)
+                    return;
+
                 if (guiScreen != null)
                     closeGuiScreen();
                 else
-                    openGuiScreen(new GuiIngameMenu());
+                    openGuiScreen(new GuiScreenIngameMenu());
             }
 
             if (Keyboard.GetState().IsKeyDown(Key.LAlt | Key.F4))
@@ -363,32 +381,54 @@ namespace OpenGL_Game
                             }
                         }
 
-                        //place
-                        if (player.getEquippedItem() is ItemBlock itemBlock && e.Button == MouseButton.Right)
+                        //place/interact
+                        if (e.Button == MouseButton.Right)
                         {
-                            pos = pos.offset(mouseOverObject.sideHit);
+                            var block = world.getBlock(pos);
+                            var model = ModelManager.getModelForBlock(block);
 
-                            var blockAtPos = world.getBlock(pos);
-
-                            var heldBlock = itemBlock.getBlock();
-                            var blockBB = ModelManager.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
-
-                            if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntitiesBBs(blockBB).Count == 0)
+                            if (model.canBeInteractedWith)
                             {
-                                var posUnder = pos.offset(EnumFacing.DOWN);
-                                var blockUnder = world.getBlock(posUnder);
+                                switch (block)
+                                {
+                                    case EnumBlock.CRAFTING_TABLE:
+                                        openGuiScreen(new GuiScreenCrafting());
+                                        break;
+                                }
+                            }
+                            else if (player.getEquippedItem() is ItemBlock itemBlock)
+                            {
+                                pos = pos.offset(mouseOverObject.sideHit);
 
-                                if (blockUnder == EnumBlock.GRASS)
-                                    world.setBlock(EnumBlock.DIRT, posUnder, false);
+                                var blockAtPos = world.getBlock(pos);
 
-                                world.setBlock(heldBlock, pos, true);
+                                var heldBlock = itemBlock.getBlock();
+                                var blockBB = ModelManager.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
+
+                                if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntitiesBBs(blockBB).Count == 0)
+                                {
+                                    var posUnder = pos.offset(EnumFacing.DOWN);
+                                    var blockUnder = world.getBlock(posUnder);
+
+                                    if (blockUnder == EnumBlock.GRASS)
+                                        world.setBlock(EnumBlock.DIRT, posUnder, false);
+
+                                    world.setBlock(heldBlock, pos, true);
+                                }
                             }
                         }
 
-                        //break;
+                        //break
                         if (e.Button == MouseButton.Left)
                             world.setBlock(EnumBlock.AIR, pos, true);
                     }
+                }
+                else
+                {
+                    var state = OpenTK.Input.Mouse.GetCursorState();
+                    var point = PointToClient(new Point(state.X, state.Y));
+
+                    guiScreen.onMouseClick(point.X, point.Y);
                 }
             }
         }
@@ -418,60 +458,6 @@ namespace OpenGL_Game
             GraphicsManager.cleanUp();
 
             WorldLoader.saveWorld(world);
-        }
-    }
-
-    class ThreadSafeList<T>
-    {
-        private List<T> list;
-
-        public int Count => list.Count;
-
-        public ThreadSafeList()
-        {
-            list = new List<T>();
-        }
-
-        public void Add(T item)
-        {
-            lock (list)
-            {
-                list.Add(item);
-            }
-        }
-
-        public void Remove(T item)
-        {
-            lock (list)
-            {
-                list.Remove(item);
-            }
-        }
-
-        public void Clear()
-        {
-            lock (list)
-            {
-                list.Clear();
-            }
-        }
-
-        public T this[int index]
-        {
-            get
-            {
-                lock (list)
-                {
-                    return list[index];
-                }
-            }
-            set
-            {
-                lock (list)
-                {
-                    list[index] = value;
-                }
-            }
         }
     }
 }

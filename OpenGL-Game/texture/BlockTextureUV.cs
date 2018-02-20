@@ -37,5 +37,16 @@ namespace OpenGL_Game
                 setUVForSide(side, from, to);
             }
         }
+
+        public void fillEmptySides(TextureUVNode with)
+        {
+            var values = Enum.GetValues(typeof(EnumFacing));
+
+            foreach (EnumFacing side in values)
+            {
+                if (getUVForSide(side) == null)
+                    setUVForSide(side, with.start, with.end);
+            }
+        }
     }
 }

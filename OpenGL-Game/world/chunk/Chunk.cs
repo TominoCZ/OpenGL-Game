@@ -111,7 +111,11 @@ namespace OpenGL_Game
                                 {
 
                                 }*/
-                                quads?.Add(((RawBlockModel)blockModel.rawModel).getQuadForSide(dir).offset(pos));
+
+                                var quad = ((RawBlockModel)blockModel.rawModel)?.getQuadForSide(dir)?.offset(pos);
+
+                                if (quad != null)
+                                    quads.Add(quad);
                             }
                         }
                     }

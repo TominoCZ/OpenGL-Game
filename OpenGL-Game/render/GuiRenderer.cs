@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using OpenGL_Game.gui;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -51,7 +52,10 @@ namespace OpenGL_Game
             GL.BindVertexArray(quad.vaoID);
             GL.EnableVertexAttribArray(0);
 
-            gui.render(shader);
+            var state = OpenTK.Input.Mouse.GetCursorState();
+            var mouse = Game.INSTANCE.PointToClient(new Point(state.X, state.Y));
+
+            gui.render(shader, mouse.X, mouse.Y);
 
             GL.DisableVertexAttribArray(0);
             GL.BindVertexArray(0);

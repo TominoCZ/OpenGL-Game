@@ -192,6 +192,11 @@ namespace OpenGL_Game
         {
             GL.DeleteVertexArray(vaoID);
         }
+
+        public static void deleteTexture(int vaoID)
+        {
+            GL.DeleteTexture(vaoID);
+        }
     }
 
     class Texture

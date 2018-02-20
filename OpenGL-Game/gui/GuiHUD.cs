@@ -23,7 +23,7 @@ namespace OpenGL_Game.gui
                 slot_selected = new GuiTexture(slot_selected_texture.textureID, slot_selected_texture.textureSize, Vector2.UnitX * 1 / 16f);
         }
 
-        public override void render(GuiShader shader)
+        public override void render(GuiShader shader, int mouseX, int mouseY)
         {
             renderTexture(shader, slot);
             renderTexture(shader, slot_selected);

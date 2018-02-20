@@ -15,7 +15,7 @@ namespace OpenGL_Game
             this.crosshairTexture = crosshairTexture;
         }
 
-        public override void render(GuiShader shader)
+        public override void render(GuiShader shader, int mouseX, int mouseY)
         {
             renderTexture(shader, crosshairTexture);
         }

@@ -21,6 +21,14 @@ namespace OpenGL_Game
             boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(pos);
         }
 
+        public EntityPlayerSP() : base(Vector3.Zero)
+        {
+            camera = new Camera();
+            camera.pos = pos;
+
+            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(pos);
+        }
+
         public override void Update()
         {
             if (Game.INSTANCE.Focused)

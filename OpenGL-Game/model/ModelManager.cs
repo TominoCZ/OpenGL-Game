@@ -3,17 +3,6 @@ using System.Net.Configuration;
 
 namespace OpenGL_Game
 {
-    public enum EnumBlock
-    {
-        AIR,
-        STONE,
-        GRASS,
-        DIRT,
-        BEDROCK,
-        RARE,
-        MISSING
-    }
-
     class ModelManager
     {
         private static Dictionary<EnumBlock, BlockModel> models = new Dictionary<EnumBlock, BlockModel>();

@@ -149,7 +149,6 @@ namespace OpenGL_Game
                     EnumFacing side = sides[index];
 
                     var p = pos.offset(side);
-
                     var ch = getChunkFromPos(p);
 
                     if (ch == null && p.ChunkPos.y >= 0)

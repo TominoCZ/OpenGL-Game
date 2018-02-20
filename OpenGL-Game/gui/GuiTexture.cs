@@ -28,5 +28,21 @@ namespace OpenGL_Game
         {
 
         }
+
+        public GuiTexture(Texture tex, Vector2 pos, Vector2 scale) : base(tex.textureID, tex.textureSize)
+        {
+            this.pos = pos;
+            this.scale = scale;
+        }
+
+        public GuiTexture(Texture tex, Vector2 pos) : this(tex.textureID, tex.textureSize, pos, Vector2.One)
+        {
+
+        }
+
+        public GuiTexture(Texture tex) : this(tex.textureID, tex.textureSize, Vector2.Zero, Vector2.One)
+        {
+
+        }
     }
 }

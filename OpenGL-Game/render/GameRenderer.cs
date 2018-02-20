@@ -17,15 +17,37 @@ namespace OpenGL_Game
         public EntityRenderer entityRenderer;
         public GuiRenderer guiRenderer;
 
-        public float NEAR_PLANE = 0.08f;
+        public float NEAR_PLANE = 0.085f;
         public float FAR_PLANE = 100f;
 
-        private int FOV = 65;
+        public float FOV = 65;
 
         public GameRenderer(Camera camera)
         {
             this.camera = camera;
 
+            worldRenderer = new WorldRenderer();
+            entityRenderer = new EntityRenderer();
+            guiRenderer = new GuiRenderer();
+
+            Game.INSTANCE.Resize += (s, e) =>
+            {
+                var shaders = ModelManager.getAllRegisteredShaders();
+                createProjectionMatrix();
+
+                foreach (var shader in shaders)
+                {
+                    shader.start();
+                    shader.loadProjectionMatrix(projectionMatrix);
+                    shader.stop();
+                }
+            };
+
+            prepare();
+        }
+
+        public GameRenderer()
+        {
             worldRenderer = new WorldRenderer();
             entityRenderer = new EntityRenderer();
             guiRenderer = new GuiRenderer();
@@ -56,13 +78,19 @@ namespace OpenGL_Game
 
         public void render(float partialTicks)
         {
+            if (camera == null)
+                return;
+            
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             prepare();
 
             var viewMatrix = MatrixHelper.createViewMatrix(camera);
 
-            worldRenderer.render(viewMatrix);
-            entityRenderer.render(partialTicks);
+            if (Game.INSTANCE.world != null)
+            {
+                worldRenderer.render(viewMatrix);
+                entityRenderer.render(partialTicks);
+            }
 
             //render other gui
             guiRenderer.renderCrosshair();
@@ -76,7 +104,7 @@ namespace OpenGL_Game
             }
         }
 
-        private void createProjectionMatrix()
+        public void createProjectionMatrix()
         {
             projectionMatrix = new Matrix4();
 
@@ -91,6 +119,11 @@ namespace OpenGL_Game
             projectionMatrix.M34 = -1;
             projectionMatrix.M43 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length);
             projectionMatrix.M44 = 0;
+        }
+
+        public void setCamera(Camera camera)
+        {
+            this.camera = camera;
         }
     }
 }

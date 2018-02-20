@@ -53,10 +53,14 @@
     <Compile Include="entity\Entity.cs" />
     <Compile Include="entity\EntityPlayerSP.cs" />
     <Compile Include="gui\Gui.cs" />
+    <Compile Include="gui\GuiButton.cs" />
     <Compile Include="gui\GuiCrosshair.cs" />
     <Compile Include="gui\GuiHUD.cs" />
-    <Compile Include="gui\GuiIngameMenu.cs" />
+    <Compile Include="gui\GuiScreenIngameMenu.cs" />
     <Compile Include="gui\GuiScreen.cs" />
+    <Compile Include="block\EnumBlock.cs" />
+    <Compile Include="gui\GuiScreenCrafting.cs" />
+    <Compile Include="gui\GuiScreenMainMenu.cs" />
     <Compile Include="render\GuiRenderer.cs" />
     <Compile Include="gui\GuiTexture.cs" />
     <Compile Include="model\ChunkModel.cs" />
@@ -64,6 +68,7 @@
     <Compile Include="render\EntityRenderer.cs" />
     <Compile Include="shader\BlockShaderUnlit.cs" />
     <Compile Include="shader\GuiShader.cs" />
+    <Compile Include="util\ThreadSafeList.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
     <Compile Include="texture\BlockTextureUV.cs" />
     <Compile Include="util\MathUtil.cs" />
@@ -101,6 +106,5 @@
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
