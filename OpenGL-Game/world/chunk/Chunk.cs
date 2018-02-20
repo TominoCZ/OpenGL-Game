@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace OpenGL_Game
 {
@@ -9,7 +10,7 @@ namespace OpenGL_Game
 
         public BlockPos chunkPos { get; }
 
-        private List<int> modelVaoIDs;
+        private ThreadSafeList<int> modelVaoIDs;
 
         public bool unloaded = false;
 
@@ -19,12 +20,12 @@ namespace OpenGL_Game
 
             chunkBlocks = new int[16, 16, 16];
 
-            modelVaoIDs = new List<int>();
+            modelVaoIDs = new ThreadSafeList<int>();
         }
 
         private Chunk(ChunkCache cache)
         {
-            modelVaoIDs = new List<int>();
+            modelVaoIDs = new ThreadSafeList<int>();
 
             chunkPos = cache.chunkPos;
             chunkBlocks = cache.chunkBlocks;
@@ -35,12 +36,9 @@ namespace OpenGL_Game
             return new Chunk(cache);
         }
 
-        public void setBlock(BlockPos pos, EnumBlock blockType, bool redraw)
+        public void setBlock(BlockPos pos, EnumBlock blockType)
         {
             chunkBlocks[pos.x, pos.y, pos.z] = (int)blockType;
-
-            if (redraw)
-                generateModel();
         }
 
         public EnumBlock getBlock(BlockPos pos)
@@ -59,16 +57,6 @@ namespace OpenGL_Game
 
         public ChunkModel generateModel()
         {
-            for (var index = 0; index < modelVaoIDs.Count; index++)
-            {
-                var id = modelVaoIDs[index];
-                GraphicsManager.deleteVAO(id);
-            }
-
-            modelVaoIDs.Clear();
-
-            var MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
-
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             var pos = new BlockPos(0, 0, 0);
             List<RawQuad> quads;
@@ -77,6 +65,9 @@ namespace OpenGL_Game
             var l_y = chunkBlocks.GetLength(1);
             var l_z = chunkBlocks.GetLength(2);
 
+            var MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
+
+            //generate the model / fill MODEL_RAW
             for (int z = 0; z < l_z; z++)
             {
                 for (int y = 0; y < l_y; y++)
@@ -110,14 +101,27 @@ namespace OpenGL_Game
 
             ChunkModel model = new ChunkModel();
 
-            foreach (var m in MODEL_RAW)
+            var finish = new ThreadLock(() =>
             {
-                var bakedModel = new ChunkFragmentModel(m.Key, m.Value);
+                for (var index = 0; index < modelVaoIDs.Count; index++)
+                {
+                    var id = modelVaoIDs[index];
+                    GraphicsManager.deleteVAO(id);
+                }
 
-                model.addFragmentModelWithShader(m.Key, bakedModel);
+                modelVaoIDs.Clear();
 
-                modelVaoIDs.Add(bakedModel.rawModel.vaoID);
-            }
+                foreach (var m in MODEL_RAW)
+                {
+                    var bakedModel = new ChunkFragmentModel(m.Key, m.Value);
+
+                    model.addFragmentModelWithShader(m.Key, bakedModel);
+
+                    modelVaoIDs.Add(bakedModel.rawModel.vaoID);
+                }
+            });
+            Game.MAIN_THREAD_QUEUE.Add(finish);
+            finish.WaitFor();
 
             return model;
         }

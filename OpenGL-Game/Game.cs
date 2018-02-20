@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using OpenGL_Game.world;
@@ -28,6 +29,7 @@ namespace OpenGL_Game
     {
         private WindowState lastWindowState;
 
+        private Stopwatch queueTimer = Stopwatch.StartNew();
         private Stopwatch timer = Stopwatch.StartNew();
         private Point mouseLast;
 
@@ -41,6 +43,8 @@ namespace OpenGL_Game
         public GuiScreen guiScreen { get; private set; }
 
         public static Game INSTANCE { get; private set; }
+
+        public static ThreadSafeList<ThreadLock> MAIN_THREAD_QUEUE = new ThreadSafeList<ThreadLock>();
 
         public Game()
         {
@@ -293,6 +297,20 @@ namespace OpenGL_Game
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            if (MAIN_THREAD_QUEUE.Count > 0)// && queueTimer.ElapsedMilliseconds >= 2)
+            {
+                for (int i = 0; i < MAIN_THREAD_QUEUE.Count; i++)
+                {
+                    var task = MAIN_THREAD_QUEUE[i];
+
+                    task.ExecuteCode();
+
+                    MAIN_THREAD_QUEUE.Remove(task);
+                }
+
+                queueTimer.Restart();
+            }
+
             float partialTicks = getRenderPartialTicks();
 
             if (!Focused && guiScreen == null)
@@ -407,6 +425,62 @@ namespace OpenGL_Game
             GraphicsManager.cleanUp();
 
             WorldLoader.saveWorld(world);
+        }
+    }
+
+    class ThreadSafeList<T>
+    {
+        private List<T> list;
+
+        private int _count;
+
+        public int Count => list.Count;
+
+        public ThreadSafeList()
+        {
+            list = new List<T>();
+        }
+
+        public void Add(T item)
+        {
+            lock (list)
+            {
+                list.Add(item);
+            }
+        }
+
+        public void Remove(T item)
+        {
+            lock (list)
+            {
+                list.Remove(item);
+            }
+        }
+
+        public void Clear()
+        {
+            lock (list)
+            {
+                list.Clear();
+            }
+        }
+
+        public T this[int index]
+        {
+            get
+            {
+                lock (list)
+                {
+                    return list[index];
+                }
+            }
+            set
+            {
+                lock (list)
+                {
+                    list[index] = value;
+                }
+            } 
         }
     }
 }

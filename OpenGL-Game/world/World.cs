@@ -1,7 +1,9 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenTK;
 
@@ -108,8 +110,6 @@ namespace OpenGL_Game
             return blocks;
         }
 
-        
-
         public Chunk getChunkFromPos(BlockPos pos)
         {
             _chunks.TryGetValue(pos.ChunkPos, out var chunkData);
@@ -128,7 +128,7 @@ namespace OpenGL_Game
             if (chunk == null)
                 return;
 
-            chunk.setBlock(pos - chunk.chunkPos, blockType, redraw);
+            chunk.setBlock(pos - chunk.chunkPos, blockType);
 
             if (redraw)
             {
@@ -186,33 +186,70 @@ namespace OpenGL_Game
 
         private void updateModelForChunk(Chunk chunk)
         {
-            var dataNodes = getChunkDataNodes();
+            new Thread(() =>
+               {
+                   var dataNodes = getChunkDataNodes();
 
-            for (var index = 0; index < dataNodes.Length; index++)
-            {
-                var node = dataNodes[index];
+                   for (var index = 0; index < dataNodes.Length; index++)
+                   {
+                       var node = dataNodes[index];
 
-                if (node.chunk == chunk)
-                {
-                    node.model = node.chunk.generateModel();
-                    break;
-                }
-            }
+                       if (node.chunk == chunk)
+                       {
+                           node.model = node.chunk.generateModel();
+                           break;
+                       }
+                   }
+               }).Start();
         }
 
         public void generateChunkModels()
         {
-            var chunkDatas = _chunks.Values.ToArray();
-
-            for (var index = 0; index < chunkDatas.Length; index++)
+            new Thread(() =>
             {
-                var chunkData = chunkDatas[index];
+                var chunkDatas = _chunks.Values.ToArray();
 
-                if (chunkData.chunk.unloaded)
-                    continue;
+                for (var index = 0; index < chunkDatas.Length; index++)
+                {
+                    var chunkData = chunkDatas[index];
 
-                chunkData.model = chunkData.chunk.generateModel();
+                    if (chunkData.chunk.unloaded)
+                        continue;
+
+                    chunkData.model = chunkData.chunk.generateModel();
+                }
+            }).Start();
+        }
+    }
+
+    class ThreadLock
+    {
+        private bool locked;
+
+        public void Lock() => locked = true;
+        public void Unlock() => locked = false;
+
+        public delegate void Method();
+
+        private Method method;
+
+        public ThreadLock(Method m)
+        {
+            method = m;
+        }
+
+        public void WaitFor()
+        {
+            while (locked)
+            {
+                Thread.Sleep(1);
             }
+        }
+
+        public void ExecuteCode()
+        {
+            method();
+            Unlock();
         }
     }
 }
