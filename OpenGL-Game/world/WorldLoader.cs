@@ -62,7 +62,9 @@ namespace OpenGL_Game.world
                 }
 
                 var world = World.Create(wcn.caches);
-                world.addEntity(new EntityPlayerSP(wcn.lastPlayerPos));
+                world.addEntity(Game.INSTANCE.player = new EntityPlayerSP(wcn.lastPlayerPos));
+
+                return world;
             }
             catch
             {

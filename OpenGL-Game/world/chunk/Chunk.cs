@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace OpenGL_Game
 {
@@ -10,8 +11,6 @@ namespace OpenGL_Game
 
         public BlockPos chunkPos { get; }
 
-        private ThreadSafeList<int> modelVaoIDs;
-
         public bool unloaded = false;
 
         public Chunk(BlockPos chunkPos)
@@ -19,14 +18,10 @@ namespace OpenGL_Game
             this.chunkPos = chunkPos;
 
             chunkBlocks = new int[16, 16, 16];
-
-            modelVaoIDs = new ThreadSafeList<int>();
         }
 
         private Chunk(ChunkCache cache)
         {
-            modelVaoIDs = new ThreadSafeList<int>();
-
             chunkPos = cache.chunkPos;
             chunkBlocks = cache.chunkBlocks;
         }
@@ -43,11 +38,7 @@ namespace OpenGL_Game
 
         public EnumBlock getBlock(BlockPos pos)
         {
-            var thisChunk = pos.x >= 0 && pos.x < chunkBlocks.GetLength(0) &&
-                            pos.y >= 0 && pos.y < chunkBlocks.GetLength(1) &&
-                            pos.z >= 0 && pos.z < chunkBlocks.GetLength(2);
-
-            if (thisChunk)
+            if (isPosInChunk(pos))
                 return (EnumBlock)chunkBlocks[pos.x, pos.y, pos.z];
 
             var block = Game.INSTANCE.world.getBlock(pos + chunkPos);
@@ -55,7 +46,31 @@ namespace OpenGL_Game
             return block;
         }
 
-        public ChunkModel generateModel()
+        private bool isPosInChunk(BlockPos pos)
+        {
+            return
+                pos.x >= 0 && pos.x < chunkBlocks.GetLength(0) &&
+                pos.y >= 0 && pos.y < chunkBlocks.GetLength(1) &&
+                pos.z >= 0 && pos.z < chunkBlocks.GetLength(2);
+        }
+
+        public bool isBlockAbove(BlockPos pos)
+        {
+            if (isPosInChunk(pos))
+            {
+                for (int y = pos.y + 1; y < 16; y++)
+                {
+                    var bp = new BlockPos(pos.x, y, pos.z);
+
+                    if (getBlock(bp) != EnumBlock.AIR)
+                        return true;
+                }
+            }
+
+            return Game.INSTANCE.world.isBlockAbove(pos + chunkPos);
+        }
+
+        public ChunkModel generateModel(ChunkModel previousChunkModel)
         {
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             var pos = new BlockPos(0, 0, 0);
@@ -92,6 +107,10 @@ namespace OpenGL_Game
 
                             if (getBlock(pos.offset(dir)) == EnumBlock.AIR)
                             {
+                                /*if (isBlockAbove(pos)) //TODO: Lighting
+                                {
+
+                                }*/
                                 quads?.Add(((RawBlockModel)blockModel.rawModel).getQuadForSide(dir).offset(pos));
                             }
                         }
@@ -99,31 +118,44 @@ namespace OpenGL_Game
                 }
             }
 
-            ChunkModel model = new ChunkModel();
-
             var finish = new ThreadLock(() =>
             {
-                for (var index = 0; index < modelVaoIDs.Count; index++)
+                var previouShaders = previousChunkModel.getShadersPresent();
+
+                if (MODEL_RAW.Count == 0)
                 {
-                    var id = modelVaoIDs[index];
-                    GraphicsManager.deleteVAO(id);
+                    //clear all shaders
+                    for (var index = 0; index < previouShaders.Length; index++)
+                    {
+                        var shader = previouShaders[index];
+                        previousChunkModel.getFragmentModelWithShader(shader, out var chunkFragmentModel);
+
+                        chunkFragmentModel.overrideData(new List<RawQuad>());
+                    }
                 }
 
-                modelVaoIDs.Clear();
-
-                foreach (var m in MODEL_RAW)
+                foreach (var value in MODEL_RAW)
                 {
-                    var bakedModel = new ChunkFragmentModel(m.Key, m.Value);
+                    var newShader = value.Key;
+                    var newData = value.Value;
 
-                    model.addFragmentModelWithShader(m.Key, bakedModel);
+                    if (!previouShaders.Contains(newShader))
+                    {
+                        var newFragment = new ChunkFragmentModel(newShader, newData);
+                        previousChunkModel.addFragmentModelWithShader(newShader, newFragment);
+                    }
+                    else
+                    {
+                        previousChunkModel.getFragmentModelWithShader(newShader, out var oldFragment);
 
-                    modelVaoIDs.Add(bakedModel.rawModel.vaoID);
+                        oldFragment.overrideData(newData);
+                    }
                 }
             });
             Game.MAIN_THREAD_QUEUE.Add(finish);
             finish.WaitFor();
 
-            return model;
+            return previousChunkModel;
         }
 
         public ChunkCache createChunkCache()

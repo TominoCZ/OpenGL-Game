@@ -100,27 +100,11 @@ namespace OpenGL_Game
             world.generateChunkModels();
             world.addEntity(player);
 
-            startGameUpdateThreads();
+            runUpdateThreads();
         }
 
-        private void startGameUpdateThreads()
+        private void runUpdateThreads()
         {
-            new Thread(() =>
-                {
-                    while (true)
-                    {
-                        if (Visible)
-                        {
-                            timer.Stop();
-                            GameLoop();
-                            timer.Restart();
-                        }
-
-                        Thread.Sleep(50);
-                    }
-                })
-            { IsBackground = true }.Start();
-
             new Thread(() =>
                 {
                     bool wasSpaceDown = false;
@@ -292,12 +276,31 @@ namespace OpenGL_Game
 
         public float getRenderPartialTicks()
         {
-            return timer.ElapsedMilliseconds / 50f;
+            return (float)timer.Elapsed.TotalMilliseconds / 50f;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (MAIN_THREAD_QUEUE.Count > 0)// && queueTimer.ElapsedMilliseconds >= 2)
+            if (timer.ElapsedMilliseconds >= 50)
+            {
+                GameLoop();
+                timer.Reset();
+            }
+
+            float partialTicks = getRenderPartialTicks();
+
+            if (!timer.IsRunning)
+                timer.Start();
+
+            if (!Focused && guiScreen == null)
+                openGuiScreen(new GuiScreen());
+
+            _gameRenderer.render(partialTicks);
+
+            SwapBuffers();
+            ProcessEvents(false);
+
+            if (MAIN_THREAD_QUEUE.Count > 0)
             {
                 for (int i = 0; i < MAIN_THREAD_QUEUE.Count; i++)
                 {
@@ -310,16 +313,6 @@ namespace OpenGL_Game
 
                 queueTimer.Restart();
             }
-
-            float partialTicks = getRenderPartialTicks();
-
-            if (!Focused && guiScreen == null)
-                openGuiScreen(new GuiScreen());
-
-            _gameRenderer.render(partialTicks);
-
-            SwapBuffers();
-            ProcessEvents(false);
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -432,8 +425,6 @@ namespace OpenGL_Game
     {
         private List<T> list;
 
-        private int _count;
-
         public int Count => list.Count;
 
         public ThreadSafeList()
@@ -480,7 +471,7 @@ namespace OpenGL_Game
                 {
                     list[index] = value;
                 }
-            } 
+            }
         }
     }
 }

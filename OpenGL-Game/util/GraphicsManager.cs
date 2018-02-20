@@ -67,6 +67,35 @@ namespace OpenGL_Game
             return new RawModel(vaoID, coordSize, quads);
         }
 
+        public static RawModel overrideModelInVAO(int ID, List<RawQuad> quads, int coordSize)
+        {
+            List<float> vertices = new List<float>();
+            List<float> normals = new List<float>();
+            List<float> UVs = new List<float>();
+
+            for (var index = 0; index < quads.Count; index++)
+            {
+                var quad = quads[index];
+
+                vertices.AddRange(quad.vertices);
+                normals.AddRange(quad.normal);
+                UVs.AddRange(quad.UVs);
+            }
+
+            GL.BindVertexArray(ID);
+
+            storeDataInAttributeList(0, coordSize, vertices.ToArray());
+
+            if (UVs.Count > 0)
+                storeDataInAttributeList(1, 2, UVs.ToArray());
+            if (normals.Count > 0)
+                storeDataInAttributeList(2, 3, normals.ToArray());
+
+            unbindVAO();
+
+            return new RawModel(ID, coordSize, quads);
+        }
+
         public static int loadTexture(Bitmap textureMap, bool smooth)
         {
             GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);

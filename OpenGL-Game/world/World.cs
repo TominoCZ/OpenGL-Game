@@ -126,7 +126,10 @@ namespace OpenGL_Game
         {
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
-                return;
+            {
+                chunk = new Chunk(pos.ChunkPos);
+                _chunks.Add(pos.ChunkPos, new ChunkData(chunk, new ChunkModel()));
+            }
 
             chunk.setBlock(pos - chunk.chunkPos, blockType);
 
@@ -141,13 +144,19 @@ namespace OpenGL_Game
 
                 int chunksUpdated = 1;
 
-                for (var index = 0; index < sides.Length - 2; index++)
+                for (var index = 0; index < sides.Length; index++)
                 {
                     EnumFacing side = sides[index];
 
                     var p = pos.offset(side);
 
                     var ch = getChunkFromPos(p);
+
+                    if (ch == null && p.ChunkPos.y >= 0)
+                    {
+                        ch = new Chunk(p.ChunkPos);
+                        _chunks.Add(p.ChunkPos, new ChunkData(ch, new ChunkModel()));
+                    }
 
                     if (ch != chunk)
                     {
@@ -184,23 +193,11 @@ namespace OpenGL_Game
             return -1;
         }
 
-        private void updateModelForChunk(Chunk chunk)
+        public bool isBlockAbove(BlockPos pos)
         {
-            new Thread(() =>
-               {
-                   var dataNodes = getChunkDataNodes();
+            var chunk = getChunkFromPos(pos);
 
-                   for (var index = 0; index < dataNodes.Length; index++)
-                   {
-                       var node = dataNodes[index];
-
-                       if (node.chunk == chunk)
-                       {
-                           node.model = node.chunk.generateModel();
-                           break;
-                       }
-                   }
-               }).Start();
+            return chunk.isBlockAbove(pos - chunk.chunkPos);
         }
 
         public void generateChunkModels()
@@ -216,9 +213,31 @@ namespace OpenGL_Game
                     if (chunkData.chunk.unloaded)
                         continue;
 
-                    chunkData.model = chunkData.chunk.generateModel();
+                    var model = chunkData.chunk.generateModel(chunkData.model);
+                    chunkData.model = model;
                 }
             }).Start();
+        }
+
+        private void updateModelForChunk(Chunk chunk)
+        {
+            new Thread(() =>
+               {
+                   var dataNodes = getChunkDataNodes();
+
+                   for (var index = 0; index < dataNodes.Length; index++)
+                   {
+                       var node = dataNodes[index];
+
+                       if (node.chunk == chunk)
+                       {
+                           var model = node.chunk.generateModel(node.model);
+
+                           node.model = model;
+                           break;
+                       }
+                   }
+               }).Start();
         }
     }
 

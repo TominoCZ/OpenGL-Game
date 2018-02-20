@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using System;
+using OpenTK;
 using OpenTK.Input;
 
 namespace OpenGL_Game
@@ -7,7 +8,7 @@ namespace OpenGL_Game
     {
         public Camera camera;
 
-        public float maxMoveSpeed = 0.255f;
+        public float maxMoveSpeed = 0.25f;
         public float moveSpeed;
 
         private Item equipped;
@@ -17,7 +18,7 @@ namespace OpenGL_Game
             camera = new Camera();
             camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 2, 0.25f)).offset(pos);
+            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(pos);
         }
 
         public override void Update()
@@ -32,7 +33,7 @@ namespace OpenGL_Game
         {
             var interpolatedPos = lastPos + (pos - lastPos) * particalTicks;
 
-            camera.pos = interpolatedPos + Vector3.UnitY * 1.725f;
+            camera.pos = interpolatedPos + Vector3.UnitY * 1.65f;
         }
 
         private void UpdateCamera()
@@ -42,22 +43,23 @@ namespace OpenGL_Game
 
             var state = Keyboard.GetState();
 
-            Vector2 vec = Vector2.Zero;
+            Vector2 dirVec = Vector2.Zero;
 
             if (state.IsKeyDown(Key.W))
-                vec += camera.forward;
+                dirVec += camera.forward;
             if (state.IsKeyDown(Key.S))
-                vec += -camera.forward;
+                dirVec += -camera.forward;
 
             if (state.IsKeyDown(Key.A))
-                vec += camera.left;
+                dirVec += camera.left;
             if (state.IsKeyDown(Key.D))
-                vec += -camera.left;
+                dirVec += -camera.left;
 
-            if (vec != Vector2.Zero)
+            if (dirVec != Vector2.Zero)
             {
-                moveSpeed = MathHelper.Clamp(moveSpeed + 0.0875f, 0, maxMoveSpeed);
-                motion.Xz = vec.Normalized() * moveSpeed;
+                moveSpeed = MathHelper.Clamp(moveSpeed + 0.095f, 0, maxMoveSpeed);
+
+                motion.Xz = dirVec.Normalized() * moveSpeed;
             }
             else
                 moveSpeed = 0;

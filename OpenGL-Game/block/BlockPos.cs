@@ -75,7 +75,7 @@ namespace OpenGL_Game
                 default: return this;
             }
         }
-
+        
         public void setPos(int x, int y, int z)
         {
             this.x = x;

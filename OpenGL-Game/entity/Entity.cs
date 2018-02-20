@@ -24,9 +24,9 @@ namespace OpenGL_Game
 
         public virtual void Update()
         {
-            lastPos = new Vector3(pos);
+            lastPos = pos;
 
-            motion.Y -= 0.0675f;
+            motion.Y -= 0.0775f;
 
             Move();
 
@@ -34,7 +34,7 @@ namespace OpenGL_Game
 
             if (onGround)
             {
-                motion.Xz *= 0.6776801f;
+                motion.Xz *= 0.6676801f;
             }
         }
 

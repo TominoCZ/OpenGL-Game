@@ -17,7 +17,7 @@ namespace OpenGL_Game
         public EntityRenderer entityRenderer;
         public GuiRenderer guiRenderer;
 
-        public float NEAR_PLANE = 0.1f;
+        public float NEAR_PLANE = 0.08f;
         public float FAR_PLANE = 100f;
 
         private int FOV = 65;
