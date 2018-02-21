@@ -209,9 +209,6 @@ namespace OpenGL_Game
                 {
                     var chunkData = chunkDatas[index];
 
-                    if (chunkData.chunk.unloaded)
-                        continue;
-
                     var model = chunkData.chunk.generateModel(chunkData.model);
                     chunkData.model = model;
                 }

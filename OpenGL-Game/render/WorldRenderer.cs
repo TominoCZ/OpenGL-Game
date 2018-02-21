@@ -4,7 +4,6 @@ using GL = OpenTK.Graphics.OpenGL.GL;
 using TextureUnit = OpenTK.Graphics.OpenGL.TextureUnit;
 using TextureTarget = OpenTK.Graphics.OpenGL.TextureTarget;
 using OpenTK.Graphics.OpenGL;
-using System;
 
 namespace OpenGL_Game
 {
@@ -12,9 +11,22 @@ namespace OpenGL_Game
     {
         private ModelLight modelLight;
 
+        private int _renderDistance;
+
+        /// <summary>
+        /// Render distance radius in chunks
+        /// </summary>
+        public int RenderDistance
+        {
+            get => _renderDistance;
+            set => _renderDistance = MathHelper.Clamp(value, 2, int.MaxValue);
+        }
+
         public WorldRenderer()
         {
             modelLight = new ModelLight(new Vector3(-25, 100, -75) * 5, Vector3.One);
+
+            RenderDistance = 16;
         }
 
         private void beginRendering(IModel m)
@@ -51,6 +63,12 @@ namespace OpenGL_Game
             for (var index = 0; index < nodes.Length; index++)
             {
                 var node = nodes[index];
+
+                var dist = (Game.INSTANCE.player.camera.pos - (node.chunk.chunkPos.vector + Vector3.UnitX * 8 + Vector3.UnitZ * 8)).Length;
+                
+                if (dist > RenderDistance * 16)
+                    continue;
+
                 var shaders = node.model.getShadersPresent();
 
                 for (int j = 0; j < shaders.Length; j++)

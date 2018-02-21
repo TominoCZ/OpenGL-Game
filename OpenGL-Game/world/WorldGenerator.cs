@@ -6,7 +6,7 @@ namespace OpenGL_Game
     {
         public static World generate(int seed)
         {
-            int size = (int)Math.Pow(2, 6);
+            int size = (int)Math.Pow(2, 8);
             int half = size / 2;
 
             int totalHeight = 10;

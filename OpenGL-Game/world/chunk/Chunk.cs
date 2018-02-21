@@ -11,8 +11,6 @@ namespace OpenGL_Game
 
         public BlockPos chunkPos { get; }
 
-        public bool unloaded = false;
-
         public Chunk(BlockPos chunkPos)
         {
             this.chunkPos = chunkPos;
@@ -58,7 +56,7 @@ namespace OpenGL_Game
         {
             if (isPosInChunk(pos))
             {
-                for (int y = pos.y + 1; y < 16; y++)
+                for (int y = pos.y + 1; y < 16; y++) //TODO: KEEP CHECKING ABOVE
                 {
                     var bp = new BlockPos(pos.x, y, pos.z);
 
