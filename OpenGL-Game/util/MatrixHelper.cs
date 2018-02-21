@@ -26,6 +26,14 @@ namespace OpenGL_Game
             return s * t;
         }
 
+        public static Matrix4 createTransformationMatrix(Vector3 translation, Vector3 scale)
+        {
+            var s = Matrix4.CreateScale(scale.X, scale.Y, scale.Z);
+            var t = Matrix4.CreateTranslation(translation.X, translation.Y, translation.Z);
+
+            return s * t;
+        }
+
         public static Matrix4 createTransformationMatrix(Vector3 translation)
         {
             return Matrix4.CreateTranslation(translation);

@@ -120,31 +120,38 @@ namespace OpenGL_Game
                 }
             }
 
+            var previousShaders = previousChunkModel.getShadersPresent();
+
             var finish = new ThreadLock(() =>
             {
-                var previouShaders = previousChunkModel.getShadersPresent();
+                var newShaders = MODEL_RAW.Keys.ToArray();
 
-                if (MODEL_RAW.Count == 0)
+                for (int i = 0; i < previousShaders.Length; i++)
                 {
-                    //clear all shaders
-                    for (var index = 0; index < previouShaders.Length; index++)
-                    {
-                        var shader = previouShaders[index];
-                        previousChunkModel.getFragmentModelWithShader(shader, out var chunkFragmentModel);
+                    var oldShader = previousShaders[i];
 
-                        chunkFragmentModel.overrideData(new List<RawQuad>());
+                    if (!newShaders.Contains(oldShader))
+                    {
+                        previousChunkModel.getFragmentModelWithShader(oldShader, out var oldChunkFragmentModel);
+                        //TODO try running only this line on main thread
+                        oldChunkFragmentModel.overrideData(new List<RawQuad>());
                     }
                 }
+            /*});
+            Game.MAIN_THREAD_QUEUE.Add(finish);
+            finish.WaitFor();
 
+            finish = new ThreadLock(() =>
+            {*/
                 foreach (var value in MODEL_RAW)
                 {
                     var newShader = value.Key;
                     var newData = value.Value;
 
-                    if (!previouShaders.Contains(newShader))
+                    if (!previousShaders.Contains(newShader))
                     {
                         var newFragment = new ChunkFragmentModel(newShader, newData);
-                        previousChunkModel.addFragmentModelWithShader(newShader, newFragment);
+                        previousChunkModel.setFragmentModelWithShader(newShader, newFragment);
                     }
                     else
                     {

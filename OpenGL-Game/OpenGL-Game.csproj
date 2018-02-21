@@ -61,6 +61,7 @@
     <Compile Include="block\EnumBlock.cs" />
     <Compile Include="gui\GuiScreenCrafting.cs" />
     <Compile Include="gui\GuiScreenMainMenu.cs" />
+    <Compile Include="model\CubeOutlineModel.cs" />
     <Compile Include="render\GuiRenderer.cs" />
     <Compile Include="gui\GuiTexture.cs" />
     <Compile Include="model\ChunkModel.cs" />
@@ -68,6 +69,8 @@
     <Compile Include="render\EntityRenderer.cs" />
     <Compile Include="shader\BlockShaderUnlit.cs" />
     <Compile Include="shader\GuiShader.cs" />
+    <Compile Include="shader\BlockShaderWireframe.cs" />
+    <Compile Include="shader\ShaderManager.cs" />
     <Compile Include="util\ThreadSafeList.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
     <Compile Include="texture\BlockTextureUV.cs" />

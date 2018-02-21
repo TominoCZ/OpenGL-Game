@@ -89,27 +89,19 @@ namespace OpenGL_Game
             return quads;
         }
 
-        public static List<ShaderProgram> getAllRegisteredShaders()
+        public static List<RawQuad> createCubeModel()
         {
-            List<ShaderProgram> shaders = new List<ShaderProgram>();
+            var quads = new List<RawQuad>();
 
-            foreach (var model in models)
+            foreach (var face in CUBE.Keys)
             {
-                shaders.Add(model.Value.shader);
+                if (CUBE.TryGetValue(face, out var vertices))
+                {
+                    quads.Add(new RawQuad(vertices));
+                }
             }
 
-            return shaders;
-        }
-
-        public static void cleanUp()
-        {
-            var shaders = getAllRegisteredShaders();
-
-            foreach (var shader in shaders)
-            {
-                shader.stop();
-                shader.cleanUp();
-            }
+            return quads;
         }
     }
 }

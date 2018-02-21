@@ -6,6 +6,7 @@ namespace OpenGL_Game
     class ChunkFragmentModel : IModel
     {
         public IRawModel rawModel { get; private set; }
+
         public ShaderProgram shader { get; }
 
         public bool hasUVs { get; }

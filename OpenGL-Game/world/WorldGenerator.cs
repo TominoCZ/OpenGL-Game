@@ -40,6 +40,8 @@ namespace OpenGL_Game
                 }
             }
 
+            world.setBlock(EnumBlock.CRAFTING_TABLE, new BlockPos(1, 10, 1), false);
+
             return world;
         }
     }

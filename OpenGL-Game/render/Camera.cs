@@ -22,13 +22,13 @@ namespace OpenGL_Game
 
             set => _yaw = value;
         }
-
+        
         public Vector3 getLookVec()
         {
             return rotate(Vector3.UnitZ, _pitch, _yaw, 0).Normalized();
         }
 
-        public static Vector3 rotate(Vector3 vec, float AngleX, float AngleY, float AngleZ)
+        private Vector3 rotate(Vector3 vec, float AngleX, float AngleY, float AngleZ)
         {
             Vector3 sin = new Vector3((float)Math.Sin(AngleX), (float)Math.Sin(AngleY), (float)Math.Sin(AngleZ));
             Vector3 cos = new Vector3((float)Math.Cos(AngleX), (float)Math.Cos(AngleY), (float)Math.Cos(AngleZ));

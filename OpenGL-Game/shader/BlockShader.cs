@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game
 {
@@ -10,7 +11,7 @@ namespace OpenGL_Game
         private int loc_lightPosition;
         private int loc_lightColor;
 
-        public BlockShader(string shaderName) : base(shaderName)
+        public BlockShader(string shaderName, PrimitiveType renderType) : base(shaderName, renderType)
         {
 
         }

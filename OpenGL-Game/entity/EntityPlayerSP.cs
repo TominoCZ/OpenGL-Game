@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Drawing;
 using OpenTK;
 using OpenTK.Input;
 
@@ -18,21 +20,18 @@ namespace OpenGL_Game
             camera = new Camera();
             camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(pos);
+            boundingBox = new AxisAlignedBB(Vector3.Zero, new Vector3(0.5f, 1.75f, 0.5f)).offset(pos);
         }
 
-        public EntityPlayerSP() : base(Vector3.Zero)
+        public EntityPlayerSP() : this(Vector3.Zero)
         {
-            camera = new Camera();
-            camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(pos);
         }
 
         public override void Update()
         {
             if (Game.INSTANCE.Focused)
-                UpdateCamera();
+                UpdateCameraMovement();
 
             base.Update();
         }
@@ -41,10 +40,10 @@ namespace OpenGL_Game
         {
             var interpolatedPos = lastPos + (pos - lastPos) * particalTicks;
 
-            camera.pos = interpolatedPos + Vector3.UnitY * 1.65f;
+            camera.pos = interpolatedPos + Vector3.UnitY * 1.625f;
         }
 
-        private void UpdateCamera()
+        private void UpdateCameraMovement()
         {
             if (Game.INSTANCE.guiScreen != null)
                 return;
@@ -63,9 +62,14 @@ namespace OpenGL_Game
             if (state.IsKeyDown(Key.D))
                 dirVec += -camera.left;
 
+            float mult = 1;
+
+            if (state.IsKeyDown(Key.LShift))
+                mult = 2f;
+
             if (dirVec != Vector2.Zero)
             {
-                moveSpeed = MathHelper.Clamp(moveSpeed + 0.095f, 0, maxMoveSpeed);
+                moveSpeed = MathHelper.Clamp(moveSpeed + 0.095f, 0, maxMoveSpeed) * mult;
 
                 motion.Xz = dirVec.Normalized() * moveSpeed;
             }

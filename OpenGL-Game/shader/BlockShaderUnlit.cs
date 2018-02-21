@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game
 {
@@ -13,7 +14,7 @@ namespace OpenGL_Game
         private int loc_projectionMatrix;
         private int loc_viewMatrix;
 
-        public BlockShaderUnlit(string shaderName) : base(shaderName)
+        public BlockShaderUnlit(string shaderName, PrimitiveType renderType) : base(shaderName, renderType)
         {
 
         }

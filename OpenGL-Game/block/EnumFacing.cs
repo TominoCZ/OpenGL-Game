@@ -1,4 +1,6 @@
-﻿namespace OpenGL_Game
+﻿using OpenTK;
+
+namespace OpenGL_Game
 {
     public enum EnumFacing
     {

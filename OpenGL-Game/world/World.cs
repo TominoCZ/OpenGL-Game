@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using OpenTK;
 
 namespace OpenGL_Game
 {
@@ -15,11 +13,14 @@ namespace OpenGL_Game
 
         public List<Entity> _entities;
 
-        public World(int sizeInChunks)
+        private World()
         {
             _chunks = new Dictionary<BlockPos, ChunkData>();
             _entities = new List<Entity>();
+        }
 
+        public World(int sizeInChunks) : this()
+        {
             int half = sizeInChunks / 2;
 
             for (int z = -half; z < half; z++)
@@ -35,11 +36,8 @@ namespace OpenGL_Game
             }
         }
 
-        private World(List<ChunkCache> caches)
+        private World(List<ChunkCache> caches) : this()
         {
-            _chunks = new Dictionary<BlockPos, ChunkData>();
-            _entities = new List<Entity>();
-
             foreach (var cache in caches)
             {
                 var pos = cache.chunkPos;

@@ -31,7 +31,7 @@ namespace OpenGL_Game
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
-            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            GL.DrawArrays(shader.renderType, 0, 4);
         }
 
         protected virtual void renderTexture(GuiShader shader, GuiTexture tex, int x, int y)
@@ -48,7 +48,7 @@ namespace OpenGL_Game
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
-            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            GL.DrawArrays(shader.renderType, 0, 4);
         }
 
         protected virtual void renderTexture(GuiShader shader, GuiTexture tex, Vector2 scale, int x, int y)
@@ -65,7 +65,7 @@ namespace OpenGL_Game
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
-            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            GL.DrawArrays(shader.renderType, 0, 4);
         }
 
         protected virtual void renderTextureCentered(GuiShader shader, GuiTexture tex, Vector2 scale, int y)
@@ -81,7 +81,7 @@ namespace OpenGL_Game
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
-            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            GL.DrawArrays(shader.renderType, 0, 4);
         }
     }
 }

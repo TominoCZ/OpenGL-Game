@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game
 {
@@ -6,7 +7,7 @@ namespace OpenGL_Game
     {
         private int loc_transformationMatrix;
 
-        public GuiShader(string shaderName) : base(shaderName)
+        public GuiShader(string shaderName) : base(shaderName, PrimitiveType.TriangleStrip)
         {
 
         }

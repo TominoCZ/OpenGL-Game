@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using OpenGL_Game.world;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
@@ -35,7 +31,7 @@ namespace OpenGL_Game
 
         public MouseOverObject mouseOverObject = new MouseOverObject();
 
-        private GameRenderer _gameRenderer;
+        public GameRenderer gameRenderer;
 
         public EntityPlayerSP player;
         public World world;
@@ -67,8 +63,8 @@ namespace OpenGL_Game
         {
             Console.WriteLine("DEBUG: loading models");
 
-            var shader = new BlockShader("block");
-            var shader_unlit = new BlockShaderUnlit("block_unlit");
+            var shader = new BlockShader("block", PrimitiveType.Quads);
+            var shader_unlit = new BlockShaderUnlit("block_unlit", PrimitiveType.Quads);
 
             var stoneModel = new BlockModel(EnumBlock.STONE, shader, false);
             var grassModel = new BlockModel(EnumBlock.GRASS, shader, false);
@@ -84,13 +80,13 @@ namespace OpenGL_Game
             ModelManager.registerBlockModel(bedrockModel);
             ModelManager.registerBlockModel(rareModel);
 
-            _gameRenderer = new GameRenderer();
+            gameRenderer = new GameRenderer();
             player = new EntityPlayerSP();
-            _gameRenderer.setCamera(player.camera);
+            gameRenderer.setCamera(player.camera);
 
             openGuiScreen(new GuiScreenMainMenu());
 
-            //startGame();
+            ShaderManager.updateProjectionMatrix();
         }
 
         public void startGame()
@@ -108,11 +104,10 @@ namespace OpenGL_Game
                 world = loadedWorld;
             }
 
+            gameRenderer.setCamera(player.camera);
+
             player.setEquippedItem(new ItemBlock(EnumBlock.STONE));
 
-            _gameRenderer.setCamera(player.camera);
-
-            world.setBlock(EnumBlock.CRAFTING_TABLE, new BlockPos(player.camera.pos + Vector3.UnitY * 2), false);
             world.generateChunkModels();
 
             world.addEntity(player);
@@ -163,7 +158,7 @@ namespace OpenGL_Game
                             mouseLast = point;
                         }
 
-                        Thread.Sleep(16);
+                        Thread.Sleep(2);
                     }
                 })
             { IsBackground = true }.Start();
@@ -171,6 +166,11 @@ namespace OpenGL_Game
 
         private void GameLoop()
         {
+            if (guiScreen == null && !Focused)
+            {
+                openGuiScreen(new GuiScreenIngameMenu());
+            }
+
             world?.updateEntities();
         }
 
@@ -193,6 +193,11 @@ namespace OpenGL_Game
 
                 OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
             }
+        }
+
+        public float getRenderPartialTicks()
+        {
+            return (float)timer.Elapsed.TotalMilliseconds / 50f;
         }
 
         private void getMouseOverObject()
@@ -262,7 +267,7 @@ namespace OpenGL_Game
             for (var index = 0; index < moos.Count; index++)
             {
                 var moo = moos[index];
-                var l = Math.Abs((player.camera.pos - (moo.hitVec - moo.normal * 0.5f)).Length);
+                var l = Math.Abs((player.camera.pos - (moo.blockPos.vector + Vector3.One * 0.5f)).Length);
 
                 if (l < dist && (EnumBlock)moo.hit != EnumBlock.AIR)
                 {
@@ -283,11 +288,6 @@ namespace OpenGL_Game
             mouseOverObject.hit = closest?.hit;
         }
 
-        public float getRenderPartialTicks()
-        {
-            return (float)timer.Elapsed.TotalMilliseconds / 50f;
-        }
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             if (timer.ElapsedMilliseconds >= 50)
@@ -298,10 +298,7 @@ namespace OpenGL_Game
 
             float partialTicks = getRenderPartialTicks();
 
-            if (!Focused && guiScreen == null)
-                openGuiScreen(new GuiScreen());
-
-            _gameRenderer.render(partialTicks);
+            gameRenderer.render(partialTicks);
 
             SwapBuffers();
             ProcessEvents(false);
@@ -310,7 +307,7 @@ namespace OpenGL_Game
             {
                 for (int i = 0; i < MAIN_THREAD_QUEUE.Count; i++)
                 {
-                    var task = MAIN_THREAD_QUEUE[i];
+                    var task = MAIN_THREAD_QUEUE[0];
 
                     task.ExecuteCode();
 
@@ -387,7 +384,7 @@ namespace OpenGL_Game
                             var block = world.getBlock(pos);
                             var model = ModelManager.getModelForBlock(block);
 
-                            if (model.canBeInteractedWith)
+                            if (model != null && model.canBeInteractedWith)
                             {
                                 switch (block)
                                 {
@@ -440,7 +437,9 @@ namespace OpenGL_Game
             GL.Viewport(ClientRectangle);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
-            GL.Ortho(0, ClientRectangle.Width, ClientRectangle.Height, 0, _gameRenderer.NEAR_PLANE, _gameRenderer.FAR_PLANE);
+            GL.Ortho(0, ClientRectangle.Width, ClientRectangle.Height, 0, gameRenderer.NEAR_PLANE, gameRenderer.FAR_PLANE);
+
+            ShaderManager.updateProjectionMatrix();
         }
 
         protected override void OnMove(EventArgs e)
@@ -452,7 +451,7 @@ namespace OpenGL_Game
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            ModelManager.cleanUp();
+            ShaderManager.cleanUp();
             TextureManager.cleanUp();
 
             GraphicsManager.cleanUp();

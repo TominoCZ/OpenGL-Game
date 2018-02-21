@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
 
-namespace OpenGL_Game.world
+namespace OpenGL_Game
 {
     class WorldLoader //TODO: MAKE A PLAYERS FOLDER AND STORE PLAYERS THERE
     {

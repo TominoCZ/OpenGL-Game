@@ -11,13 +11,11 @@ namespace OpenGL_Game
     {
         private Camera camera;
 
-        private Matrix4 projectionMatrix;
-
         public WorldRenderer worldRenderer;
         public EntityRenderer entityRenderer;
         public GuiRenderer guiRenderer;
 
-        public float NEAR_PLANE = 0.085f;
+        public float NEAR_PLANE = 0.09f;
         public float FAR_PLANE = 100f;
 
         public float FOV = 65;
@@ -30,42 +28,12 @@ namespace OpenGL_Game
             entityRenderer = new EntityRenderer();
             guiRenderer = new GuiRenderer();
 
-            Game.INSTANCE.Resize += (s, e) =>
-            {
-                var shaders = ModelManager.getAllRegisteredShaders();
-                createProjectionMatrix();
-
-                foreach (var shader in shaders)
-                {
-                    shader.start();
-                    shader.loadProjectionMatrix(projectionMatrix);
-                    shader.stop();
-                }
-            };
-
             prepare();
         }
 
-        public GameRenderer()
+        public GameRenderer() : this(null)
         {
-            worldRenderer = new WorldRenderer();
-            entityRenderer = new EntityRenderer();
-            guiRenderer = new GuiRenderer();
 
-            Game.INSTANCE.Resize += (s, e) =>
-            {
-                var shaders = ModelManager.getAllRegisteredShaders();
-                createProjectionMatrix();
-
-                foreach (var shader in shaders)
-                {
-                    shader.start();
-                    shader.loadProjectionMatrix(projectionMatrix);
-                    shader.stop();
-                }
-            };
-
-            prepare();
         }
 
         public void prepare()
@@ -80,7 +48,7 @@ namespace OpenGL_Game
         {
             if (camera == null)
                 return;
-            
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             prepare();
 
@@ -104,26 +72,28 @@ namespace OpenGL_Game
             }
         }
 
-        public void createProjectionMatrix()
+        public void setCamera(Camera camera)
         {
-            projectionMatrix = new Matrix4();
+            this.camera = camera;
+        }
+
+        public Matrix4 createProjectionMatrix()
+        {
+            var matrix = new Matrix4();
 
             float aspectRatio = (float)Game.INSTANCE.Width / Game.INSTANCE.Height;
             float y_scale = (float)(1f / Math.Tan(MathHelper.DegreesToRadians(FOV / 2f)));
             float x_scale = y_scale / aspectRatio;
             float frustum_length = FAR_PLANE - NEAR_PLANE;
 
-            projectionMatrix.M11 = x_scale;
-            projectionMatrix.M22 = y_scale;
-            projectionMatrix.M33 = -((FAR_PLANE + NEAR_PLANE) / frustum_length);
-            projectionMatrix.M34 = -1;
-            projectionMatrix.M43 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length);
-            projectionMatrix.M44 = 0;
-        }
+            matrix.M11 = x_scale;
+            matrix.M22 = y_scale;
+            matrix.M33 = -((FAR_PLANE + NEAR_PLANE) / frustum_length);
+            matrix.M34 = -1;
+            matrix.M43 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length);
+            matrix.M44 = 0;
 
-        public void setCamera(Camera camera)
-        {
-            this.camera = camera;
+            return matrix;
         }
     }
 }

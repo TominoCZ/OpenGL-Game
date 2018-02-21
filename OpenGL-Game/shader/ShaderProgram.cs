@@ -11,9 +11,11 @@ namespace OpenGL_Game
         public int ProgramID { get; }
         public int VertexShaderID { get; }
         public int FragmentShaderID { get; }
+        public PrimitiveType renderType { get; }
 
-        protected ShaderProgram(string shaderName)
+        protected ShaderProgram(string shaderName, PrimitiveType renderType)
         {
+            this.renderType = renderType;
             var file = "assets/shaders/" + shaderName;
 
             VertexShaderID = loadShader(ShaderType.VertexShader, file);
@@ -33,6 +35,8 @@ namespace OpenGL_Game
             GL.ValidateProgram(ProgramID);
 
             getAllUniformLocations();
+
+            ShaderManager.registerShader(this);
         }
 
         protected int getUniformLocation(string uniform)
@@ -43,11 +47,6 @@ namespace OpenGL_Game
         protected void loadMatrix(int location, Matrix4 mat)
         {
             GL.UniformMatrix4(location, false, ref mat);
-        }
-
-        protected void loadVector(int location, Vector3 vec)
-        {
-            GL.Uniform3(location, ref vec);
         }
 
         public void start()
@@ -97,6 +96,16 @@ namespace OpenGL_Game
             {
                 return -1;
             }
+        }
+
+        protected void loadVector(int location, Vector3 vec)
+        {
+            GL.Uniform3(location, ref vec);
+        }
+
+        protected void loadVector(int location, Vector4 vec)
+        {
+            GL.Uniform4(location, ref vec);
         }
 
         public abstract void loadTransformationMatrix(Matrix4 mat);

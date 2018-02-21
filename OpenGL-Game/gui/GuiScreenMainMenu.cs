@@ -17,7 +17,7 @@ namespace OpenGL_Game
         public GuiScreenMainMenu()
         {
             buttons.Add(new GuiButton(0, 0, 200, Vector2.One * 2) { centered = true });
-            background = new GuiTexture(GraphicsManager.loadTexture("gui/bg", false), Vector2.Zero, Vector2.One * 4);
+            background = new GuiTexture(GraphicsManager.loadTexture("gui/bg", false), Vector2.Zero, Vector2.One * 8);
         }
 
         public override void render(GuiShader shader, int mouseX, int mouseY)

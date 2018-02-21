@@ -10,10 +10,25 @@ namespace OpenGL_Game
         public Vector3 min { get; }
         public Vector3 max { get; }
 
+        public Vector3 size { get; }
+
         public AxisAlignedBB(Vector3 min, Vector3 max)
         {
             this.min = min;
             this.max = max;
+
+            var minX = MathUtil.Min(min.X, max.X);
+            var minY = MathUtil.Min(min.Y, max.Y);
+            var minZ = MathUtil.Min(min.Z, max.Z);
+
+            var maxX = MathUtil.Max(min.X, max.X);
+            var maxY = MathUtil.Max(min.Y, max.Y);
+            var maxZ = MathUtil.Max(min.Z, max.Z);
+
+            var v1 = new Vector3(minX, minY, minZ);
+            var v2 = new Vector3(maxX, maxY, maxZ);
+
+            size = v2 - v1;
         }
 
         public AxisAlignedBB(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) : this(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ))

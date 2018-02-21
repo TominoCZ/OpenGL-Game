@@ -15,8 +15,11 @@ namespace OpenGL_Game
             fragmentPerShader = new Dictionary<ShaderProgram, ChunkFragmentModel>();
         }
 
-        public void addFragmentModelWithShader(ShaderProgram shader, ChunkFragmentModel model)
+        public void setFragmentModelWithShader(ShaderProgram shader, ChunkFragmentModel model)
         {
+            if (fragmentPerShader.ContainsKey(shader))
+                fragmentPerShader.Remove(shader);
+
             fragmentPerShader.Add(shader, model);
         }
 
