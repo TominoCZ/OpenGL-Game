@@ -125,8 +125,10 @@ namespace OpenGL_Game
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
             {
-                chunk = new Chunk(pos.ChunkPos);
-                _chunks.Add(pos.ChunkPos, new ChunkData(chunk, new ChunkModel()));
+                pos = pos.ChunkPos;
+
+                chunk = new Chunk(pos);
+                _chunks.Add(pos, new ChunkData(chunk, new ChunkModel()));
             }
 
             chunk.setBlock(pos - chunk.chunkPos, blockType);
@@ -149,10 +151,12 @@ namespace OpenGL_Game
                     var p = pos.offset(side);
                     var ch = getChunkFromPos(p);
 
-                    if (ch == null && p.ChunkPos.y >= 0)
+                    p = p.ChunkPos;
+
+                    if (ch == null && p.y >= 0)
                     {
-                        ch = new Chunk(p.ChunkPos);
-                        _chunks.Add(p.ChunkPos, new ChunkData(ch, new ChunkModel()));
+                        ch = new Chunk(p);
+                        _chunks.Add(p, new ChunkData(ch, new ChunkModel()));
                     }
 
                     if (ch != chunk)

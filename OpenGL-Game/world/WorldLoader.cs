@@ -1,19 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using OpenTK;
+using System.Threading;
 
 namespace OpenGL_Game
 {
-    class WorldLoader //TODO: MAKE A PLAYERS FOLDER AND STORE PLAYERS THERE
+    class WorldLoader
     {
         static string dir = "CSharpMC_World";
 
         public static void saveWorld(World w)
         {
-            try
+            new Thread(() =>
             {
+                var bf = new BinaryFormatter();
+
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
@@ -28,18 +29,27 @@ namespace OpenGL_Game
                     caches.Add(cache);
                 }
 
-                var wcn = new WorldCacheNode(caches, Game.INSTANCE.player.pos);
-
-                var bf = new BinaryFormatter();
-                using (var fs = File.OpenWrite(dir + "/chunks.dat"))
+                try
                 {
-                    bf.Serialize(fs, wcn);
-                }
-            }
-            catch
-            {
+                    var wcn = new WorldChunksNode(caches);
 
-            }
+                    using (var fs = File.OpenWrite(dir + "/chunks.dat"))
+                    {
+                        bf.Serialize(fs, wcn);
+                    }
+
+                    var wpn = new WorldPlayerNode(Game.INSTANCE.player);
+
+                    using (var fs = File.OpenWrite(dir + "/player.dat"))
+                    {
+                        bf.Serialize(fs, wpn);
+                    }
+                }
+                catch
+                {
+
+                }
+            }).Start();
         }
 
         public static World loadWorld()
@@ -51,15 +61,33 @@ namespace OpenGL_Game
 
             try
             {
-                WorldCacheNode wcn;
+                WorldChunksNode wcn;
+                WorldPlayerNode wpn;
 
                 using (var fs = File.OpenRead(dir + "/chunks.dat"))
                 {
-                    wcn = (WorldCacheNode)bf.Deserialize(fs);
+                    wcn = (WorldChunksNode)bf.Deserialize(fs);
+                }
+
+                using (var fs = File.OpenRead(dir + "/player.dat"))
+                {
+                    wpn = (WorldPlayerNode)bf.Deserialize(fs);
                 }
 
                 var world = World.Create(wcn.caches);
-                world.addEntity(Game.INSTANCE.player = new EntityPlayerSP(wcn.lastPlayerPos));
+
+                var player = new EntityPlayerSP(wpn.pos);
+                player.camera.pitch = wpn.pitch;
+                player.camera.yaw = wpn.yaw;
+
+                for (int i = 0; i < wpn.hotbar.Length; i++)
+                {
+                    player.hotbar[i] = wpn.hotbar[i];
+                }
+
+                Game.INSTANCE.player = player;
+
+                world.addEntity(player);
 
                 return world;
             }
@@ -69,19 +97,6 @@ namespace OpenGL_Game
             }
 
             return null;
-        }
-    }
-
-    [Serializable]
-    class WorldCacheNode
-    {
-        public List<ChunkCache> caches { get; }
-        public Vector3 lastPlayerPos { get; }
-
-        public WorldCacheNode(List<ChunkCache> caches, Vector3 lastPlayerPos)
-        {
-            this.caches = caches;
-            this.lastPlayerPos = lastPlayerPos;
         }
     }
 }

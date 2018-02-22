@@ -103,5 +103,17 @@ namespace OpenGL_Game
 
             return quads;
         }
+
+        public static List<RawQuad> createCubeModelFace(EnumFacing face)
+        {
+            var quads = new List<RawQuad>();
+
+            if (CUBE.TryGetValue(face, out var vertices))
+            {
+                quads.Add(new RawQuad(vertices));
+            }
+
+            return quads;
+        }
     }
 }

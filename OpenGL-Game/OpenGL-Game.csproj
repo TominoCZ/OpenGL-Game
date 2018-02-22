@@ -62,12 +62,14 @@
     <Compile Include="gui\GuiScreenCrafting.cs" />
     <Compile Include="gui\GuiScreenMainMenu.cs" />
     <Compile Include="model\CubeOutlineModel.cs" />
+    <Compile Include="model\GuiItemModel.cs" />
     <Compile Include="render\GuiRenderer.cs" />
     <Compile Include="gui\GuiTexture.cs" />
     <Compile Include="model\ChunkModel.cs" />
     <Compile Include="model\RawModel.cs" />
     <Compile Include="render\EntityRenderer.cs" />
     <Compile Include="shader\BlockShaderUnlit.cs" />
+    <Compile Include="shader\GuiItemShader.cs" />
     <Compile Include="shader\GuiShader.cs" />
     <Compile Include="shader\BlockShaderWireframe.cs" />
     <Compile Include="shader\ShaderManager.cs" />
@@ -77,8 +79,9 @@
     <Compile Include="util\MathUtil.cs" />
     <Compile Include="util\MouseOverObject.cs" />
     <Compile Include="util\RayHelper.cs" />
-    <Compile Include="texture\TextureUVNode.cs" />
+    <Compile Include="texture\TextureUV.cs" />
     <Compile Include="world\chunk\ChunkData.cs" />
+    <Compile Include="world\WorldChunksNode.cs" />
     <Compile Include="world\WorldGenerator.cs" />
     <Compile Include="render\WorldRenderer.cs" />
     <Compile Include="render\Camera.cs" />
@@ -103,6 +106,7 @@
     <Compile Include="texture\TextureManager.cs" />
     <Compile Include="world\World.cs" />
     <Compile Include="world\WorldLoader.cs" />
+    <Compile Include="world\WorldPlayerNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

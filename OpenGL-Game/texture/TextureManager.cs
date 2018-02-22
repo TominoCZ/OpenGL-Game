@@ -16,9 +16,14 @@ namespace OpenGL_Game
 {
     class TextureManager
     {
-        public static int blockTextureAtlasID;
+        private static Dictionary<EnumBlock, BlockTextureUV> UVs;
 
-        private static Dictionary<EnumBlock, BlockTextureUV> UVs = new Dictionary<EnumBlock, BlockTextureUV>();
+        static TextureManager()
+        {
+            UVs = new Dictionary<EnumBlock, BlockTextureUV>();
+        }
+
+        public static int blockTextureAtlasID;
 
         public static void stitchTextures()
         {
@@ -234,7 +239,7 @@ namespace OpenGL_Game
                             }
                         }
 
-                        UVs.Add(block, uvs);
+                        Uv.Add(block, uvs);
                     }
                 }*/
                 #endregion

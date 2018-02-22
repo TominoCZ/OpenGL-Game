@@ -85,15 +85,21 @@ namespace OpenGL_Game
             GL.BindVertexArray(ID);
 
             storeDataInAttributeList(0, coordSize, vertices.ToArray());
-
-            if (UVs.Count > 0)
-                storeDataInAttributeList(1, 2, UVs.ToArray());
-            if (normals.Count > 0)
-                storeDataInAttributeList(2, 3, normals.ToArray());
+            storeDataInAttributeList(1, 2, UVs.ToArray());
+            storeDataInAttributeList(2, 3, normals.ToArray());
 
             unbindVAO();
 
             return new RawModel(ID, coordSize, quads);
+        }
+
+        public static void overrideModelUVsInVAO(int ID, float[] UVs)
+        {
+            GL.BindVertexArray(ID);
+
+            storeDataInAttributeList(1, 2, UVs);
+
+            unbindVAO();
         }
 
         public static int loadTexture(Bitmap textureMap, bool smooth)

@@ -6,17 +6,17 @@ namespace OpenGL_Game
 {
     internal class MatrixHelper
     {
-       /* public static Matrix4 createTransformationMatrix(Vector3 translation, float rx, float ry, float rz, float scale)
+        public static Matrix4 createTransformationMatrixOrtho(Vector3 translation, Vector3 rot, float scale)
         {
-            var x = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rx));
-            var y = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(ry));
-            var z = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rz));
+            var x = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(rot.X));
+            var y = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rot.Y));
+            var z = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(rot.Z));
 
-            var s = Matrix4.CreateScale(scale);
+            var s = Matrix4.CreateScale(scale, scale, 0);
             var t = Matrix4.CreateTranslation(translation);
 
-            return x * y * z * s * t;
-        }*/
+            return x * z * y * s * t;
+        }
 
         public static Matrix4 createTransformationMatrix(Vector2 translation, Vector2 scale)
         {

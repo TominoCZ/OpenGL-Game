@@ -5,6 +5,8 @@ using TextureUnit = OpenTK.Graphics.OpenGL.TextureUnit;
 using TextureTarget = OpenTK.Graphics.OpenGL.TextureTarget;
 using OpenTK.Graphics.OpenGL;
 using System;
+using System.Diagnostics;
+using System.Drawing;
 
 namespace OpenGL_Game
 {
@@ -12,7 +14,13 @@ namespace OpenGL_Game
     {
         private CubeOutlineModel selectionOutlineModel;
 
+        private Vector4 selectionOutlineColor;
+
         private ModelLight modelLight;
+
+        private Stopwatch updateTimer;
+
+        private int hue;
 
         /// <summary>
         /// Render distance radius in chunks
@@ -27,13 +35,15 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-25, 100, -75) * 5, Vector3.One);
+            modelLight = new ModelLight(new Vector3(-25, 75, -75) * 5, Vector3.One);
             selectionOutlineModel = new CubeOutlineModel(new BlockShaderWireframe());
 
             RenderDistance = 3;
+
+            updateTimer = Stopwatch.StartNew();
         }
 
-        private void beginRendering(IModel m)
+        private void bindModel(IModel m)
         {
             GL.BindVertexArray(m.rawModel.vaoID);
 
@@ -48,7 +58,7 @@ namespace OpenGL_Game
             GL.BindTexture(TextureTarget.Texture2D, TextureManager.blockTextureAtlasID);
         }
 
-        private void finishRendering(IModel m)
+        private void unbindModel(IModel m)
         {
             GL.DisableVertexAttribArray(0);
 
@@ -85,7 +95,7 @@ namespace OpenGL_Game
 
                     if (node.model.getFragmentModelWithShader(shader, out var chunkFragmentModel))
                     {
-                        beginRendering(chunkFragmentModel);
+                        bindModel(chunkFragmentModel);
 
                         shader.start();
 
@@ -96,7 +106,7 @@ namespace OpenGL_Game
 
                         GL.DrawArrays(shader.renderType, 0, chunkFragmentModel.rawModel.vertexCount);
 
-                        finishRendering(chunkFragmentModel);
+                        unbindModel(chunkFragmentModel);
                         shader.stop();
                     }
                 }
@@ -105,13 +115,22 @@ namespace OpenGL_Game
 
         private void renderBlockSelectionOutline(Matrix4 viewMatrix, EnumBlock block, BlockPos pos)
         {
+            if (updateTimer.ElapsedMilliseconds >= 50)
+            {
+                hue = (hue + 5) % 365;
+
+                selectionOutlineColor = getHue(hue);
+
+                updateTimer.Restart();
+            }
+
             var shader = (BlockShaderWireframe)selectionOutlineModel.shader;
             var size = ModelManager.getModelForBlock(block).boundingBox.size + Vector3.One * 0.005f;
 
-            beginRendering(selectionOutlineModel);
+            bindModel(selectionOutlineModel);
             shader.start();
 
-            shader.loadColor(Vector4.One);
+            shader.loadColor(selectionOutlineColor);
             shader.loadViewMatrix(viewMatrix);
             shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos.vector - Vector3.One * 0.0025f, size));
 
@@ -123,8 +142,20 @@ namespace OpenGL_Game
             GL.Enable(EnableCap.CullFace);
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
 
-            finishRendering(selectionOutlineModel);
+            unbindModel(selectionOutlineModel);
+
             shader.stop();
+        }
+
+        Vector4 getHue(int hue)
+        {
+            var rads = MathHelper.DegreesToRadians(hue);
+
+            var r = (float)(Math.Sin(rads) * 0.5 + 0.5);
+            var g = (float)(Math.Sin(rads + MathHelper.PiOver3 * 2) * 0.5 + 0.5);
+            var b = (float)(Math.Sin(rads + MathHelper.PiOver3 * 4) * 0.5 + 0.5);
+
+            return Vector4.UnitX * r + Vector4.UnitY * g + Vector4.UnitZ * b + Vector4.UnitW;
         }
     }
 }

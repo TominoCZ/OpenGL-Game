@@ -70,6 +70,8 @@ namespace OpenGL_Game
             var stoneModel = new BlockModel(EnumBlock.STONE, shader, false);
             var grassModel = new BlockModel(EnumBlock.GRASS, shader, false);
             var dirtModel = new BlockModel(EnumBlock.DIRT, shader, false);
+            var cobblestoneModel = new BlockModel(EnumBlock.COBBLESTONE, shader, false);
+            var planksModel = new BlockModel(EnumBlock.PLANKS, shader, false);
             var craftingTableModel = new BlockModel(EnumBlock.CRAFTING_TABLE, shader, true);
             var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader, false);
             var rareModel = new BlockModel(EnumBlock.RARE, shader_unlit, false);
@@ -77,17 +79,15 @@ namespace OpenGL_Game
             ModelManager.registerBlockModel(stoneModel);
             ModelManager.registerBlockModel(grassModel);
             ModelManager.registerBlockModel(dirtModel);
+            ModelManager.registerBlockModel(cobblestoneModel);
+            ModelManager.registerBlockModel(planksModel);
             ModelManager.registerBlockModel(craftingTableModel);
             ModelManager.registerBlockModel(bedrockModel);
             ModelManager.registerBlockModel(rareModel);
 
-            gameRenderer = new GameRenderer();
-            player = new EntityPlayerSP();
-            gameRenderer.setCamera(player.camera);
+            gameRenderer = new GameRenderer(new Camera());
 
             openGuiScreen(new GuiScreenMainMenu());
-
-            ShaderManager.updateProjectionMatrix();
         }
 
         public void startGame()
@@ -99,21 +99,30 @@ namespace OpenGL_Game
                 Console.WriteLine("DEBUG: generating world");
                 world = WorldGenerator.generate(0);
                 player = new EntityPlayerSP(Vector3.UnitY * (world.getHeightAtPos(0, 0) + 1));
+
+                player.setItemInHotbar(0, new ItemBlock(EnumBlock.CRAFTING_TABLE));
+                player.setItemInHotbar(1, new ItemBlock(EnumBlock.COBBLESTONE));
+                player.setItemInHotbar(2, new ItemBlock(EnumBlock.PLANKS));
             }
             else
             {
                 world = loadedWorld;
             }
 
-            gameRenderer.setCamera(player.camera);
+            resetMouse();
 
-            player.setItemInSelectedSlot(new ItemBlock(EnumBlock.STONE));
+            var state = OpenTK.Input.Mouse.GetState();
+            mouseLast = new Point(state.X, state.Y);
+
+            gameRenderer.setCamera(player.camera);
 
             world.generateChunkModels();
 
             world.addEntity(player);
 
             runUpdateThreads();
+
+            ShaderManager.updateProjectionMatrix();
         }
 
         private void runUpdateThreads()
@@ -151,8 +160,7 @@ namespace OpenGL_Game
 
                                     getMouseOverObject();
 
-                                    var middle = PointToScreen(new Point(ClientSize.Width / 2, ClientSize.Height / 2));
-                                    OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
+                                    resetMouse();
                                 }
                             }
 
@@ -163,6 +171,12 @@ namespace OpenGL_Game
                     }
                 })
             { IsBackground = true }.Start();
+        }
+
+        private void resetMouse()
+        {
+            var middle = PointToScreen(new Point(ClientSize.Width / 2, ClientSize.Height / 2));
+            OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
         }
 
         private void GameLoop()
@@ -445,8 +459,10 @@ namespace OpenGL_Game
 
         protected override void OnResize(EventArgs e)
         {
-            if (ClientSize.Width < 640 || ClientSize.Height < 480)
-                ClientSize = new Size(640, 480);
+            if (ClientSize.Width < 640)
+                ClientSize = new Size(640, ClientSize.Height);
+            if (ClientSize.Height < 480)
+                ClientSize = new Size(ClientSize.Width, 480);
 
             base.OnResize(e);
 

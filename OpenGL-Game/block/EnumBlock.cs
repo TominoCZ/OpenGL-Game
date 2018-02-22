@@ -7,8 +7,10 @@
         STONE = 1,
         GRASS = 2,
         DIRT = 3,
-        RARE = 4,
-        CRAFTING_TABLE = 5,
+        COBBLESTONE = 4,
+        PLANKS = 5,
+        CRAFTING_TABLE = 6,
         BEDROCK = 7,
+        RARE = 8,
     }
 }

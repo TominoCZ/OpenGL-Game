@@ -12,9 +12,14 @@ namespace OpenGL_Game
 {
     class Gui
     {
-        protected Gui()
-        {
+        protected static ModelLight GUI_BLOCK_LIGHT { get; }
+        protected static GuiItemModel itemModel;
 
+        static Gui()
+        {
+            itemModel = new GuiItemModel(new GuiItemShader("gui_item"));
+
+            GUI_BLOCK_LIGHT = new ModelLight(new Vector3(10, 50, 10), Vector3.One);
         }
 
         public virtual void render(GuiShader shader, int mouseX, int mouseY)
@@ -34,13 +39,16 @@ namespace OpenGL_Game
             GL.DrawArrays(shader.renderType, 0, 4);
         }
 
-        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, float x, float y)
+        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, int x, int y)
         {
             renderTexture(shader, tex, tex.scale, x, y);
         }
 
-        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, Vector2 scale, float x, float y)
+        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, Vector2 scale, int x, int y)
         {
+            shader.start();
+            GL.BindVertexArray(GuiRenderer.GUIquad.vaoID);
+            GL.EnableVertexAttribArray(0);
             var unit = new Vector2(1f / Game.INSTANCE.ClientSize.Width, 1f / Game.INSTANCE.ClientSize.Height);
 
             float width = tex.textureSize.Width;
@@ -60,6 +68,81 @@ namespace OpenGL_Game
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
             GL.DrawArrays(shader.renderType, 0, 4);
+            GL.DisableVertexAttribArray(0);
+            GL.BindVertexArray(0);
+            shader.stop();
+        }
+
+        protected virtual void renderBlock(EnumBlock block, float scale, int x, int y)
+        {
+            var UVs = TextureManager.getUVsFromBlock(block);
+            GraphicsManager.overrideModelUVsInVAO(itemModel.rawModel.vaoID, UVs.getUVForSide(EnumFacing.SOUTH).ToArray());
+
+            var unit = new Vector2(1f / Game.INSTANCE.ClientSize.Width, 1f / Game.INSTANCE.ClientSize.Height);
+
+            float width = 16;
+            float height = 16;
+
+            float scaledWidth = 16 * scale;
+            float scaledHeight = 16 * scale;
+
+            float posX = x + scaledWidth / 2;
+            float posY = -y - scaledHeight / 2;
+
+            var pos = new Vector2(posX, posY) * unit;
+
+            var mat = MatrixHelper.createTransformationMatrix(pos * 2 - Vector2.UnitX + Vector2.UnitY, scale * new Vector2(width, height) * unit);
+
+            itemModel.shader.start();
+            itemModel.shader.loadTransformationMatrix(mat);
+
+            GL.BindVertexArray(itemModel.rawModel.vaoID);
+            GL.EnableVertexAttribArray(0);
+            GL.EnableVertexAttribArray(1);
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, TextureManager.blockTextureAtlasID);
+            GL.DrawArrays(itemModel.shader.renderType, 0, 4);
+
+            GL.DisableVertexAttribArray(0);
+            GL.DisableVertexAttribArray(1);
+
+            GL.BindVertexArray(0);
+            itemModel.shader.stop();
+            /*
+            var block = ib.getBlock();
+            var model = ModelManager.getModelForBlock(block);
+
+            var width = Game.INSTANCE.ClientSize.Width;
+            var height = Game.INSTANCE.ClientSize.Height;
+
+            var unit = new Vector2(1f / width, 1f / height); //this float number, because of perspective and my being lazy
+
+            var pos = new Vector2(x, -(y)) * unit;
+            var rot = new Vector3(22.5f, 45, 22.5f);
+            rot = Vector3.Zero;
+
+            var mat = MatrixHelper.createTransformationMatrixOrtho(new Vector3(pos.X, pos.Y, -1), rot, 1);
+
+            model.shader.start();
+            model.shader.loadLight(GUI_BLOCK_LIGHT);
+            model.shader.loadTransformationMatrix(mat);
+            model.shader.loadViewMatrix(Matrix4.Identity);
+
+            GL.BindVertexArray(model.rawModel.vaoID);
+            GL.EnableVertexAttribArray(0);
+            GL.EnableVertexAttribArray(1);
+            GL.EnableVertexAttribArray(2);
+
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, TextureManager.blockTextureAtlasID);
+            GL.DrawArrays(PrimitiveType.Quads, 0, model.rawModel.vertexCount);
+
+            GL.DisableVertexAttribArray(0);
+            GL.DisableVertexAttribArray(1);
+            GL.DisableVertexAttribArray(2);
+            GL.BindVertexArray(0);
+            model.shader.stop();*/
         }
     }
 }

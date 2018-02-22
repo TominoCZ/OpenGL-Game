@@ -8,23 +8,26 @@ namespace OpenGL_Game
 {
     class GuiRenderer
     {
-        public RawModel quad;
+        public static RawModel GUIquad;
 
         private GuiShader shader;
 
         private GuiCrosshair crosshairGui;
         private GuiHUD hudGui;
 
-        public GuiRenderer()
+        static GuiRenderer()
         {
             var rawQuad = new RawQuad(new float[] {
                 -1,  1,
                 -1, -1,
-                 1, 1,
-                 1, -1 });
+                1, 1,
+                1, -1 });
 
-            quad = GraphicsManager.loadModelToVAO(new List<RawQuad> { rawQuad }, 2);
+            GUIquad = GraphicsManager.loadModelToVAO(new List<RawQuad> { rawQuad }, 2);
+        }
 
+        public GuiRenderer()
+        {
             shader = new GuiShader("gui");
 
             var texture = GraphicsManager.loadTexture("gui/cross", true);
@@ -49,7 +52,7 @@ namespace OpenGL_Game
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
             GL.Disable(EnableCap.DepthTest);
 
-            GL.BindVertexArray(quad.vaoID);
+            GL.BindVertexArray(GUIquad.vaoID);
             GL.EnableVertexAttribArray(0);
 
             var state = OpenTK.Input.Mouse.GetCursorState();

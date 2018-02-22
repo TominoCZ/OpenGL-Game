@@ -41,12 +41,24 @@ namespace OpenGL_Game.gui
             {
                 var b = i == Game.INSTANCE.player.equippedItemHotbarIndex;
 
-                renderTexture(shader, b ? slot_selected : slot, startPos + i * (scaledWidth + space), size.Height - 20 - scaledHeight);
+                var x = startPos + i * (scaledWidth + space);
+                var y = size.Height - 20 - scaledHeight;
 
-                var item = Game.INSTANCE.player.getEquippedItem();
+                renderTexture(shader, b ? slot_selected : slot, x, y);
+
+                var item = Game.INSTANCE.player.hotbar[i];
 
                 if (item != null && item is ItemBlock itemBlock)
                 {
+                    var block = itemBlock.getBlock();
+
+                    x += 14;
+                    y += 14;
+
+                    renderBlock(block, 2.25f, x, y);
+
+                    //renderBlock(itemBlock, 64, 0);
+
                     //TODO render preview
                 }
             }

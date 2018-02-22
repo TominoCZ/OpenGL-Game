@@ -23,7 +23,7 @@ namespace OpenGL_Game
             camera = new Camera();
             camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(Vector3.Zero, new Vector3(0.5f, 1.75f, 0.5f)).offset(pos);
+            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(lastPos = pos);
 
             hotbar = new Item[9];
         }
@@ -84,7 +84,7 @@ namespace OpenGL_Game
 
         public void setItemInHotbar(int index, Item item)
         {
-            hotbar[index % 8] = item;
+            hotbar[index % 9] = item;
         }
 
         public void setItemInSelectedSlot(Item item)
@@ -96,14 +96,6 @@ namespace OpenGL_Game
         {
             return hotbar[equippedItemHotbarIndex];
         }
-
-       /* public void setEquippedItem(Item i)
-        {
-            var index = hotbar.ToList().IndexOf(i);
-
-            if (index != -1)
-                equippedItemHotbarIndex = index;
-        }*/
 
         public void selectNextItem()
         {
@@ -119,6 +111,7 @@ namespace OpenGL_Game
         }
     }
 
+    [Serializable]
     abstract class Item
     {
         protected object item { get; }
@@ -132,6 +125,7 @@ namespace OpenGL_Game
         }
     }
 
+    [Serializable]
     class ItemBlock : Item
     {
         public ItemBlock(EnumBlock block) : base(block.ToString(), block)
