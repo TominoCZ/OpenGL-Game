@@ -24,9 +24,9 @@ namespace OpenGL_Game
 
         protected virtual void renderTexture(GuiShader shader, GuiTexture tex)
         {
-            var ratio = Vector2.UnitX * ((float)tex.textureSize.Width / Game.INSTANCE.ClientSize.Width) + Vector2.UnitY * ((float)tex.textureSize.Height / Game.INSTANCE.ClientSize.Height);
+            var ratio = new Vector2((float)tex.textureSize.Width / Game.INSTANCE.ClientSize.Width, (float)tex.textureSize.Height / Game.INSTANCE.ClientSize.Height);
 
-            var mat = MatrixHelper.createTransformationMatrix(tex.pos, tex.scale * ratio);
+            var mat = MatrixHelper.createTransformationMatrix(tex.pos * 2, tex.scale * ratio);
             shader.loadTransformationMatrix(mat);
 
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -34,49 +34,27 @@ namespace OpenGL_Game
             GL.DrawArrays(shader.renderType, 0, 4);
         }
 
-        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, int x, int y)
+        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, float x, float y)
         {
-            var ratio = Vector2.UnitX * ((float)tex.textureSize.Width / Game.INSTANCE.ClientSize.Width) + Vector2.UnitY * ((float)tex.textureSize.Height / Game.INSTANCE.ClientSize.Height);
-
-            var posX = (x + tex.textureSize.Width) / (float)tex.textureSize.Width;
-            var posY = (-y - tex.textureSize.Height) / (float)tex.textureSize.Height;
-
-            var pos = (tex.scale * new Vector2(posX, posY) * ratio - Vector2.UnitX + Vector2.UnitY);
-
-            var mat = MatrixHelper.createTransformationMatrix(pos, tex.scale * ratio);
-            shader.loadTransformationMatrix(mat);
-
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
-            GL.DrawArrays(shader.renderType, 0, 4);
+            renderTexture(shader, tex, tex.scale, x, y);
         }
 
-        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, Vector2 scale, int x, int y)
+        protected virtual void renderTexture(GuiShader shader, GuiTexture tex, Vector2 scale, float x, float y)
         {
-            var ratio = Vector2.UnitX * ((float)tex.textureSize.Width / Game.INSTANCE.ClientSize.Width) + Vector2.UnitY * ((float)tex.textureSize.Height / Game.INSTANCE.ClientSize.Height);
+            var unit = new Vector2(1f / Game.INSTANCE.ClientSize.Width, 1f / Game.INSTANCE.ClientSize.Height);
 
-            var posX = (x + tex.textureSize.Width) / (float)tex.textureSize.Width;
-            var posY = (-y - tex.textureSize.Height) / (float)tex.textureSize.Height;
+            float width = tex.textureSize.Width;
+            float height = tex.textureSize.Height;
 
-            var pos = (scale * new Vector2(posX, posY) * ratio - Vector2.UnitX + Vector2.UnitY);
+            float scaledWidth = width * scale.X;
+            float scaledHeight = height * scale.Y;
 
-            var mat = MatrixHelper.createTransformationMatrix(pos, scale * ratio);
-            shader.loadTransformationMatrix(mat);
+            float posX = x + scaledWidth / 2;
+            float posY = -y - scaledHeight / 2;
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, tex.textureID);
-            GL.DrawArrays(shader.renderType, 0, 4);
-        }
+            var pos = new Vector2(posX, posY) * unit;
 
-        protected virtual void renderTextureCentered(GuiShader shader, GuiTexture tex, Vector2 scale, int y)
-        {
-            var ratio = Vector2.UnitX * ((float)tex.textureSize.Width / Game.INSTANCE.ClientSize.Width) + Vector2.UnitY * ((float)tex.textureSize.Height / Game.INSTANCE.ClientSize.Height);
-
-            var posY = ((-y - tex.textureSize.Height) * scale.Y) / tex.textureSize.Height;
-
-            var pos = new Vector2(0, posY) * ratio.Y + Vector2.UnitY;
-
-            var mat = MatrixHelper.createTransformationMatrix(pos, scale * ratio);
+            var mat = MatrixHelper.createTransformationMatrix(pos * 2 - Vector2.UnitX + Vector2.UnitY, scale * new Vector2(width, height) * unit);
             shader.loadTransformationMatrix(mat);
 
             GL.ActiveTexture(TextureUnit.Texture0);

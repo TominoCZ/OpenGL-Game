@@ -8,7 +8,7 @@ namespace OpenGL_Game
 {
     class GuiRenderer
     {
-        private RawModel quad;
+        public RawModel quad;
 
         private GuiShader shader;
 

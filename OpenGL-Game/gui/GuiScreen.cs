@@ -26,8 +26,8 @@ namespace OpenGL_Game
 
         protected virtual void drawBackground(GuiShader shader, GuiTexture tex)
         {
-            var sizeX = tex.textureSize.Width * 2f;
-            var sizeY = tex.textureSize.Height * 2f;
+            var sizeX = tex.textureSize.Width * tex.scale.X;
+            var sizeY = tex.textureSize.Height * tex.scale.Y;
 
             var countX = Game.INSTANCE.ClientSize.Width / sizeX;
             var countY = Game.INSTANCE.ClientSize.Height / sizeY;
@@ -36,7 +36,7 @@ namespace OpenGL_Game
             {
                 for (int y = 0; y <= countY; y++)
                 {
-                    renderTexture(shader, tex, tex.scale, (int)(x * sizeX), (int)(y * sizeY));
+                    renderTexture(shader, tex, (int)(x * sizeX), (int)(y * sizeY));
                 }
             }
         }

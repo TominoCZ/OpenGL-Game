@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using OpenTK;
 using OpenTK.Input;
 
@@ -13,7 +14,9 @@ namespace OpenGL_Game
         public float maxMoveSpeed = 0.25f;
         public float moveSpeed;
 
-        private Item equipped;
+        public int equippedItemHotbarIndex { get; private set; }
+
+        public Item[] hotbar { get; }
 
         public EntityPlayerSP(Vector3 pos) : base(pos)
         {
@@ -21,6 +24,8 @@ namespace OpenGL_Game
             camera.pos = pos;
 
             boundingBox = new AxisAlignedBB(Vector3.Zero, new Vector3(0.5f, 1.75f, 0.5f)).offset(pos);
+
+            hotbar = new Item[9];
         }
 
         public EntityPlayerSP() : this(Vector3.Zero)
@@ -65,7 +70,7 @@ namespace OpenGL_Game
             float mult = 1;
 
             if (state.IsKeyDown(Key.LShift))
-                mult = 2f;
+                mult = 1.5f;
 
             if (dirVec != Vector2.Zero)
             {
@@ -77,14 +82,40 @@ namespace OpenGL_Game
                 moveSpeed = 0;
         }
 
-        public Item getEquippedItem()
+        public void setItemInHotbar(int index, Item item)
         {
-            return equipped;
+            hotbar[index % 8] = item;
         }
 
-        public void setEquippedItem(Item i)
+        public void setItemInSelectedSlot(Item item)
         {
-            equipped = i;
+            hotbar[equippedItemHotbarIndex] = item;
+        }
+
+        public Item getEquippedItem()
+        {
+            return hotbar[equippedItemHotbarIndex];
+        }
+
+       /* public void setEquippedItem(Item i)
+        {
+            var index = hotbar.ToList().IndexOf(i);
+
+            if (index != -1)
+                equippedItemHotbarIndex = index;
+        }*/
+
+        public void selectNextItem()
+        {
+            equippedItemHotbarIndex = (equippedItemHotbarIndex + 1) % 9;
+        }
+
+        public void selectPreviousItem()
+        {
+            if (equippedItemHotbarIndex <= 0)
+                equippedItemHotbarIndex = 8;
+            else
+                equippedItemHotbarIndex = equippedItemHotbarIndex - 1;
         }
     }
 

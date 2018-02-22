@@ -51,7 +51,7 @@ namespace OpenGL_Game
             if (centered)
             {
                 posX = (int)(Game.INSTANCE.ClientSize.Width / 2f - tex.textureSize.Width * scale.X / 2f);
-                renderTextureCentered(shader, tex, scale, posY);
+                renderTexture(shader, tex, scale, posX, posY);
             }
             else
                 renderTexture(shader, tex, scale, posX, posY);

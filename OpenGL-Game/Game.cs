@@ -37,9 +37,9 @@ namespace OpenGL_Game
         public World world;
 
         private int FPS;
+        private float mouseWheelLast;
 
         public GuiScreen guiScreen { get; private set; }
-
         public static Game INSTANCE { get; private set; }
 
         public static ThreadSafeList<ThreadLock> MAIN_THREAD_QUEUE = new ThreadSafeList<ThreadLock>();
@@ -50,6 +50,7 @@ namespace OpenGL_Game
 
             Title = "OpenGL Game";
             CursorVisible = false;
+
             VSync = VSyncMode.Off;
             MakeCurrent();
 
@@ -106,7 +107,7 @@ namespace OpenGL_Game
 
             gameRenderer.setCamera(player.camera);
 
-            player.setEquippedItem(new ItemBlock(EnumBlock.STONE));
+            player.setItemInSelectedSlot(new ItemBlock(EnumBlock.STONE));
 
             world.generateChunkModels();
 
@@ -170,6 +171,18 @@ namespace OpenGL_Game
             {
                 openGuiScreen(new GuiScreenIngameMenu());
             }
+
+            var wheelValue = Mouse.WheelPrecise;
+
+            if (player != null)
+            {
+                if (wheelValue < mouseWheelLast)
+                    player.selectNextItem();
+                else if (wheelValue > mouseWheelLast)
+                    player.selectPreviousItem();
+            }
+
+            mouseWheelLast = wheelValue;
 
             world?.updateEntities();
         }
@@ -374,7 +387,7 @@ namespace OpenGL_Game
 
                             if (clickedBlock != EnumBlock.AIR)
                             {
-                                player.setEquippedItem(new ItemBlock(clickedBlock));
+                                player.setItemInSelectedSlot(new ItemBlock(clickedBlock));
                             }
                         }
 
@@ -432,6 +445,9 @@ namespace OpenGL_Game
 
         protected override void OnResize(EventArgs e)
         {
+            if (ClientSize.Width < 640 || ClientSize.Height < 480)
+                ClientSize = new Size(640, 480);
+
             base.OnResize(e);
 
             GL.Viewport(ClientRectangle);
