@@ -11,6 +11,8 @@
         PLANKS = 5,
         CRAFTING_TABLE = 6,
         BEDROCK = 7,
-        RARE = 8,
+        GLASS = 20,
+        FURNACE = 61,
+        RARE = 1337
     }
 }

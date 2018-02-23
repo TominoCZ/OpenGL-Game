@@ -213,8 +213,8 @@ namespace OpenGL_Game
 
             var chunk = new Chunk(chunkPos);
 
-            if (_chunks.ContainsKey(chunkPos))
-                _chunks.Remove(chunkPos);
+            //if (_chunks.ContainsKey(chunkPos))
+            _chunks.Remove(chunkPos);
 
             _chunks.Add(chunkPos, new ChunkData(chunk, new ChunkModel()));
 

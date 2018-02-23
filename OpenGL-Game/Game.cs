@@ -67,7 +67,7 @@ namespace OpenGL_Game
             Console.WriteLine("DEBUG: loading models");
 
             var shader = new BlockShader("block", PrimitiveType.Quads);
-            var shader_unlit = new BlockShaderUnlit("block_unlit", PrimitiveType.Quads);
+            //var shader_unlit = new BlockShaderUnlit("block_unlit", PrimitiveType.Quads);
 
             var stoneModel = new BlockModel(EnumBlock.STONE, shader, false);
             var grassModel = new BlockModel(EnumBlock.GRASS, shader, false);
@@ -75,8 +75,10 @@ namespace OpenGL_Game
             var cobblestoneModel = new BlockModel(EnumBlock.COBBLESTONE, shader, false);
             var planksModel = new BlockModel(EnumBlock.PLANKS, shader, false);
             var craftingTableModel = new BlockModel(EnumBlock.CRAFTING_TABLE, shader, true);
+            var furnaceModel = new BlockModel(EnumBlock.FURNACE, shader, true);
             var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader, false);
-            var rareModel = new BlockModel(EnumBlock.RARE, shader_unlit, false);
+            var rareModel = new BlockModel(EnumBlock.RARE, shader, false);
+            var glassModel = new BlockModel(EnumBlock.GLASS, shader, false);
 
             ModelManager.registerBlockModel(stoneModel);
             ModelManager.registerBlockModel(grassModel);
@@ -84,8 +86,10 @@ namespace OpenGL_Game
             ModelManager.registerBlockModel(cobblestoneModel);
             ModelManager.registerBlockModel(planksModel);
             ModelManager.registerBlockModel(craftingTableModel);
+            ModelManager.registerBlockModel(furnaceModel);
             ModelManager.registerBlockModel(bedrockModel);
             ModelManager.registerBlockModel(rareModel);
+            ModelManager.registerBlockModel(glassModel);
 
             gameRenderer = new GameRenderer(new Camera());
 
@@ -105,8 +109,10 @@ namespace OpenGL_Game
                 player = new EntityPlayerSP(Vector3.UnitY * (world.getHeightAtPos(0, 0) + 1));
 
                 player.setItemInHotbar(0, new ItemBlock(EnumBlock.CRAFTING_TABLE));
-                player.setItemInHotbar(1, new ItemBlock(EnumBlock.COBBLESTONE));
-                player.setItemInHotbar(2, new ItemBlock(EnumBlock.PLANKS));
+                player.setItemInHotbar(1, new ItemBlock(EnumBlock.FURNACE));
+                player.setItemInHotbar(2, new ItemBlock(EnumBlock.COBBLESTONE));
+                player.setItemInHotbar(3, new ItemBlock(EnumBlock.PLANKS));
+                player.setItemInHotbar(4, new ItemBlock(EnumBlock.GLASS));
             }
             else
             {
@@ -368,7 +374,11 @@ namespace OpenGL_Game
                 if (guiScreen != null)
                     closeGuiScreen();
                 else
+                {
                     openGuiScreen(new GuiScreenIngameMenu());
+
+                    WorldLoader.saveWorld(world);
+                }
             }
 
             if (Keyboard.GetState().IsKeyDown(Key.LAlt | Key.F4))
@@ -419,6 +429,7 @@ namespace OpenGL_Game
                             {
                                 switch (block)
                                 {
+                                    case EnumBlock.FURNACE:
                                     case EnumBlock.CRAFTING_TABLE:
                                         openGuiScreen(new GuiScreenCrafting());
                                         break;
@@ -436,12 +447,16 @@ namespace OpenGL_Game
                                 if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntitiesBBs(blockBB).Count == 0)
                                 {
                                     var posUnder = pos.offset(EnumFacing.DOWN);
+
                                     var blockUnder = world.getBlock(posUnder);
+                                    var blockAbove = world.getBlock(pos.offset(EnumFacing.UP));
 
                                     if (blockUnder == EnumBlock.GRASS)
                                         world.setBlock(posUnder, EnumBlock.DIRT, false);
-
-                                    world.setBlock(pos, heldBlock, true);
+                                    if (blockAbove != EnumBlock.AIR && heldBlock == EnumBlock.GRASS)
+                                        world.setBlock(pos, EnumBlock.DIRT, true);
+                                    else
+                                        world.setBlock(pos, heldBlock, true);
                                 }
                             }
                         }
@@ -535,7 +550,7 @@ namespace OpenGL_Game
                 Directory.CreateDirectory(dir);
 
             var file = dir + "/settings.txt";
-            
+
             StringBuilder sb = new StringBuilder();
             sb.Append($"renderDistance={Game.INSTANCE.gameRenderer.worldRenderer.RenderDistance}");
 

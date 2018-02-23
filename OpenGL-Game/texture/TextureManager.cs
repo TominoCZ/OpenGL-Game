@@ -9,6 +9,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Schema;
+using OpenGL_Game.Properties;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -62,7 +63,25 @@ namespace OpenGL_Game
                     var texName = block.ToString().ToLower();
                     var uvs = new BlockTextureUV();
 
-                    if (containsContaining(files, texName) > 0)
+                    if (block == EnumBlock.MISSING)
+                    {
+                        var pos = new Vector2(countX * size.X, countY * size.Y);
+                        var end = pos + size;
+
+                        uvs.fill(pos, end);
+
+                        drawToBitmap(map, countX * 16, countY * 16, Resources.missing);
+
+                        countX++;
+
+                        //check
+                        if (countX * 16 >= map.Size.Width)
+                        {
+                            countX = 0;
+                            countY++;
+                        }
+                    }
+                    else if (containsContaining(files, texName) > 0)
                     {
                         //found
 
@@ -141,13 +160,10 @@ namespace OpenGL_Game
 
                 var missingUVs = getUVsFromBlock(EnumBlock.MISSING);
 
-                if (missingUVs != null)
+                foreach (var uv in UVs)
                 {
-                    foreach (var uv in UVs)
-                    {
-                        if (uv.Key != EnumBlock.AIR)
-                            uv.Value.fillEmptySides(missingUVs.getUVForSide(EnumFacing.DOWN));
-                    }
+                    if (uv.Key != EnumBlock.AIR)
+                        uv.Value.fillEmptySides(missingUVs.getUVForSide(EnumFacing.DOWN));
                 }
 
                 #region fuj
@@ -266,12 +282,17 @@ namespace OpenGL_Game
 
         private static void drawToBitmap(Bitmap to, int x, int y, string file)
         {
-            using (var bmp = Image.FromFile(file))
+            using (var bmp = (Bitmap)Image.FromFile(file))
             {
-                using (var g = Graphics.FromImage(to))
-                {
-                    g.DrawImage(bmp, x, y, 16, 16);
-                }
+                drawToBitmap(to, x, y, bmp);
+            }
+        }
+
+        private static void drawToBitmap(Bitmap to, int x, int y, Bitmap bmp)
+        {
+            using (var g = Graphics.FromImage(to))
+            {
+                g.DrawImage(bmp, x, y, 16, 16);
             }
         }
 

@@ -45,7 +45,7 @@ namespace OpenGL_Game
         {
             var interpolatedPos = lastPos + (pos - lastPos) * particalTicks;
 
-            camera.pos = interpolatedPos + Vector3.UnitY * 1.6f;
+            camera.pos = interpolatedPos + Vector3.UnitY * 1.7f;
         }
 
         private void UpdateCameraMovement()

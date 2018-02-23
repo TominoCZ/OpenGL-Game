@@ -12,7 +12,7 @@ namespace OpenGL_Game
     {
         private int loc_color;
 
-        public BlockShaderWireframe() : base("line", PrimitiveType.Quads)
+        public BlockShaderWireframe() : base("color", PrimitiveType.Quads)
         {
 
         }

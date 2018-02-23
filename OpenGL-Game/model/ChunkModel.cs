@@ -17,15 +17,15 @@ namespace OpenGL_Game
 
         public void setFragmentModelWithShader(ShaderProgram shader, ChunkFragmentModel model)
         {
-            if (fragmentPerShader.ContainsKey(shader))
-                fragmentPerShader.Remove(shader);
+            //if (fragmentPerShader.ContainsKey(shader))
+            fragmentPerShader.Remove(shader);
 
             fragmentPerShader.Add(shader, model);
         }
 
-        public bool getFragmentModelWithShader(ShaderProgram shader, out ChunkFragmentModel model)
+        public ChunkFragmentModel getFragmentModelWithShader(ShaderProgram shader)
         {
-            return fragmentPerShader.TryGetValue(shader, out model);
+            return fragmentPerShader[shader];
         }
 
         public ShaderProgram[] getShadersPresent()

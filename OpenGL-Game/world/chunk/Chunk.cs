@@ -102,8 +102,9 @@ namespace OpenGL_Game
                         for (int i = 0; i < possibleDirections.Length; i++)
                         {
                             var dir = possibleDirections[i];
+                            var block_o = getBlock(pos.offset(dir));
 
-                            if (getBlock(pos.offset(dir)) == EnumBlock.AIR)
+                            if (block_o == EnumBlock.AIR || (block_o == EnumBlock.GLASS && block != EnumBlock.GLASS))
                             {
                                 /*if (isBlockAbove(pos)) //TODO: Lighting
                                 {
@@ -132,8 +133,7 @@ namespace OpenGL_Game
 
                     if (!newShaders.Contains(oldShader))
                     {
-                        previousChunkModel.getFragmentModelWithShader(oldShader, out var oldChunkFragmentModel);
-                        oldChunkFragmentModel.overrideData(new List<RawQuad>());
+                        previousChunkModel.getFragmentModelWithShader(oldShader).overrideData(new List<RawQuad>());
                     }
                 }
 
@@ -149,9 +149,7 @@ namespace OpenGL_Game
                     }
                     else
                     {
-                        previousChunkModel.getFragmentModelWithShader(newShader, out var oldFragment);
-
-                        oldFragment.overrideData(newData);
+                        previousChunkModel.getFragmentModelWithShader(newShader).overrideData(newData);
                     }
                 }
             });

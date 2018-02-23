@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using OpenGL_Game.Properties;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using GL = OpenTK.Graphics.OpenGL.GL;
@@ -135,9 +138,9 @@ namespace OpenGL_Game
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
                 (int)(smooth ? TextureMagFilter.Linear : TextureMagFilter.Nearest));
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                (int)TextureWrapMode.MirroredRepeat);
+                (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                (int)TextureWrapMode.MirroredRepeat);
+                (int)TextureWrapMode.ClampToEdge);
 
             return texID;
         }
@@ -154,11 +157,102 @@ namespace OpenGL_Game
             }
             catch
             {
-
+                Console.WriteLine($"Error: the texture '{textureName}' failed to load!");
             }
 
-            Console.WriteLine($"Error: the texture '{textureName}' failed to load!");
-            return null;
+            return new Texture(loadTexture(Resources.missing, smooth), Resources.missing.Size);
+        }
+
+        public static int loadCubeMap()
+        {
+            int texID = GL.GenTexture();
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.TextureCubeMap, texID);
+
+            var cubeMapTextures = loadCubeMapTextures();
+
+            foreach (var dictValues in cubeMapTextures)
+            {
+                var target = TextureTarget.Texture2D;
+
+                switch (dictValues.Key)
+                {
+                    case EnumFacing.NORTH:
+                        target = TextureTarget.TextureCubeMapNegativeZ;
+                        break;
+                    case EnumFacing.SOUTH:
+                        target = TextureTarget.TextureCubeMapPositiveZ;
+                        break;
+                    case EnumFacing.EAST:
+                        target = TextureTarget.TextureCubeMapPositiveX;
+                        break;
+                    case EnumFacing.WEST:
+                        target = TextureTarget.TextureCubeMapNegativeX;
+                        break;
+                    case EnumFacing.UP:
+                        target = TextureTarget.TextureCubeMapPositiveY;
+                        break;
+                    case EnumFacing.DOWN:
+                        target = TextureTarget.TextureCubeMapNegativeY;
+                        break;
+                }
+
+                var bmp = (Bitmap)dictValues.Value.Clone();
+                var size = bmp.Size;
+
+                BitmapData data = bmp.LockBits(new Rectangle(0, 0, size.Width, size.Height),
+                    ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+                GL.TexImage2D(target, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0, PixelFormat.Bgra,
+                        PixelType.UnsignedByte, data.Scan0);
+
+                bmp.UnlockBits(data);
+            }
+
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+            return texID;
+        }
+
+        private static Dictionary<EnumFacing, Bitmap> loadCubeMapTextures()
+        {
+            Dictionary<EnumFacing, Bitmap> bitmaps = new Dictionary<EnumFacing, Bitmap>();
+
+            string[] files = new string[0];
+
+            var dir = "SharpCraft_Data/assets/textures/skybox";
+
+            if (Directory.Exists(dir))
+                files = Directory.GetFiles(dir, "*.png");
+
+            var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                files[i] = Path.GetFileNameWithoutExtension(files[i])?.ToLower();
+            }
+
+            foreach (var side in sides)
+            {
+                var sideName = side.ToString().ToLower();
+
+                if (files.Contains($"sky_{sideName}"))
+                {
+                    var file = $"{dir}/sky_{sideName}.png";
+
+                    bitmaps.Add(side, (Bitmap)Image.FromFile(file));
+                }
+                else
+                {
+                    bitmaps.Add(side, Resources.missing);
+                }
+            }
+
+            return bitmaps;
         }
 
         private static int createVAO()

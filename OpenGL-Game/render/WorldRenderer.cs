@@ -35,7 +35,7 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-7, 9, -9f) * 500, Vector3.One);
+            modelLight = new ModelLight(new Vector3(-7, 12, -9f) * 500, Vector3.One);
             selectionOutlineModel = new CubeOutlineModel(new BlockShaderWireframe());
 
             RenderDistance = 5;
@@ -93,22 +93,21 @@ namespace OpenGL_Game
                 {
                     var shader = shaders[j];
 
-                    if (node.model.getFragmentModelWithShader(shader, out var chunkFragmentModel))
-                    {
-                        bindModel(chunkFragmentModel);
+                    var chunkFragmentModel = node.model.getFragmentModelWithShader(shader);
 
-                        shader.start();
+                    bindModel(chunkFragmentModel);
 
-                        shader.loadLight(modelLight);
-                        shader.loadViewMatrix(viewMatrix);
+                    shader.start();
 
-                        shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(node.chunk.chunkPos.vector));
+                    shader.loadLight(modelLight);
+                    shader.loadViewMatrix(viewMatrix);
 
-                        GL.DrawArrays(shader.renderType, 0, chunkFragmentModel.rawModel.vertexCount);
+                    shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(node.chunk.chunkPos.vector));
 
-                        unbindModel(chunkFragmentModel);
-                        shader.stop();
-                    }
+                    GL.DrawArrays(shader.renderType, 0, chunkFragmentModel.rawModel.vertexCount);
+
+                    unbindModel(chunkFragmentModel);
+                    shader.stop();
                 }
             }
 
@@ -164,7 +163,7 @@ namespace OpenGL_Game
                 model.shader.start();
                 model.shader.loadLight(modelLight);
                 model.shader.loadViewMatrix(Matrix4.Identity);
-                
+
                 model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(
                     new Vector3(0.04f, -0.065f, -0.1f),
                     new Vector3(-2, -10, 0),

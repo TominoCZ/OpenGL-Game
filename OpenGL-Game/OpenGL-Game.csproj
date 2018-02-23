@@ -63,16 +63,23 @@
     <Compile Include="gui\GuiScreenMainMenu.cs" />
     <Compile Include="model\CubeOutlineModel.cs" />
     <Compile Include="model\GuiItemModel.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="render\GuiRenderer.cs" />
     <Compile Include="gui\GuiTexture.cs" />
     <Compile Include="model\ChunkModel.cs" />
     <Compile Include="model\RawModel.cs" />
     <Compile Include="render\EntityRenderer.cs" />
+    <Compile Include="render\SkyboxRenderer.cs" />
     <Compile Include="shader\BlockShaderUnlit.cs" />
     <Compile Include="shader\GuiItemShader.cs" />
     <Compile Include="shader\GuiShader.cs" />
     <Compile Include="shader\BlockShaderWireframe.cs" />
     <Compile Include="shader\ShaderManager.cs" />
+    <Compile Include="shader\SkyboxShader.cs" />
     <Compile Include="util\FastNoise.cs" />
     <Compile Include="util\ThreadSafeList.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
@@ -113,6 +120,19 @@
     <None Include="App.config" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\SharpCraft_Data\assets\textures\blocks\missing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="missing.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using OpenGL_Game.render;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using ClearBufferMask = OpenTK.Graphics.OpenGL.ClearBufferMask;
@@ -14,6 +15,7 @@ namespace OpenGL_Game
         public WorldRenderer worldRenderer;
         public EntityRenderer entityRenderer;
         public GuiRenderer guiRenderer;
+        public SkyboxRenderer skyboxRenderer;
 
         public float NEAR_PLANE = 0.1f;
         public float FAR_PLANE = 1000f;
@@ -27,6 +29,7 @@ namespace OpenGL_Game
             worldRenderer = new WorldRenderer();
             entityRenderer = new EntityRenderer();
             guiRenderer = new GuiRenderer();
+            skyboxRenderer = new SkyboxRenderer();
 
             prepare();
         }
@@ -58,6 +61,8 @@ namespace OpenGL_Game
             {
                 worldRenderer.render(viewMatrix);
                 entityRenderer.render(partialTicks);
+
+                skyboxRenderer.render(viewMatrix);
             }
             
             //render other gui
