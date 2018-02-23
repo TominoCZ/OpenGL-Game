@@ -111,6 +111,11 @@ namespace OpenGL_Game
                     }
                 }
             }
+
+            if (Game.INSTANCE.player != null)
+            {
+                renderSelectedBlock(Matrix4.Identity);
+            }
         }
 
         private void renderBlockSelectionOutline(Matrix4 viewMatrix, EnumBlock block, BlockPos pos)
@@ -145,6 +150,31 @@ namespace OpenGL_Game
             unbindModel(selectionOutlineModel);
 
             shader.stop();
+        }
+
+        private void renderSelectedBlock(Matrix4 viewMatrix)
+        {
+            var item = Game.INSTANCE.player.getEquippedItem();
+
+            if (item is ItemBlock itemBlock)
+            {
+                var model = ModelManager.getModelForBlock(itemBlock.getBlock());
+
+                bindModel(model);
+                model.shader.start();
+                model.shader.loadLight(modelLight);
+                model.shader.loadViewMatrix(Matrix4.Identity);
+                
+                model.shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(
+                    new Vector3(0.04f, -0.065f, -0.1f),
+                    new Vector3(-2, -10, 0),
+                    0.045f));
+
+                GL.Enable(EnableCap.DepthClamp);
+                GL.DrawArrays(model.shader.renderType, 0, model.rawModel.vertexCount);
+                model.shader.stop();
+                unbindModel(model);
+            }
         }
 
         Vector4 getHue(int hue)

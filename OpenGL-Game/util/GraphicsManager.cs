@@ -80,41 +80,28 @@ namespace OpenGL_Game
                 UVs.AddRange(quad.UVs);
             }
 
-            GL.BindVertexArray(ID);
-
             overrideDataInAttributeList(buffers[0], 0, coordSize, vertices.ToArray());
-            if (buffers[1] != -1)
-                overrideDataInAttributeList(buffers[1], 1, 2, UVs.ToArray());
-            if (buffers[2] != -1)
-                overrideDataInAttributeList(buffers[2], 2, 3, normals.ToArray());
-
-            unbindVAO();
+            overrideDataInAttributeList(buffers[1], 1, 2, UVs.ToArray());
+            overrideDataInAttributeList(buffers[2], 2, 3, normals.ToArray());
 
             return new RawModel(ID, buffers, coordSize, quads);
         }
 
-        public static void overrideModelUVsInVAO(int ID, float[] UVs)
+        public static void overrideModelUVsInVAO(int bufferID, float[] UVs)
         {
-            overrideDataInAttributeList(ID, 1, 2, UVs);
+            overrideDataInAttributeList(bufferID, 1, 2, UVs);
         }
 
         private static void overrideDataInAttributeList(int ID, int attrib, int coordSize, float[] data)
         {
-            GL.BindVertexArray(ID);
-
             GL.BindBuffer(BufferTarget.ArrayBuffer, ID);
             GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.DynamicDraw);
             GL.VertexAttribPointer(attrib, coordSize, VertexAttribPointerType.Float, false, 0, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-            unbindVAO();
         }
 
         private static int storeDataInAttributeList(int attrib, int coordSize, float[] data)
         {
-            if (data.Length == 0)
-                return -1;
-
             int vboID = GL.GenBuffer();
 
             VBOs.Add(vboID);

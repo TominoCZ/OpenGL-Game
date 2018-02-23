@@ -23,7 +23,7 @@ namespace OpenGL_Game
             camera = new Camera();
             camera.pos = pos;
 
-            boundingBox = new AxisAlignedBB(new Vector3(-0.25f, 0, -0.25f), new Vector3(0.25f, 1.75f, 0.25f)).offset(lastPos = pos);
+            boundingBox = new AxisAlignedBB(new Vector3(-0.3f, 0, -0.3f), new Vector3(0.3f, 1.75f, 0.3f)).offset(lastPos = pos);
 
             hotbar = new Item[9];
         }
@@ -45,7 +45,7 @@ namespace OpenGL_Game
         {
             var interpolatedPos = lastPos + (pos - lastPos) * particalTicks;
 
-            camera.pos = interpolatedPos + Vector3.UnitY * 1.625f;
+            camera.pos = interpolatedPos + Vector3.UnitY * 1.7f;
         }
 
         private void UpdateCameraMovement()

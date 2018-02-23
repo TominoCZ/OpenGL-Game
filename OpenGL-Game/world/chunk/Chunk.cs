@@ -71,7 +71,7 @@ namespace OpenGL_Game
         public ChunkModel generateModel(ChunkModel previousChunkModel)
         {
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
-            var pos = new BlockPos(0, 0, 0);
+            var pos = new BlockPos();
             List<RawQuad> quads;
 
             var l_x = chunkBlocks.GetLength(0);
@@ -133,7 +133,6 @@ namespace OpenGL_Game
                     if (!newShaders.Contains(oldShader))
                     {
                         previousChunkModel.getFragmentModelWithShader(oldShader, out var oldChunkFragmentModel);
-                        //TODO try running only this line on main thread
                         oldChunkFragmentModel.overrideData(new List<RawQuad>());
                     }
                 }

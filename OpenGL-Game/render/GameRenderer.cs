@@ -39,7 +39,7 @@ namespace OpenGL_Game
         public void prepare()
         {
             GL.Enable(EnableCap.DepthTest);
-
+            GL.Enable(EnableCap.DepthClamp);
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(CullFaceMode.Back);
         }

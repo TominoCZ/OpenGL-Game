@@ -73,7 +73,7 @@ namespace OpenGL_Game
             shader.stop();
         }
 
-        protected virtual void renderBlock(EnumBlock block, float scale, int x, int y) //TODO - fix memory leak
+        protected virtual void renderBlock(EnumBlock block, float scale, int x, int y)
         {
             var UVs = TextureManager.getUVsFromBlock(block);
             GraphicsManager.overrideModelUVsInVAO(itemModel.rawModel.bufferIDs[1], UVs.getUVForSide(EnumFacing.SOUTH).ToArray());
