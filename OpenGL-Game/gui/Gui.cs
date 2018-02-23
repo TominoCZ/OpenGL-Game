@@ -73,10 +73,10 @@ namespace OpenGL_Game
             shader.stop();
         }
 
-        protected virtual void renderBlock(EnumBlock block, float scale, int x, int y)
+        protected virtual void renderBlock(EnumBlock block, float scale, int x, int y) //TODO - fix memory leak
         {
             var UVs = TextureManager.getUVsFromBlock(block);
-            GraphicsManager.overrideModelUVsInVAO(itemModel.rawModel.vaoID, UVs.getUVForSide(EnumFacing.SOUTH).ToArray());
+            GraphicsManager.overrideModelUVsInVAO(itemModel.rawModel.bufferIDs[1], UVs.getUVForSide(EnumFacing.SOUTH).ToArray());
 
             var unit = new Vector2(1f / Game.INSTANCE.ClientSize.Width, 1f / Game.INSTANCE.ClientSize.Height);
 
@@ -109,40 +109,6 @@ namespace OpenGL_Game
 
             GL.BindVertexArray(0);
             itemModel.shader.stop();
-            /*
-            var block = ib.getBlock();
-            var model = ModelManager.getModelForBlock(block);
-
-            var width = Game.INSTANCE.ClientSize.Width;
-            var height = Game.INSTANCE.ClientSize.Height;
-
-            var unit = new Vector2(1f / width, 1f / height); //this float number, because of perspective and my being lazy
-
-            var pos = new Vector2(x, -(y)) * unit;
-            var rot = new Vector3(22.5f, 45, 22.5f);
-            rot = Vector3.Zero;
-
-            var mat = MatrixHelper.createTransformationMatrixOrtho(new Vector3(pos.X, pos.Y, -1), rot, 1);
-
-            model.shader.start();
-            model.shader.loadLight(GUI_BLOCK_LIGHT);
-            model.shader.loadTransformationMatrix(mat);
-            model.shader.loadViewMatrix(Matrix4.Identity);
-
-            GL.BindVertexArray(model.rawModel.vaoID);
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-            GL.EnableVertexAttribArray(2);
-
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, TextureManager.blockTextureAtlasID);
-            GL.DrawArrays(PrimitiveType.Quads, 0, model.rawModel.vertexCount);
-
-            GL.DisableVertexAttribArray(0);
-            GL.DisableVertexAttribArray(1);
-            GL.DisableVertexAttribArray(2);
-            GL.BindVertexArray(0);
-            model.shader.stop();*/
         }
     }
 }

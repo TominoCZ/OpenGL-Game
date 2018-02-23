@@ -16,12 +16,16 @@ namespace OpenGL_Game
 
         public bool hasNormals { get; }
 
+        public int[] bufferIDs { get; }
+
         public List<RawQuad> quads;
 
-        public RawModel(int vaoID, int valuesPerVertice, List<RawQuad> quads)
+        public RawModel(int vaoID, int[] bufferIDs, int valuesPerVertice, List<RawQuad> quads)
         {
             this.vaoID = vaoID;
             this.quads = quads;
+
+            this.bufferIDs = bufferIDs;
 
             foreach (var quad in quads)
             {

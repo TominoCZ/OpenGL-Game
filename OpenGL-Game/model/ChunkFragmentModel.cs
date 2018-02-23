@@ -25,7 +25,7 @@ namespace OpenGL_Game
 
         public void overrideData(List<RawQuad> quads)
         {
-            rawModel = GraphicsManager.overrideModelInVAO(rawModel.vaoID, quads, 3);
+            rawModel = GraphicsManager.overrideModelInVAO(rawModel.vaoID, rawModel.bufferIDs, quads, 3);
         }
     }
 }

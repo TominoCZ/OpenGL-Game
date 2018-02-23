@@ -137,12 +137,7 @@ namespace OpenGL_Game
                         oldChunkFragmentModel.overrideData(new List<RawQuad>());
                     }
                 }
-            /*});
-            Game.MAIN_THREAD_QUEUE.Add(finish);
-            finish.WaitFor();
 
-            finish = new ThreadLock(() =>
-            {*/
                 foreach (var value in MODEL_RAW)
                 {
                     var newShader = value.Key;

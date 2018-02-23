@@ -19,7 +19,12 @@ namespace OpenGL_Game
                 -1,  1,
                 -1, -1,
                 1, -1,
-                1, 1 });
+                1, 1 }, 
+                new float[] {
+                0, 0,
+                1, 0,
+                1, 1,
+                0, 1});
 
             rawModel = GraphicsManager.loadModelToVAO(new List<RawQuad> { rawQuad }, 2);
         }

@@ -6,9 +6,9 @@ namespace OpenGL_Game
     {
         public int vaoID { get; }
         public int vertexCount { get; }
+        public int[] bufferIDs { get; }
 
         public bool hasUVs { get; }
-
         public bool hasNormals { get; }
 
         private Dictionary<EnumFacing, RawQuad> quads;

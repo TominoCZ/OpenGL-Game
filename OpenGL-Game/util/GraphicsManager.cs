@@ -5,13 +5,14 @@ using System.Drawing.Imaging;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using GL = OpenTK.Graphics.OpenGL.GL;
+using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace OpenGL_Game
 {
     class GraphicsManager
     {
         static List<int> VAOs = new List<int>();
-        static List<int> VBOs = new List<int>();
+        static ThreadSafeList<int> VBOs = new ThreadSafeList<int>();
         static List<int> textures = new List<int>();
 
         public static RawBlockModel loadBlockModelToVAO(Dictionary<EnumFacing, RawQuad> quads)
@@ -55,19 +56,16 @@ namespace OpenGL_Game
                 UVs.AddRange(quad.UVs);
             }
 
-            storeDataInAttributeList(0, coordSize, vertices.ToArray());
-
-            if (UVs.Count > 0)
-                storeDataInAttributeList(1, 2, UVs.ToArray());
-            if (normals.Count > 0)
-                storeDataInAttributeList(2, 3, normals.ToArray());
+            var buff0 = storeDataInAttributeList(0, coordSize, vertices.ToArray());
+            var buff1 = storeDataInAttributeList(1, 2, UVs.ToArray());
+            var buff2 = storeDataInAttributeList(2, 3, normals.ToArray());
 
             unbindVAO();
 
-            return new RawModel(vaoID, coordSize, quads);
+            return new RawModel(vaoID, new[] { buff0, buff1, buff2 }, coordSize, quads);
         }
 
-        public static RawModel overrideModelInVAO(int ID, List<RawQuad> quads, int coordSize)
+        public static RawModel overrideModelInVAO(int ID, int[] buffers, List<RawQuad> quads, int coordSize)
         {
             List<float> vertices = new List<float>();
             List<float> normals = new List<float>();
@@ -84,22 +82,49 @@ namespace OpenGL_Game
 
             GL.BindVertexArray(ID);
 
-            storeDataInAttributeList(0, coordSize, vertices.ToArray());
-            storeDataInAttributeList(1, 2, UVs.ToArray());
-            storeDataInAttributeList(2, 3, normals.ToArray());
+            overrideDataInAttributeList(buffers[0], 0, coordSize, vertices.ToArray());
+            if (buffers[1] != -1)
+                overrideDataInAttributeList(buffers[1], 1, 2, UVs.ToArray());
+            if (buffers[2] != -1)
+                overrideDataInAttributeList(buffers[2], 2, 3, normals.ToArray());
 
             unbindVAO();
 
-            return new RawModel(ID, coordSize, quads);
+            return new RawModel(ID, buffers, coordSize, quads);
         }
 
         public static void overrideModelUVsInVAO(int ID, float[] UVs)
         {
+            overrideDataInAttributeList(ID, 1, 2, UVs);
+        }
+
+        private static void overrideDataInAttributeList(int ID, int attrib, int coordSize, float[] data)
+        {
             GL.BindVertexArray(ID);
 
-            storeDataInAttributeList(1, 2, UVs);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, ID);
+            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.DynamicDraw);
+            GL.VertexAttribPointer(attrib, coordSize, VertexAttribPointerType.Float, false, 0, 0);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
             unbindVAO();
+        }
+
+        private static int storeDataInAttributeList(int attrib, int coordSize, float[] data)
+        {
+            if (data.Length == 0)
+                return -1;
+
+            int vboID = GL.GenBuffer();
+
+            VBOs.Add(vboID);
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vboID);
+            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.DynamicDraw);
+            GL.VertexAttribPointer(attrib, coordSize, VertexAttribPointerType.Float, false, 0, 0);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            return vboID;
         }
 
         public static int loadTexture(Bitmap textureMap, bool smooth)
@@ -149,18 +174,6 @@ namespace OpenGL_Game
             return null;
         }
 
-        private static void storeDataInAttributeList(int attrib, int coordSize, float[] data)
-        {
-            int vboID = GL.GenBuffer();
-
-            VBOs.Add(vboID);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vboID);
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.StaticDraw);
-            GL.VertexAttribPointer(attrib, coordSize, VertexAttribPointerType.Float, false, 0, 0);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        }
-
         private static int createVAO()
         {
             int vaoID = GL.GenVertexArray();
@@ -182,9 +195,9 @@ namespace OpenGL_Game
             {
                 deleteVAO(item);
             }
-            foreach (var item in VBOs)
+            for (int i = 0; i < VBOs.Count; i++)
             {
-                GL.DeleteBuffer(item);
+                GL.DeleteBuffer(VBOs[i]);
             }
             foreach (var item in textures)
             {

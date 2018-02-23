@@ -60,6 +60,7 @@ namespace OpenGL_Game
                 entityRenderer.render(partialTicks);
             }
 
+            
             //render other gui
             if (Game.INSTANCE.player != null)
             {
