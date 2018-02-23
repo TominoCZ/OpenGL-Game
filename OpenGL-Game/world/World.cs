@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 
@@ -13,7 +14,7 @@ namespace OpenGL_Game
 
         public List<Entity> _entities;
 
-        private World()
+        public World()
         {
             _chunks = new Dictionary<BlockPos, ChunkData>();
             _entities = new List<Entity>();
@@ -120,15 +121,15 @@ namespace OpenGL_Game
             return _chunks.Values.ToArray();
         }
 
-        public void setBlock(EnumBlock blockType, BlockPos pos, bool redraw)
+        public void setBlock(BlockPos pos, EnumBlock blockType, bool redraw)
         {
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
             {
-                pos = pos.ChunkPos;
+                var chp = pos.ChunkPos;
 
-                chunk = new Chunk(pos);
-                _chunks.Add(pos, new ChunkData(chunk, new ChunkModel()));
+                chunk = new Chunk(chp);
+                _chunks.Add(chp, new ChunkData(chunk, new ChunkModel()));
             }
 
             chunk.setBlock(pos - chunk.chunkPos, blockType);
@@ -159,7 +160,7 @@ namespace OpenGL_Game
                         _chunks.Add(p, new ChunkData(ch, new ChunkModel()));
                     }
 
-                    if (ch != chunk)
+                    if (ch != chunk && ch != null)
                     {
                         updateModelForChunk(ch);
                         chunksUpdated++;
@@ -199,6 +200,47 @@ namespace OpenGL_Game
             var chunk = getChunkFromPos(pos);
 
             return chunk.isBlockAbove(pos - chunk.chunkPos);
+        }
+
+        public void generateChunk(BlockPos pos)
+        {
+            var chunkPos = pos.ChunkPos;
+            if (chunkPos.y >= 1)
+                return;
+
+            var noise = new FastNoise(0);
+            noise.SetFractalType(FastNoise.FractalType.FBM);
+
+            var chunk = new Chunk(chunkPos);
+
+            if (_chunks.ContainsKey(chunkPos))
+                _chunks.Remove(chunkPos);
+
+            _chunks.Add(chunkPos, new ChunkData(chunk, new ChunkModel()));
+
+            var r = new Random();
+
+            for (int z = 0; z < 16; z++)
+            {
+                for (int x = 0; x < 16; x++)
+                {
+                    int peakY = (int)Math.Abs((0.5f + noise.GetPerlinFractal((x + chunkPos.x), (z + chunkPos.z))) * 31);
+
+                    for (int y = peakY; y >= 0; y--)
+                    {
+                        var p = new BlockPos(x, y, z) + chunkPos;
+
+                        if (y == peakY)
+                            setBlock(p, EnumBlock.GRASS, false);
+                        else if (peakY - y > 0 && peakY - y < 3) // for 2 blocks
+                            setBlock(p, EnumBlock.DIRT, false);
+                        else if (y == 0)
+                            setBlock(p, EnumBlock.BEDROCK, false);
+                        else
+                            setBlock(p, r.NextDouble() > 0.98 ? EnumBlock.RARE : EnumBlock.STONE, false);
+                    }
+                }
+            }
         }
 
         public void generateChunkModels()

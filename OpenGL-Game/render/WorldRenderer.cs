@@ -35,10 +35,10 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-25, 75, -75) * 5, Vector3.One);
+            modelLight = new ModelLight(new Vector3(-7, 9, -9f) * 500, Vector3.One);
             selectionOutlineModel = new CubeOutlineModel(new BlockShaderWireframe());
 
-            RenderDistance = 3;
+            RenderDistance = 5;
 
             updateTimer = Stopwatch.StartNew();
         }

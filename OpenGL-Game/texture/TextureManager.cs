@@ -37,11 +37,11 @@ namespace OpenGL_Game
             var blocks = Enum.GetValues(typeof(EnumBlock));
             var sides = Enum.GetValues(typeof(EnumFacing));
 
-            var dir = "assets/textures/blocks";
+            var dir = "SharpCraft_Data/assets/textures/blocks";
 
             var files = new string[0];
             if (Directory.Exists(dir))
-                files = Directory.GetFiles("assets/textures/blocks", "*.png");
+                files = Directory.GetFiles("SharpCraft_Data/assets/textures/blocks", "*.png");
 
             for (int i = 0; i < files.Length; i++)
             {

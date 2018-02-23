@@ -56,7 +56,7 @@ namespace OpenGL_Game
         {
             if (isPosInChunk(pos))
             {
-                for (int y = pos.y + 1; y < 16; y++) //TODO: KEEP CHECKING ABOVE
+                for (int y = pos.y + 1; y < chunkBlocks.GetLength(1); y++) //TODO: KEEP CHECKING ABOVE
                 {
                     var bp = new BlockPos(pos.x, y, pos.z);
 

@@ -73,6 +73,7 @@
     <Compile Include="shader\GuiShader.cs" />
     <Compile Include="shader\BlockShaderWireframe.cs" />
     <Compile Include="shader\ShaderManager.cs" />
+    <Compile Include="util\FastNoise.cs" />
     <Compile Include="util\ThreadSafeList.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
     <Compile Include="texture\BlockTextureUV.cs" />

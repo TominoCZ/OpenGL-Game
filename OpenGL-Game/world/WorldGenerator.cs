@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace OpenGL_Game
 {
@@ -11,10 +12,32 @@ namespace OpenGL_Game
 
             int totalHeight = 10;
 
-            World world = new World(size / 16);
+            World world = new World();
 
             Random rand = new Random(seed);
 
+            var sizeInChunks = size / 16;
+            var chunksHalf = sizeInChunks / 2;
+
+            for (int x = -chunksHalf; x < chunksHalf; x++)
+            {
+                for (int z = -chunksHalf; z < chunksHalf; z++)
+                {
+
+                    var pos = new BlockPos(x * 16, 0, z * 16);
+                    world.generateChunk(pos);
+
+                }
+            }
+
+            if (Game.INSTANCE.player != null)
+            {
+                var playerPos = new BlockPos(Game.INSTANCE.player.pos);
+
+                Game.INSTANCE.player.pos.X = world.getHeightAtPos(playerPos.x, playerPos.z) + 1;
+            }
+
+            return world;
             for (int y = 0; y < totalHeight; y++)
             {
                 for (int z = -half; z < half; z++)
@@ -35,7 +58,7 @@ namespace OpenGL_Game
                         if (block == EnumBlock.AIR)
                             continue;
 
-                        world.setBlock(block, pos, false);
+                        world.setBlock(pos, block, false);
                     }
                 }
             }

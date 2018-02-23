@@ -16,7 +16,7 @@ namespace OpenGL_Game
         protected ShaderProgram(string shaderName, PrimitiveType renderType)
         {
             this.renderType = renderType;
-            var file = "assets/shaders/" + shaderName;
+            var file = "SharpCraft_Data/assets/shaders/" + shaderName;
 
             VertexShaderID = loadShader(ShaderType.VertexShader, file);
             FragmentShaderID = loadShader(ShaderType.FragmentShader, file);

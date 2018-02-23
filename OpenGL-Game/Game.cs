@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Text;
 using System.Threading;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -86,6 +88,8 @@ namespace OpenGL_Game
             ModelManager.registerBlockModel(rareModel);
 
             gameRenderer = new GameRenderer(new Camera());
+
+            SettingsManager.load();
 
             openGuiScreen(new GuiScreenMainMenu());
         }
@@ -435,16 +439,16 @@ namespace OpenGL_Game
                                     var blockUnder = world.getBlock(posUnder);
 
                                     if (blockUnder == EnumBlock.GRASS)
-                                        world.setBlock(EnumBlock.DIRT, posUnder, false);
+                                        world.setBlock(posUnder, EnumBlock.DIRT, false);
 
-                                    world.setBlock(heldBlock, pos, true);
+                                    world.setBlock(pos, heldBlock, true);
                                 }
                             }
                         }
 
                         //break
                         if (e.Button == MouseButton.Left)
-                            world.setBlock(EnumBlock.AIR, pos, true);
+                            world.setBlock(pos, EnumBlock.AIR, true);
                     }
                 }
                 else
@@ -489,6 +493,53 @@ namespace OpenGL_Game
             GraphicsManager.cleanUp();
 
             WorldLoader.saveWorld(world);
+            SettingsManager.save();
+        }
+    }
+
+    class SettingsManager
+    {
+        public static void load()
+        {
+            var dir = "SharpCraft_Data";
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            var file = dir + "/settings.txt";
+
+            if (File.Exists(file))
+            {
+                var data = File.ReadLines(file);
+
+                foreach (var line in data)
+                {
+                    var parsed = line.Trim().Replace(" ", "").ToLower();
+                    var split = parsed.Split('=');
+
+                    if (split.Length < 2)
+                        continue;
+
+                    if (parsed.Contains("renderdistance="))
+                    {
+                        int.TryParse(split[1], out var num);
+                        Game.INSTANCE.gameRenderer.worldRenderer.RenderDistance = num;
+                    }
+                }
+            }
+        }
+
+        public static void save()
+        {
+            var dir = "SharpCraft_Data";
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            var file = dir + "/settings.txt";
+            
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"renderDistance={Game.INSTANCE.gameRenderer.worldRenderer.RenderDistance}");
+
+            File.WriteAllText(file, sb.ToString());
         }
     }
 }

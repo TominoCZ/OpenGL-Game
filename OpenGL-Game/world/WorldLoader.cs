@@ -7,10 +7,13 @@ namespace OpenGL_Game
 {
     class WorldLoader
     {
-        static string dir = "CSharpMC_World";
+        static string dir = "SharpCraft_Data/saves/world";
 
         public static void saveWorld(World w)
         {
+            if (w == null)
+                return;
+
             new Thread(() =>
             {
                 var bf = new BinaryFormatter();

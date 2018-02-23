@@ -146,7 +146,7 @@ namespace OpenGL_Game
         {
             try
             {
-                var bmp = (Bitmap)Image.FromFile($"assets/textures/{textureName}.png");
+                var bmp = (Bitmap)Image.FromFile($"SharpCraft_Data/assets/textures/{textureName}.png");
 
                 int id = loadTexture(bmp, smooth);
 

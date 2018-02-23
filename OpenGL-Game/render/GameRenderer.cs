@@ -15,8 +15,8 @@ namespace OpenGL_Game
         public EntityRenderer entityRenderer;
         public GuiRenderer guiRenderer;
 
-        public float NEAR_PLANE = 0.09f;
-        public float FAR_PLANE = 100f;
+        public float NEAR_PLANE = 0.1f;
+        public float FAR_PLANE = 1000f;
 
         public float FOV = 65;
 
@@ -59,7 +59,6 @@ namespace OpenGL_Game
                 worldRenderer.render(viewMatrix);
                 entityRenderer.render(partialTicks);
             }
-
             
             //render other gui
             if (Game.INSTANCE.player != null)
