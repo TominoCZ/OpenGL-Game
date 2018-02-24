@@ -5,6 +5,8 @@
         public Chunk chunk;
         public ChunkModel model;
 
+        public bool modelGenerated;
+
         public ChunkData(Chunk chunk, ChunkModel model)
         {
             this.chunk = chunk;

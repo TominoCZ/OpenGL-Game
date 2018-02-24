@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace OpenGL_Game
         {
             this.chunkPos = chunkPos;
 
-            chunkBlocks = new int[16, 16, 16];
+            chunkBlocks = new int[16, 128, 16];
         }
 
         private Chunk(ChunkCache cache)
@@ -47,16 +48,16 @@ namespace OpenGL_Game
         private bool isPosInChunk(BlockPos pos)
         {
             return
-                pos.x >= 0 && pos.x < chunkBlocks.GetLength(0) &&
-                pos.y >= 0 && pos.y < chunkBlocks.GetLength(1) &&
-                pos.z >= 0 && pos.z < chunkBlocks.GetLength(2);
+                pos.x >= 0 && pos.x < 16 &&
+                pos.y >= 0 && pos.y < 256 &&
+                pos.z >= 0 && pos.z < 16;
         }
 
         public bool isBlockAbove(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
             {
-                for (int y = pos.y + 1; y < chunkBlocks.GetLength(1); y++) //TODO: KEEP CHECKING ABOVE
+                for (int y = pos.y + 1; y < 256; y++) //TODO: KEEP CHECKING ABOVE
                 {
                     var bp = new BlockPos(pos.x, y, pos.z);
 
@@ -71,7 +72,6 @@ namespace OpenGL_Game
         public ChunkModel generateModel(World w, ChunkModel previousChunkModel)
         {
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
-            var pos = new BlockPos();
             List<RawQuad> quads;
 
             var l_x = chunkBlocks.GetLength(0);
@@ -87,7 +87,7 @@ namespace OpenGL_Game
                 {
                     for (int x = 0; x < l_x; x++)
                     {
-                        pos.setPos(x, y, z);
+                        var pos = new BlockPos(x, y, z);
 
                         var block = getBlock(w, pos);
 

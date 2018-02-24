@@ -123,7 +123,7 @@ namespace OpenGL_Game
 
         public Chunk getChunkFromPos(BlockPos pos)
         {
-            if (!_chunks.TryGetValue(pos.ChunkPos, out var chunkData))
+            if (!_chunks.TryGetValue(pos.ChunkPos(), out var chunkData))
                 return null;
 
             return chunkData?.chunk;
@@ -139,10 +139,16 @@ namespace OpenGL_Game
             var chunk = getChunkFromPos(pos);
             if (chunk == null)
             {
-                var chp = pos.ChunkPos;
+                var chp = pos.ChunkPos();
 
-                chunk = new Chunk(chp);
-                _chunks.TryAdd(chp, new ChunkData(chunk, new ChunkModel()));
+                new Thread(() =>
+                {
+                    generateChunk(chp, false);
+                    setBlock(pos, blockType, redraw);
+                }).Start();
+
+                //chunk = new Chunk(chp);
+                //_chunks.TryAdd(chp, new ChunkData(chunk, new ChunkModel()));
             }
 
             chunk.setBlock(pos - chunk.chunkPos, blockType);
@@ -152,7 +158,7 @@ namespace OpenGL_Game
                 var sw = new Stopwatch();
                 sw.Start();
 
-                updateModelForChunk(chunk);
+                updateModelForChunk(chunk.chunkPos);
 
                 var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
 
@@ -165,17 +171,9 @@ namespace OpenGL_Game
                     var p = pos.offset(side);
                     var ch = getChunkFromPos(p);
 
-                    p = p.ChunkPos;
-
-                    if (ch == null && p.y >= 0)
-                    {
-                        ch = new Chunk(p);
-                        _chunks.TryAdd(p, new ChunkData(ch, new ChunkModel()));
-                    }
-
                     if (ch != chunk && ch != null)
                     {
-                        updateModelForChunk(ch);
+                        updateModelForChunk(ch.chunkPos);
                         chunksUpdated++;
                     }
                 }
@@ -197,16 +195,22 @@ namespace OpenGL_Game
 
         public int getHeightAtPos(int x, int z)
         {
-            for (int y = 0; y >= 0; y++)
+            for (int y = 255; y >= 0; y--)
             {
-                var block = getBlock(new BlockPos(x, y, z));
-                var blockAbove = getBlock(new BlockPos(x, y, z));
+                var pos = new BlockPos(x, y, z);
 
-                if (block == blockAbove && block == EnumBlock.AIR)
-                    return y;
+                var chunk = getChunkFromPos(pos);
+
+                if (chunk == null)
+                    generateChunk(pos, false);
+
+                var block = getBlock(pos);
+
+                if (block != EnumBlock.AIR)
+                    return y + 1;
             }
 
-            return -1;
+            return 0;
         }
 
         public bool isBlockAbove(BlockPos pos)
@@ -218,14 +222,12 @@ namespace OpenGL_Game
 
         public void generateChunk(BlockPos pos, bool redraw)
         {
-            var chunkPos = pos.ChunkPos;
-            if (chunkPos.y >= 1)
+            var chunkPos = pos.ChunkPos();
+
+            if (_chunks.ContainsKey(chunkPos))
                 return;
 
             var chunk = new Chunk(chunkPos);
-
-            //if (_chunks.ContainsKey(chunkPos))
-            _chunks.TryRemove(chunkPos, out var oldchunk);
 
             _chunks.TryAdd(chunkPos, new ChunkData(chunk, new ChunkModel()));
 
@@ -233,80 +235,60 @@ namespace OpenGL_Game
             {
                 for (int x = 0; x < 16; x++)
                 {
-                    int peakY = (int)Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal((x + chunkPos.x) / 1.25f, (z + chunkPos.z) / 1.25f), 0, 1) * 30);
+                    int peakY = 32 + (int)Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal((x + chunkPos.x) / 1.25f, (z + chunkPos.z) / 1.25f), 0, 1) * 30);
 
                     for (int y = peakY; y >= 0; y--)
                     {
-                        var p = new BlockPos(x, y, z) + chunkPos;
+                        var p = new BlockPos(x, y, z);
 
                         if (y == peakY)
-                            setBlock(p, EnumBlock.GRASS, false);
-                        else if (peakY - y > 0 && peakY - y < 3) // for 2 blocks
-                            setBlock(p, EnumBlock.DIRT, false);
+                            chunk.setBlock(p, EnumBlock.GRASS);
+                        else if (y > 0 && peakY - y > 0 && peakY - y < 3) // for 2 blocks
+                            chunk.setBlock(p, EnumBlock.DIRT);
                         else if (y == 0)
-                            setBlock(p, EnumBlock.BEDROCK, false);
+                            chunk.setBlock(p, EnumBlock.BEDROCK);
                         else
-                            setBlock(p, noise.GetCubic(x, y) > 0.98 ? EnumBlock.RARE : EnumBlock.STONE, false);
+                            chunk.setBlock(p, noise.GetCubic(x, y) > 0.98 ? EnumBlock.RARE : EnumBlock.STONE);
                     }
                 }
             }
 
             if (redraw)
+                updateModelForChunk(chunk.chunkPos);
+
+            var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+
+            for (var index = 0; index < sides.Length - 2; index++)
             {
-                updateModelForChunk(chunk);
+                var side = sides[index];
 
-                var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+                var vec = new BlockPos().offset(side).vector;
+                var offset = new BlockPos(vec * 16);
 
-                for (var index = 0; index < sides.Length; index++)
-                {
-                    var side = sides[index];
+                var c = getChunkFromPos(offset + chunkPos);
 
-                    var vec = new BlockPos().offset(side).vector;
-                    var offset = new BlockPos(vec * 16);
-
-                    var c = getChunkFromPos(offset + pos.ChunkPos);
-
-                    if (c != null)
-                        updateModelForChunk(c);
-                }
-            }//TODO check if player is in the chunk, set his position
+                if (c != null)
+                    updateModelForChunk(c.chunkPos);
+            }
         }
 
-        public void generateChunkModels()
-        {
-            new Thread(() =>
-            {
-                var chunkDatas = _chunks.Values.ToArray();
-
-                for (var index = 0; index < chunkDatas.Length; index++)
-                {
-                    var chunkData = chunkDatas[index];
-
-                    var model = chunkData.chunk.generateModel(this, chunkData.model);
-                    chunkData.model = model;
-                }
-            }).Start();
-        }
-
-        private void updateModelForChunk(Chunk chunk)
+        public void updateModelForChunk(BlockPos pos)
         {
             new Thread(() =>
                {
-                   var dataNodes = getChunkDataNodes();
-
-                   for (var index = 0; index < dataNodes.Length; index++)
+                   if (_chunks.TryGetValue(pos.ChunkPos(), out var node))
                    {
-                       var node = dataNodes[index];
+                       var model = node.chunk.generateModel(this, node.model);
 
-                       if (node.chunk == chunk)
-                       {
-                           var model = node.chunk.generateModel(this, node.model);
-
-                           node.model = model;
-                           break;
-                       }
+                       node.model = model;
+                       node.modelGenerated = true;
                    }
                }).Start();
+        }
+
+        public bool doesChunkHaveModel(BlockPos pos)
+        {
+            return _chunks[pos.ChunkPos()].modelGenerated;
         }
     }
 

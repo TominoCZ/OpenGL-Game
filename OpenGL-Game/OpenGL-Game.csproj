@@ -90,7 +90,6 @@
     <Compile Include="texture\TextureUV.cs" />
     <Compile Include="world\chunk\ChunkData.cs" />
     <Compile Include="world\WorldChunksNode.cs" />
-    <Compile Include="world\WorldGenerator.cs" />
     <Compile Include="render\WorldRenderer.cs" />
     <Compile Include="render\Camera.cs" />
     <Compile Include="world\chunk\Chunk.cs" />
