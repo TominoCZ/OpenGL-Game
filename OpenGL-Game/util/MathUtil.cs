@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpenTK;
 
 namespace OpenGL_Game
 {
@@ -30,6 +31,14 @@ namespace OpenGL_Game
             }
 
             return max;
+        }
+
+        public static float distance(Vector2 v1, Vector2 v2)
+        {
+            var x = v1.X - v2.X;
+            var y = v1.Y - v2.Y;
+
+            return (float)Math.Sqrt(x * x + y * y);
         }
     }
 }

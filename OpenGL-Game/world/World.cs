@@ -1,43 +1,55 @@
 ﻿using System;
 using System.CodeDom;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using OpenTK;
 
 namespace OpenGL_Game
 {
     class World
     {
-        private Dictionary<BlockPos, ChunkData> _chunks;
+        private ConcurrentDictionary<BlockPos, ChunkData> _chunks;
 
         public List<Entity> _entities;
 
-        public World()
+        public readonly int seed;
+
+        private FastNoise noise;
+
+        public World(int seed)
         {
-            _chunks = new Dictionary<BlockPos, ChunkData>();
+            _chunks = new ConcurrentDictionary<BlockPos, ChunkData>();
             _entities = new List<Entity>();
+
+            noise = new FastNoise(seed);
+            noise.SetFractalType(FastNoise.FractalType.FBM);
+
+            this.seed = seed;
         }
 
-        public World(int sizeInChunks) : this()
-        {
-            int half = sizeInChunks / 2;
+        /* public World(int sizeInChunks) : this()
+         {
 
-            for (int z = -half; z < half; z++)
-            {
-                for (int x = -half; x < half; x++)
-                {
-                    var pos = new BlockPos(x * 16, 0, z * 16);
-                    var chunk = new Chunk(pos);
-                    var model = new ChunkModel();
+             int half = sizeInChunks / 2;
 
-                    _chunks.Add(pos, new ChunkData(chunk, model));
-                }
-            }
-        }
+             for (int z = -half; z < half; z++)
+             {
+                 for (int x = -half; x < half; x++)
+                 {
+                     var pos = new BlockPos(x * 16, 0, z * 16);
+                     var chunk = new Chunk(pos);
+                     var model = new ChunkModel();
 
-        private World(List<ChunkCache> caches) : this()
+                     _chunks.TryAdd(pos, new ChunkData(chunk, model));
+                 }
+             }
+         }*/
+
+        private World(int seed, List<ChunkCache> caches) : this(seed)
         {
             foreach (var cache in caches)
             {
@@ -46,13 +58,13 @@ namespace OpenGL_Game
                 var chunk = Chunk.CreateFromCache(cache);
                 var model = new ChunkModel();
 
-                _chunks.Add(pos, new ChunkData(chunk, model));
+                _chunks.TryAdd(pos, new ChunkData(chunk, model));
             }
         }
 
-        public static World Create(List<ChunkCache> caches)
+        public static World Create(int seed, List<ChunkCache> caches)
         {
-            return new World(caches);
+            return new World(seed, caches);
         }
 
         public void addEntity(Entity e)
@@ -111,7 +123,8 @@ namespace OpenGL_Game
 
         public Chunk getChunkFromPos(BlockPos pos)
         {
-            _chunks.TryGetValue(pos.ChunkPos, out var chunkData);
+            if (!_chunks.TryGetValue(pos.ChunkPos, out var chunkData))
+                return null;
 
             return chunkData?.chunk;
         }
@@ -129,7 +142,7 @@ namespace OpenGL_Game
                 var chp = pos.ChunkPos;
 
                 chunk = new Chunk(chp);
-                _chunks.Add(chp, new ChunkData(chunk, new ChunkModel()));
+                _chunks.TryAdd(chp, new ChunkData(chunk, new ChunkModel()));
             }
 
             chunk.setBlock(pos - chunk.chunkPos, blockType);
@@ -157,7 +170,7 @@ namespace OpenGL_Game
                     if (ch == null && p.y >= 0)
                     {
                         ch = new Chunk(p);
-                        _chunks.Add(p, new ChunkData(ch, new ChunkModel()));
+                        _chunks.TryAdd(p, new ChunkData(ch, new ChunkModel()));
                     }
 
                     if (ch != chunk && ch != null)
@@ -179,16 +192,17 @@ namespace OpenGL_Game
             if (chunk == null)
                 return EnumBlock.AIR;
 
-            return chunk.getBlock(pos - chunk.chunkPos);
+            return chunk.getBlock(this, pos - chunk.chunkPos);
         }
 
         public int getHeightAtPos(int x, int z)
         {
-            for (int y = 255; y >= 0; y--)
+            for (int y = 0; y >= 0; y++)
             {
                 var block = getBlock(new BlockPos(x, y, z));
+                var blockAbove = getBlock(new BlockPos(x, y, z));
 
-                if (block != EnumBlock.AIR)
+                if (block == blockAbove && block == EnumBlock.AIR)
                     return y;
             }
 
@@ -199,32 +213,27 @@ namespace OpenGL_Game
         {
             var chunk = getChunkFromPos(pos);
 
-            return chunk.isBlockAbove(pos - chunk.chunkPos);
+            return chunk.isBlockAbove(this, pos - chunk.chunkPos);
         }
 
-        public void generateChunk(BlockPos pos)
+        public void generateChunk(BlockPos pos, bool redraw)
         {
             var chunkPos = pos.ChunkPos;
             if (chunkPos.y >= 1)
                 return;
 
-            var noise = new FastNoise(0);
-            noise.SetFractalType(FastNoise.FractalType.FBM);
-
             var chunk = new Chunk(chunkPos);
 
             //if (_chunks.ContainsKey(chunkPos))
-            _chunks.Remove(chunkPos);
+            _chunks.TryRemove(chunkPos, out var oldchunk);
 
-            _chunks.Add(chunkPos, new ChunkData(chunk, new ChunkModel()));
-
-            var r = new Random();
+            _chunks.TryAdd(chunkPos, new ChunkData(chunk, new ChunkModel()));
 
             for (int z = 0; z < 16; z++)
             {
                 for (int x = 0; x < 16; x++)
                 {
-                    int peakY = (int)Math.Abs((0.5f + noise.GetPerlinFractal((x + chunkPos.x), (z + chunkPos.z))) * 31);
+                    int peakY = (int)Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal((x + chunkPos.x) / 1.25f, (z + chunkPos.z) / 1.25f), 0, 1) * 30);
 
                     for (int y = peakY; y >= 0; y--)
                     {
@@ -237,10 +246,30 @@ namespace OpenGL_Game
                         else if (y == 0)
                             setBlock(p, EnumBlock.BEDROCK, false);
                         else
-                            setBlock(p, r.NextDouble() > 0.98 ? EnumBlock.RARE : EnumBlock.STONE, false);
+                            setBlock(p, noise.GetCubic(x, y) > 0.98 ? EnumBlock.RARE : EnumBlock.STONE, false);
                     }
                 }
             }
+
+            if (redraw)
+            {
+                updateModelForChunk(chunk);
+
+                var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+
+                for (var index = 0; index < sides.Length; index++)
+                {
+                    var side = sides[index];
+
+                    var vec = new BlockPos().offset(side).vector;
+                    var offset = new BlockPos(vec * 16);
+
+                    var c = getChunkFromPos(offset + pos.ChunkPos);
+
+                    if (c != null)
+                        updateModelForChunk(c);
+                }
+            }//TODO check if player is in the chunk, set his position
         }
 
         public void generateChunkModels()
@@ -253,7 +282,7 @@ namespace OpenGL_Game
                 {
                     var chunkData = chunkDatas[index];
 
-                    var model = chunkData.chunk.generateModel(chunkData.model);
+                    var model = chunkData.chunk.generateModel(this, chunkData.model);
                     chunkData.model = model;
                 }
             }).Start();
@@ -271,7 +300,7 @@ namespace OpenGL_Game
 
                        if (node.chunk == chunk)
                        {
-                           var model = node.chunk.generateModel(node.model);
+                           var model = node.chunk.generateModel(this, node.model);
 
                            node.model = model;
                            break;

@@ -34,12 +34,12 @@ namespace OpenGL_Game
             chunkBlocks[pos.x, pos.y, pos.z] = (int)blockType;
         }
 
-        public EnumBlock getBlock(BlockPos pos)
+        public EnumBlock getBlock(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
                 return (EnumBlock)chunkBlocks[pos.x, pos.y, pos.z];
 
-            var block = Game.INSTANCE.world.getBlock(pos + chunkPos);
+            var block = w.getBlock(pos + chunkPos);
 
             return block;
         }
@@ -52,7 +52,7 @@ namespace OpenGL_Game
                 pos.z >= 0 && pos.z < chunkBlocks.GetLength(2);
         }
 
-        public bool isBlockAbove(BlockPos pos)
+        public bool isBlockAbove(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
             {
@@ -60,7 +60,7 @@ namespace OpenGL_Game
                 {
                     var bp = new BlockPos(pos.x, y, pos.z);
 
-                    if (getBlock(bp) != EnumBlock.AIR)
+                    if (getBlock(w, bp) != EnumBlock.AIR)
                         return true;
                 }
             }
@@ -68,7 +68,7 @@ namespace OpenGL_Game
             return Game.INSTANCE.world.isBlockAbove(pos + chunkPos);
         }
 
-        public ChunkModel generateModel(ChunkModel previousChunkModel)
+        public ChunkModel generateModel(World w, ChunkModel previousChunkModel)
         {
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             var pos = new BlockPos();
@@ -89,7 +89,7 @@ namespace OpenGL_Game
                     {
                         pos.setPos(x, y, z);
 
-                        var block = getBlock(pos);
+                        var block = getBlock(w, pos);
 
                         if (block == EnumBlock.AIR)
                             continue;
@@ -102,7 +102,7 @@ namespace OpenGL_Game
                         for (int i = 0; i < possibleDirections.Length; i++)
                         {
                             var dir = possibleDirections[i];
-                            var block_o = getBlock(pos.offset(dir));
+                            var block_o = getBlock(w, pos.offset(dir));
 
                             if (block_o == EnumBlock.AIR || (block_o == EnumBlock.GLASS && block != EnumBlock.GLASS))
                             {

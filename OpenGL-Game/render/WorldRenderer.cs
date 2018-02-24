@@ -82,6 +82,9 @@ namespace OpenGL_Game
             {
                 var node = nodes[index];
 
+                if (node == null)
+                    continue;
+
                 var dist = (Game.INSTANCE.player.camera.pos - (node.chunk.chunkPos.vector + Vector3.UnitX * 8 + Vector3.UnitZ * 8)).Length;
 
                 if (dist > RenderDistance * 16)

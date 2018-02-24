@@ -1,1 +1,1 @@
-renderDistance=5
+renderDistance=8

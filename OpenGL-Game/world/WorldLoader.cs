@@ -21,20 +21,9 @@ namespace OpenGL_Game
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
-                var nodes = w.getChunkDataNodes();
-
-                List<ChunkCache> caches = new List<ChunkCache>();
-
-                foreach (var node in nodes)
-                {
-                    var cache = node.chunk.createChunkCache();
-
-                    caches.Add(cache);
-                }
-
                 try
                 {
-                    var wcn = new WorldChunksNode(caches);
+                    var wcn = new WorldChunksNode(w);
 
                     using (var fs = File.OpenWrite(dir + "/chunks.dat"))
                     {
@@ -77,7 +66,7 @@ namespace OpenGL_Game
                     wpn = (WorldPlayerNode)bf.Deserialize(fs);
                 }
 
-                var world = World.Create(wcn.caches);
+                var world = World.Create(wcn.seed, wcn.caches);
 
                 var player = new EntityPlayerSP(wpn.pos);
                 player.camera.pitch = wpn.pitch;

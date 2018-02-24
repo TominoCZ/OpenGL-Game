@@ -7,10 +7,22 @@ namespace OpenGL_Game
     class WorldChunksNode
     {
         public List<ChunkCache> caches { get; }
+        public int seed { get; }
 
-        public WorldChunksNode(List<ChunkCache> caches)
+        public WorldChunksNode(World w)
         {
-            this.caches = caches;
+            var nodes = w.getChunkDataNodes();
+
+            caches = new List<ChunkCache>();
+
+            foreach (var node in nodes)
+            {
+                var cache = node.chunk.createChunkCache();
+
+                caches.Add(cache);
+            }
+
+            seed = w.seed;
         }
     }
 }

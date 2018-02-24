@@ -106,7 +106,8 @@ namespace OpenGL_Game
             {
                 Console.WriteLine("DEBUG: generating world");
                 world = WorldGenerator.generate(0);
-                player = new EntityPlayerSP(Vector3.UnitY * (world.getHeightAtPos(0, 0) + 1));
+                var r = new Random();
+                player = new EntityPlayerSP(new Vector3(-100 + (float)r.NextDouble() * 200, 30, -100 + (float)r.NextDouble() * 200));
 
                 player.setItemInHotbar(0, new ItemBlock(EnumBlock.CRAFTING_TABLE));
                 player.setItemInHotbar(1, new ItemBlock(EnumBlock.FURNACE));
@@ -209,6 +210,39 @@ namespace OpenGL_Game
             mouseWheelLast = wheelValue;
 
             world?.updateEntities();
+
+            checkForEmptyChunks();
+        }
+
+        private void checkForEmptyChunks()
+        {
+            if (world == null || player == null)
+                return;
+
+            var rDist = gameRenderer.worldRenderer.RenderDistance;
+
+            for (int x = -rDist; x < rDist; x++)
+            {
+                for (int z = -rDist; z < rDist; z++)
+                {
+                    var pos = new BlockPos(x * 16 + player.pos.X, 0, z * 16 + player.pos.Z).ChunkPos +
+                              new BlockPos(8, 0, 8);
+
+                    var dist = MathUtil.distance(pos.vector.Xz, player.camera.pos.Xz);
+
+                    if (dist <= rDist * 16)
+                    {
+                        var chunk = world.getChunkFromPos(pos);
+
+                        if (chunk == null)
+                        {
+                            new Thread(() => world.generateChunk(pos, true)).Start();
+
+                            Console.WriteLine("generated a chunk!");
+                        }
+                    }
+                }
+            }
         }
 
         public void closeGuiScreen()
