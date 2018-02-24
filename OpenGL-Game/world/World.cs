@@ -1,9 +1,7 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using OpenTK;
@@ -274,16 +272,16 @@ namespace OpenGL_Game
 
         public void updateModelForChunk(BlockPos pos)
         {
-            new Thread(() =>
-               {
-                   if (_chunks.TryGetValue(pos.ChunkPos(), out var node))
-                   {
-                       var model = node.chunk.generateModel(this, node.model);
+            if (_chunks.TryGetValue(pos.ChunkPos(), out var node))
+            {
+                node.modelGenerated = true;
 
-                       node.model = model;
-                       node.modelGenerated = true;
-                   }
-               }).Start();
+                new Thread(() =>
+                {
+                    var model = node.chunk.generateModel(this, node.model);
+                    node.model = model;
+                }).Start();
+            }
         }
 
         public bool doesChunkHaveModel(BlockPos pos)

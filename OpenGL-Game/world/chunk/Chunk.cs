@@ -8,7 +8,7 @@ namespace OpenGL_Game
 {
     class Chunk
     {
-        private int[,,] chunkBlocks;
+        private short[,,] chunkBlocks;
 
         public BlockPos chunkPos { get; }
 
@@ -16,7 +16,7 @@ namespace OpenGL_Game
         {
             this.chunkPos = chunkPos;
 
-            chunkBlocks = new int[16, 128, 16];
+            chunkBlocks = new short[16, 256, 16];
         }
 
         private Chunk(ChunkCache cache)
@@ -32,7 +32,7 @@ namespace OpenGL_Game
 
         public void setBlock(BlockPos pos, EnumBlock blockType)
         {
-            chunkBlocks[pos.x, pos.y, pos.z] = (int)blockType;
+            chunkBlocks[pos.x, pos.y, pos.z] = (short)blockType;
         }
 
         public EnumBlock getBlock(World w, BlockPos pos)
@@ -74,9 +74,9 @@ namespace OpenGL_Game
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             List<RawQuad> quads;
 
-            var l_x = chunkBlocks.GetLength(0);
-            var l_y = chunkBlocks.GetLength(1);
-            var l_z = chunkBlocks.GetLength(2);
+            var l_x = 16;//chunkBlocks.GetLength(0);
+            var l_y = 256;//chunkBlocks.GetLength(1);
+            var l_z = 16;//chunkBlocks.GetLength(2);
 
             var MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
 
@@ -161,7 +161,8 @@ namespace OpenGL_Game
 
         public ChunkCache createChunkCache()
         {
-            return new ChunkCache(chunkPos, chunkBlocks);
+            return null;
+            //return new ChunkCache(chunkPos, chunkBlocks);
         }
     }
 
@@ -169,12 +170,12 @@ namespace OpenGL_Game
     class ChunkCache
     {
         private readonly BlockPos _chunkPos;
-        private readonly int[,,] _chunkBlocks;
+        private readonly short[,,] _chunkBlocks;
 
         public BlockPos chunkPos => _chunkPos;
-        public int[,,] chunkBlocks => _chunkBlocks;
+        public short[,,] chunkBlocks => _chunkBlocks;
 
-        public ChunkCache(BlockPos chunkPos, int[,,] chunkBlocks)
+        public ChunkCache(BlockPos chunkPos, short[,,] chunkBlocks)
         {
             _chunkPos = chunkPos;
             _chunkBlocks = chunkBlocks;
