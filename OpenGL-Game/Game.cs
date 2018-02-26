@@ -108,12 +108,14 @@ namespace OpenGL_Game
 
                 var r = new Random();
 
-                var playerPos = new BlockPos(-100 + (float)r.NextDouble() * 200, 0, -100 + (float)r.NextDouble() * 200);
+                var playerPos = new BlockPos(-100 + (float) r.NextDouble() * 200, 0,
+                    -100 + (float) r.NextDouble() * 200);
 
                 world = new World(0);
                 world.generateChunk(playerPos, true);
 
-                player = new EntityPlayerSP(new Vector3(playerPos.x, world.getHeightAtPos(playerPos.x, playerPos.z), playerPos.z));
+                player = new EntityPlayerSP(new Vector3(playerPos.x, world.getHeightAtPos(playerPos.x, playerPos.z),
+                    playerPos.z));
 
                 player.setItemInHotbar(0, new ItemBlock(EnumBlock.CRAFTING_TABLE));
                 player.setItemInHotbar(1, new ItemBlock(EnumBlock.FURNACE));
@@ -143,63 +145,63 @@ namespace OpenGL_Game
         private void runUpdateThreads()
         {
             new Thread(() =>
-            {
-                while (true)
                 {
-                    if (Visible)
+                    while (true)
                     {
-                        checkForEmptyChunks();
-                    }
-
-                    Thread.Sleep(250);
-                }
-            })
-            { IsBackground = true }.Start();
-
-            new Thread(() =>
-            {
-                bool wasSpaceDown = false;
-
-                while (true)
-                {
-                    if (Visible)
-                    {
-                        var state = OpenTK.Input.Mouse.GetState();
-
-                        var point = new Point(state.X, state.Y);
-
-                        if (guiScreen == null)
+                        if (Visible)
                         {
-                            if (!(CursorVisible = !Focused))
-                            {
-                                var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
-
-                                player.camera.yaw -= delta.X / 1000f;
-                                player.camera.pitch -= delta.Y / 1000f;
-
-                                var keyboardState = Keyboard.GetState();
-
-                                if (keyboardState.IsKeyDown(Key.Space) && !wasSpaceDown && player.onGround)
-                                {
-                                    wasSpaceDown = true;
-                                    player.motion.Y = 0.475F;
-                                }
-                                else if ((!keyboardState.IsKeyDown(Key.Space) || player.onGround) && wasSpaceDown)
-                                    wasSpaceDown = false;
-
-                                getMouseOverObject();
-
-                                resetMouse();
-                            }
+                            checkForEmptyChunks();
                         }
 
-                        mouseLast = point;
+                        Thread.Sleep(250);
                     }
+                })
+                {IsBackground = true}.Start();
 
-                    Thread.Sleep(2);
-                }
-            })
-            { IsBackground = true }.Start();
+            new Thread(() =>
+                {
+                    bool wasSpaceDown = false;
+
+                    while (true)
+                    {
+                        if (Visible)
+                        {
+                            var state = OpenTK.Input.Mouse.GetState();
+
+                            var point = new Point(state.X, state.Y);
+
+                            if (guiScreen == null)
+                            {
+                                if (!(CursorVisible = !Focused))
+                                {
+                                    var delta = new Point(mouseLast.X - point.X, mouseLast.Y - point.Y);
+
+                                    player.camera.yaw -= delta.X / 1000f;
+                                    player.camera.pitch -= delta.Y / 1000f;
+
+                                    var keyboardState = Keyboard.GetState();
+
+                                    if (keyboardState.IsKeyDown(Key.Space) && !wasSpaceDown && player.onGround)
+                                    {
+                                        wasSpaceDown = true;
+                                        player.motion.Y = 0.475F;
+                                    }
+                                    else if ((!keyboardState.IsKeyDown(Key.Space) || player.onGround) && wasSpaceDown)
+                                        wasSpaceDown = false;
+
+                                    getMouseOverObject();
+
+                                    resetMouse();
+                                }
+                            }
+
+                            mouseLast = point;
+                        }
+
+                        Thread.Sleep(2);
+                    }
+                })
+                {IsBackground = true}.Start();
         }
 
         private void resetMouse()
@@ -255,10 +257,12 @@ namespace OpenGL_Game
                             new Thread(() => world.generateChunk(pos, true)).Start();
 
                             Console.WriteLine("generated a chunk!");
+                            Thread.Sleep(1);
                         }
                         else if (!world.doesChunkHaveModel(pos))
                         {
                             world.updateModelForChunk(pos);
+                            Thread.Sleep(1);
                         }
                     }
                 }
@@ -288,7 +292,7 @@ namespace OpenGL_Game
 
         public float getRenderPartialTicks()
         {
-            return (float)timer.Elapsed.TotalMilliseconds / 50f;
+            return (float) timer.Elapsed.TotalMilliseconds / 50f;
         }
 
         private void getMouseOverObject()
@@ -360,7 +364,7 @@ namespace OpenGL_Game
                 var moo = moos[index];
                 var l = Math.Abs((player.camera.pos - (moo.blockPos.vector + Vector3.One * 0.5f)).Length);
 
-                if (l < dist && (EnumBlock)moo.hit != EnumBlock.AIR)
+                if (l < dist && (EnumBlock) moo.hit != EnumBlock.AIR)
                 {
                     dist = l;
 
@@ -542,7 +546,8 @@ namespace OpenGL_Game
             GL.Viewport(ClientRectangle);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
-            GL.Ortho(0, ClientRectangle.Width, ClientRectangle.Height, 0, gameRenderer.NEAR_PLANE, gameRenderer.FAR_PLANE);
+            GL.Ortho(0, ClientRectangle.Width, ClientRectangle.Height, 0, gameRenderer.NEAR_PLANE,
+                gameRenderer.FAR_PLANE);
 
             ShaderManager.updateProjectionMatrix();
         }

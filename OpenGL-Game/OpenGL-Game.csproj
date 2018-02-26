@@ -80,6 +80,7 @@
     <Compile Include="shader\BlockShaderWireframe.cs" />
     <Compile Include="shader\ShaderManager.cs" />
     <Compile Include="shader\SkyboxShader.cs" />
+    <Compile Include="thread\ThreadPool.cs" />
     <Compile Include="util\FastNoise.cs" />
     <Compile Include="util\ThreadSafeList.cs" />
     <Compile Include="util\AxisAlignedBB.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="world\World.cs" />
     <Compile Include="world\WorldLoader.cs" />
     <Compile Include="world\WorldPlayerNode.cs" />
+    <Compile Include="world\WorldRegionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

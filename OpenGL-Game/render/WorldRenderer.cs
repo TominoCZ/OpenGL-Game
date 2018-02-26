@@ -35,7 +35,7 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-7, 12, -9f) * 500, Vector3.One);
+            modelLight = new ModelLight(new Vector3(-8, 12, -10f) * 500, Vector3.One);
             selectionOutlineModel = new CubeOutlineModel(new BlockShaderWireframe());
 
             RenderDistance = 5;
@@ -78,6 +78,7 @@ namespace OpenGL_Game
                 renderBlockSelectionOutline(viewMatrix, block, hit.blockPos);
 
             var nodes = Game.INSTANCE.world.getChunkDataNodes();
+
             for (var index = 0; index < nodes.Length; index++)
             {
                 var node = nodes[index];
@@ -85,14 +86,17 @@ namespace OpenGL_Game
                 if (node == null)
                     continue;
 
-                var dist = (Game.INSTANCE.player.camera.pos - (node.chunk.chunkPos.vector + Vector3.UnitX * 8 + Vector3.UnitZ * 8)).Length;
+                var pos = node.chunk.chunkPos +
+                          new BlockPos(8, 0, 8);
 
-                if (dist > RenderDistance * 16)
+                var dist = MathUtil.distance(pos.vector.Xz, Game.INSTANCE.player.camera.pos.Xz);
+
+                if (dist > _renderDistance * 16)
                     continue;
 
                 var shaders = node.model.getShadersPresent();
 
-                for (int j = 0; j < shaders.Length; j++)
+                for (int j = 0; j < shaders.Count; j++)
                 {
                     var shader = shaders[j];
 

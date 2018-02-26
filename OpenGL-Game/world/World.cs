@@ -29,24 +29,6 @@ namespace OpenGL_Game
             this.seed = seed;
         }
 
-        /* public World(int sizeInChunks) : this()
-         {
-
-             int half = sizeInChunks / 2;
-
-             for (int z = -half; z < half; z++)
-             {
-                 for (int x = -half; x < half; x++)
-                 {
-                     var pos = new BlockPos(x * 16, 0, z * 16);
-                     var chunk = new Chunk(pos);
-                     var model = new ChunkModel();
-
-                     _chunks.TryAdd(pos, new ChunkData(chunk, model));
-                 }
-             }
-         }*/
-
         private World(int seed, List<ChunkCache> caches) : this(seed)
         {
             foreach (var cache in caches)
@@ -56,7 +38,9 @@ namespace OpenGL_Game
                 var chunk = Chunk.CreateFromCache(cache);
                 var model = new ChunkModel();
 
-                _chunks.TryAdd(pos, new ChunkData(chunk, model));
+                var data = new ChunkData(chunk, model);
+
+                _chunks.TryAdd(pos, data);
             }
         }
 
@@ -149,7 +133,7 @@ namespace OpenGL_Game
                 //_chunks.TryAdd(chp, new ChunkData(chunk, new ChunkModel()));
             }
 
-            chunk.setBlock(pos - chunk.chunkPos, blockType);
+            chunk.setBlock(pos - chunk.chunkPos, blockType, 0);
 
             if (redraw)
             {
@@ -240,13 +224,13 @@ namespace OpenGL_Game
                         var p = new BlockPos(x, y, z);
 
                         if (y == peakY)
-                            chunk.setBlock(p, EnumBlock.GRASS);
+                            chunk.setBlock(p, EnumBlock.GRASS, 0);
                         else if (y > 0 && peakY - y > 0 && peakY - y < 3) // for 2 blocks
-                            chunk.setBlock(p, EnumBlock.DIRT);
+                            chunk.setBlock(p, EnumBlock.DIRT, 0);
                         else if (y == 0)
-                            chunk.setBlock(p, EnumBlock.BEDROCK);
+                            chunk.setBlock(p, EnumBlock.BEDROCK, 0);
                         else
-                            chunk.setBlock(p, noise.GetCubic(x, y) > 0.98 ? EnumBlock.RARE : EnumBlock.STONE);
+                            chunk.setBlock(p, noise.GetCubic(x, y) > 0.98 ? EnumBlock.RARE : EnumBlock.STONE, 0);
                     }
                 }
             }

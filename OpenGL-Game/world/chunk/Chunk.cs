@@ -30,19 +30,27 @@ namespace OpenGL_Game
             return new Chunk(cache);
         }
 
-        public void setBlock(BlockPos pos, EnumBlock blockType)
+        public void setBlock(BlockPos pos, EnumBlock blockType, int meta)
         {
-            chunkBlocks[pos.x, pos.y, pos.z] = (short)blockType;
+            chunkBlocks[pos.x, pos.y, pos.z] = (short)((short)blockType << 4 | meta);
         }
 
         public EnumBlock getBlock(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
-                return (EnumBlock)chunkBlocks[pos.x, pos.y, pos.z];
+                return (EnumBlock)(chunkBlocks[pos.x, pos.y, pos.z] >> 4);
 
             var block = w.getBlock(pos + chunkPos);
 
             return block;
+        }
+
+        public int getMetadata(BlockPos pos)
+        {
+            if (isPosInChunk(pos))
+                return chunkBlocks[pos.x, pos.y, pos.z] & 15;
+
+            return 0;
         }
 
         private bool isPosInChunk(BlockPos pos)
@@ -74,9 +82,9 @@ namespace OpenGL_Game
             var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             List<RawQuad> quads;
 
-            var l_x = 16;//chunkBlocks.GetLength(0);
-            var l_y = 256;//chunkBlocks.GetLength(1);
-            var l_z = 16;//chunkBlocks.GetLength(2);
+            var l_x = 16;
+            var l_y = 256;
+            var l_z = 16;
 
             var MODEL_RAW = new Dictionary<ShaderProgram, List<RawQuad>>();
 
@@ -127,7 +135,7 @@ namespace OpenGL_Game
             {
                 var newShaders = MODEL_RAW.Keys.ToArray();
 
-                for (int i = 0; i < previousShaders.Length; i++)
+                for (int i = 0; i < previousShaders.Count; i++)
                 {
                     var oldShader = previousShaders[i];
 
@@ -161,8 +169,7 @@ namespace OpenGL_Game
 
         public ChunkCache createChunkCache()
         {
-            return null;
-            //return new ChunkCache(chunkPos, chunkBlocks);
+            return new ChunkCache(chunkPos, chunkBlocks);
         }
     }
 
