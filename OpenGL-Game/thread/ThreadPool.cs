@@ -1,36 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace OpenGL_Game.thread
+namespace OpenGL_Game
 {
-    delegate Delegate WorkerFunc();
-
     static class ThreadPool
     {
         private static List<Worker> _workers;
-        private static List<WorkerFunc> _queue;
+        private static List<Worker.Method> _queue;
 
         private static Thread _queueThread;
 
         static ThreadPool()
         {
             _workers = new List<Worker>();
-            _queue = new List<WorkerFunc>();
-            
-            for (int i = 0; i < 16; i++)
+            _queue = new List<Worker.Method>();
+
+            for (int i = 0; i < 4; i++)
             {
                 _workers.Add(new Worker());
             }
 
             _queueThread = new Thread(manageTaskQueue);
-            _queueThread.IsBackground = true;
             _queueThread.Start();
         }
 
-        public static void runTask(WorkerFunc f)
+        public static void runTask(bool highPriority, Worker.Method f)
         {
             var worker = getAvailableWorker();
 
@@ -38,10 +34,10 @@ namespace OpenGL_Game.thread
                 worker.runTask(f);
             else
             {
-                _queue.Add(f);
-
-                if (_queue.Count == 0)
-                    _queueThread.Resume();
+                if (highPriority)
+                    _queue.Insert(0, f);
+                else
+                    _queue.Add(f);
             }
         }
 
@@ -51,7 +47,7 @@ namespace OpenGL_Game.thread
             {
                 var worker = getAvailableWorker();
 
-                if (worker != null)
+                if (worker != null && _queue.Count > 0)
                 {
                     var func = _queue.First();
 
@@ -60,8 +56,7 @@ namespace OpenGL_Game.thread
                     _queue.Remove(func);
                 }
 
-                if (_queue.Count == 0)
-                    _queueThread.Suspend();
+                Thread.Sleep(2);
             }
         }
 
@@ -82,7 +77,9 @@ namespace OpenGL_Game.thread
     class Worker
     {
         private Thread _thread;
-        private WorkerFunc _task;
+        private Method _task;
+
+        public delegate void Method();
 
         public bool Ready { get; private set; }
 
@@ -91,6 +88,8 @@ namespace OpenGL_Game.thread
             _thread = new Thread(run);
             _thread.IsBackground = true;
             _thread.Start();
+
+            Ready = true;
         }
 
         private void run()
@@ -105,17 +104,15 @@ namespace OpenGL_Game.thread
                     Ready = true;
                 }
 
-                _thread.Suspend();
+                Thread.Sleep(2);
             }
         }
 
-        public void runTask(WorkerFunc workerFunc)
+        public void runTask(Method workerFunc)
         {
             Ready = false;
 
             _task = workerFunc;
-
-            _thread.Resume();
         }
     }
 }

@@ -213,9 +213,7 @@ namespace OpenGL_Game
         private void GameLoop()
         {
             if (guiScreen == null && !Focused)
-            {
                 openGuiScreen(new GuiScreenIngameMenu());
-            }
 
             var wheelValue = Mouse.WheelPrecise;
 
@@ -254,15 +252,14 @@ namespace OpenGL_Game
 
                         if (chunk == null)
                         {
-                            new Thread(() => world.generateChunk(pos, true)).Start();
+                            ThreadPool.runTask(false, () => world.generateChunk(pos, true));
 
                             Console.WriteLine("generated a chunk!");
-                            Thread.Sleep(1);
                         }
                         else if (!world.doesChunkHaveModel(pos))
                         {
-                            world.updateModelForChunk(pos);
-                            Thread.Sleep(1);
+                            ThreadPool.runTask(false, () => world.updateModelForChunk(pos));
+                            world.setChunkHasModel(pos, true);
                         }
                     }
                 }
@@ -569,6 +566,38 @@ namespace OpenGL_Game
             WorldLoader.saveWorld(world);
             SettingsManager.save();
         }
+
+        /*
+        // false if fully outside, true if inside or intersects
+        bool boxInFrustum(AxisAlignedBB box)
+        {
+            // check box outside/inside of frustum
+            for( int i=0; i<6; i++ )
+            {
+                int j = 0;
+                    
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.min.X, box.min.Y, box.min.Z, 1.0f)) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.max.X, box.min.Y, box.min.Z, 1.0f) ) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.min.X, box.max.Y, box.min.Z, 1.0f) ) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.max.X, box.max.Y, box.min.Z, 1.0f) ) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.min.X, box.min.Y, box.max.Z, 1.0f) ) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.max.X, box.min.Y, box.max.Z, 1.0f) ) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.min.X, box.max.Y, box.max.Z, 1.0f) ) < 0.0 )?1:0);
+                    j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.max.X, box.max.Y, box.max.Z, 1.0f) ) < 0.0 )?1:0);
+                if( j==8 ) return false;
+            }
+
+            // check frustum outside/inside box
+            int k;
+                k=0; for( int i=0; i<8; i++ ) k += ((fru.mPoints[i].x > box.max.X)?1:0); if( k==8 ) return false;
+                k=0; for( int i=0; i<8; i++ ) k += ((fru.mPoints[i].x < box.min.X)?1:0); if( k==8 ) return false;
+                k=0; for( int i=0; i<8; i++ ) k += ((fru.mPoints[i].y > box.max.Y)?1:0); if( k==8 ) return false;
+                k=0; for( int i=0; i<8; i++ ) k += ((fru.mPoints[i].y < box.min.Y)?1:0); if( k==8 ) return false;
+                k=0; for( int i=0; i<8; i++ ) k += ((fru.mPoints[i].z > box.max.Z)?1:0); if( k==8 ) return false;
+                k=0; for( int i=0; i<8; i++ ) k += ((fru.mPoints[i].z < box.min.Z)?1:0); if( k==8 ) return false;
+
+            return true;
+        }*/
     }
 
     class SettingsManager

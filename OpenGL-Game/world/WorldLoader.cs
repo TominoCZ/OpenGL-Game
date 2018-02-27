@@ -14,7 +14,7 @@ namespace OpenGL_Game
             if (w == null)
                 return;
 
-            new Thread(() =>
+            ThreadPool.runTask(false, () =>
             {
                 var bf = new BinaryFormatter();
 
@@ -39,9 +39,8 @@ namespace OpenGL_Game
                 }
                 catch
                 {
-
                 }
-            }).Start();
+            });
         }
 
         public static World loadWorld()
@@ -58,12 +57,12 @@ namespace OpenGL_Game
 
                 using (var fs = File.OpenRead(dir + "/chunks.dat"))
                 {
-                    wcn = (WorldChunksNode)bf.Deserialize(fs);
+                    wcn = (WorldChunksNode) bf.Deserialize(fs);
                 }
 
                 using (var fs = File.OpenRead(dir + "/player.dat"))
                 {
-                    wpn = (WorldPlayerNode)bf.Deserialize(fs);
+                    wpn = (WorldPlayerNode) bf.Deserialize(fs);
                 }
 
                 var world = World.Create(wcn.seed, wcn.caches);
@@ -85,7 +84,6 @@ namespace OpenGL_Game
             }
             catch
             {
-
             }
 
             return null;

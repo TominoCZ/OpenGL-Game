@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using OpenTK;
 
 namespace OpenGL_Game
@@ -84,11 +83,11 @@ namespace OpenGL_Game
 
             var bb = box.union(box);
 
-            for (int x = (int)bb.min.X, maxX = (int)bb.max.X; x < maxX; x++)
+            for (int x = (int) bb.min.X, maxX = (int) bb.max.X; x < maxX; x++)
             {
-                for (int y = (int)bb.min.Y, maxY = (int)bb.max.Y; y < maxY; y++)
+                for (int y = (int) bb.min.Y, maxY = (int) bb.max.Y; y < maxY; y++)
                 {
-                    for (int z = (int)bb.min.Z, maxZ = (int)bb.max.Z; z < maxZ; z++)
+                    for (int z = (int) bb.min.Z, maxZ = (int) bb.max.Z; z < maxZ; z++)
                     {
                         var pos = new BlockPos(x, y, z);
                         var block = Game.INSTANCE.world.getBlock(pos);
@@ -123,46 +122,49 @@ namespace OpenGL_Game
             {
                 var chp = pos.ChunkPos();
 
-                new Thread(() =>
+                ThreadPool.runTask(true, () =>
                 {
                     generateChunk(chp, false);
                     setBlock(pos, blockType, redraw);
-                }).Start();
+                });
 
-                //chunk = new Chunk(chp);
-                //_chunks.TryAdd(chp, new ChunkData(chunk, new ChunkModel()));
+                return;
             }
 
             chunk.setBlock(pos - chunk.chunkPos, blockType, 0);
 
             if (redraw)
             {
-                var sw = new Stopwatch();
-                sw.Start();
-
-                updateModelForChunk(chunk.chunkPos);
-
-                var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
-
-                int chunksUpdated = 1;
-
-                for (var index = 0; index < sides.Length; index++)
+                ThreadPool.runTask(true, () =>
                 {
-                    EnumFacing side = sides[index];
+                    var sw = new Stopwatch();
+                    sw.Start();
 
-                    var p = pos.offset(side);
-                    var ch = getChunkFromPos(p);
+                    updateModelForChunk(chunk.chunkPos);
 
-                    if (ch != chunk && ch != null)
+                    var sides = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
+
+                    int chunksUpdated = 1;
+
+                    for (var index = 0; index < sides.Length; index++)
                     {
-                        updateModelForChunk(ch.chunkPos);
-                        chunksUpdated++;
+                        EnumFacing side = sides[index];
+
+                        var p = pos.offset(side);
+                        var ch = getChunkFromPos(p);
+
+                        if (ch != chunk && ch != null)
+                        {
+                            updateModelForChunk(ch.chunkPos);
+                            chunksUpdated++;
+                        }
                     }
-                }
 
-                sw.Stop();
+                    sw.Stop();
 
-                Console.WriteLine($"DEBUG: built terrain model [{sw.Elapsed.TotalMilliseconds:##.000}ms] ({chunksUpdated} {(chunksUpdated > 1 ? "chunks" : "chunk")})");
+                    Console.WriteLine(
+                        $"DEBUG: built terrain model [{sw.Elapsed.TotalMilliseconds:F}ms] ({chunksUpdated} {(chunksUpdated > 1 ? "chunks" : "chunk")})");
+                });
             }
         }
 
@@ -184,7 +186,7 @@ namespace OpenGL_Game
                 var chunk = getChunkFromPos(pos);
 
                 if (chunk == null)
-                    generateChunk(pos, false);
+                    ThreadPool.runTask(false, () => generateChunk(pos, false));
 
                 var block = getBlock(pos);
 
@@ -217,7 +219,10 @@ namespace OpenGL_Game
             {
                 for (int x = 0; x < 16; x++)
                 {
-                    int peakY = 32 + (int)Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal((x + chunkPos.x) / 1.25f, (z + chunkPos.z) / 1.25f), 0, 1) * 30);
+                    var X = (x + chunkPos.x) / 1.25f;
+                    var Y = (z + chunkPos.z) / 1.25f;
+
+                    int peakY = 32 + (int) Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal(X, Y), 0, 1) * 30);
 
                     for (int y = peakY; y >= 0; y--)
                     {
@@ -230,7 +235,13 @@ namespace OpenGL_Game
                         else if (y == 0)
                             chunk.setBlock(p, EnumBlock.BEDROCK, 0);
                         else
-                            chunk.setBlock(p, noise.GetCubic(x, y) > 0.98 ? EnumBlock.RARE : EnumBlock.STONE, 0);
+                        {
+                            var f = 0.35f + noise.GetNoise(X * 16 - y * 12, Y * 16 + x * 12);
+
+                            Console.WriteLine(f);
+
+                            chunk.setBlock(p, f >= 0.75f ? EnumBlock.RARE : EnumBlock.STONE, 0);
+                        }
                     }
                 }
             }
@@ -238,7 +249,7 @@ namespace OpenGL_Game
             if (redraw)
                 updateModelForChunk(chunk.chunkPos);
 
-            var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+            var sides = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
 
             for (var index = 0; index < sides.Length - 2; index++)
             {
@@ -260,11 +271,8 @@ namespace OpenGL_Game
             {
                 node.modelGenerated = true;
 
-                new Thread(() =>
-                {
-                    var model = node.chunk.generateModel(this, node.model);
-                    node.model = model;
-                }).Start();
+                var model = node.chunk.generateModel(this, node.model);
+                node.model = model;
             }
         }
 
@@ -272,36 +280,10 @@ namespace OpenGL_Game
         {
             return _chunks[pos.ChunkPos()].modelGenerated;
         }
-    }
 
-    class ThreadLock
-    {
-        private bool locked;
-
-        public void Lock() => locked = true;
-        public void Unlock() => locked = false;
-
-        public delegate void Method();
-
-        private Method method;
-
-        public ThreadLock(Method m)
+        public void setChunkHasModel(BlockPos pos, bool b)
         {
-            method = m;
-        }
-
-        public void WaitFor()
-        {
-            while (locked)
-            {
-                Thread.Sleep(1);
-            }
-        }
-
-        public void ExecuteCode()
-        {
-            method();
-            Unlock();
+            _chunks[pos.ChunkPos()].modelGenerated = b;
         }
     }
 }

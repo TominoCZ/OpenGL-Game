@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using OpenTK;
 
 namespace OpenGL_Game
 {
@@ -12,16 +13,21 @@ namespace OpenGL_Game
 
         public BlockPos chunkPos { get; }
 
+        public AxisAlignedBB boundingBox { get; }
+        
         public Chunk(BlockPos chunkPos)
         {
             this.chunkPos = chunkPos;
-
+            boundingBox = new AxisAlignedBB(Vector3.Zero, Vector3.One * 16 + Vector3.UnitY * 240).offset(chunkPos.vector);
+            
             chunkBlocks = new short[16, 256, 16];
         }
 
         private Chunk(ChunkCache cache)
         {
             chunkPos = cache.chunkPos;
+            boundingBox = new AxisAlignedBB(Vector3.Zero, Vector3.One * 16 + Vector3.UnitY * 240).offset(chunkPos.vector);
+            
             chunkBlocks = cache.chunkBlocks;
         }
 
