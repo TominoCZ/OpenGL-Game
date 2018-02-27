@@ -11,7 +11,7 @@ namespace OpenGL_Game
 
         public Vector3 pos;
 
-        public Item[] hotbar;
+        public ItemStack[] hotbar;
 
         public WorldPlayerNode(EntityPlayerSP player)
         {

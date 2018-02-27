@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using OpenTK;
 
@@ -14,20 +15,22 @@ namespace OpenGL_Game
         public BlockPos chunkPos { get; }
 
         public AxisAlignedBB boundingBox { get; }
-        
+
         public Chunk(BlockPos chunkPos)
         {
             this.chunkPos = chunkPos;
-            boundingBox = new AxisAlignedBB(Vector3.Zero, Vector3.One * 16 + Vector3.UnitY * 240).offset(chunkPos.vector);
-            
+            boundingBox =
+                new AxisAlignedBB(Vector3.Zero, Vector3.One * 16 + Vector3.UnitY * 240).offset(chunkPos.vector);
+
             chunkBlocks = new short[16, 256, 16];
         }
 
         private Chunk(ChunkCache cache)
         {
             chunkPos = cache.chunkPos;
-            boundingBox = new AxisAlignedBB(Vector3.Zero, Vector3.One * 16 + Vector3.UnitY * 240).offset(chunkPos.vector);
-            
+            boundingBox =
+                new AxisAlignedBB(Vector3.Zero, Vector3.One * 16 + Vector3.UnitY * 240).offset(chunkPos.vector);
+
             chunkBlocks = cache.chunkBlocks;
         }
 
@@ -38,25 +41,39 @@ namespace OpenGL_Game
 
         public void setBlock(BlockPos pos, EnumBlock blockType, int meta)
         {
-            chunkBlocks[pos.x, pos.y, pos.z] = (short)((short)blockType << 4 | meta);
+            short id = (short) ((short) blockType << 4 | meta);
+
+            chunkBlocks[pos.x, pos.y, pos.z] = id;
         }
 
         public EnumBlock getBlock(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
-                return (EnumBlock)(chunkBlocks[pos.x, pos.y, pos.z] >> 4);
+                return (EnumBlock) (chunkBlocks[pos.x, pos.y, pos.z] >> 4);
 
             var block = w.getBlock(pos + chunkPos);
 
             return block;
         }
 
-        public int getMetadata(BlockPos pos)
+        public int getMetadata(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
                 return chunkBlocks[pos.x, pos.y, pos.z] & 15;
 
-            return 0;
+            return w.getMetadata(pos + chunkPos);
+        }
+
+        public void setMetadata(World w, BlockPos pos, int meta, bool redraw)
+        {
+            if (isPosInChunk(pos))
+            {
+                var id = chunkBlocks[pos.x, pos.y, pos.z];
+
+                chunkBlocks[pos.x, pos.y, pos.z] = (short) (id & 4095 | meta);
+            }
+
+            w.setMetadata(pos + chunkPos, meta, redraw);
         }
 
         private bool isPosInChunk(BlockPos pos)
@@ -85,7 +102,7 @@ namespace OpenGL_Game
 
         public ChunkModel generateModel(World w, ChunkModel previousChunkModel)
         {
-            var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+            var possibleDirections = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
             List<RawQuad> quads;
 
             var l_x = 16;
@@ -108,7 +125,7 @@ namespace OpenGL_Game
                         if (block == EnumBlock.AIR)
                             continue;
 
-                        var blockModel = ModelManager.getModelForBlock(block);
+                        var blockModel = ModelManager.getModelForBlock(block, getMetadata(w, pos));
 
                         if (!MODEL_RAW.TryGetValue(blockModel.shader, out quads))
                             MODEL_RAW.Add(blockModel.shader, quads = new List<RawQuad>());
@@ -125,7 +142,7 @@ namespace OpenGL_Game
 
                                 }*/
 
-                                var quad = ((RawBlockModel)blockModel.rawModel)?.getQuadForSide(dir)?.offset(pos);
+                                var quad = ((RawBlockModel) blockModel.rawModel)?.getQuadForSide(dir)?.offset(pos);
 
                                 if (quad != null)
                                     quads.Add(quad);
@@ -180,7 +197,7 @@ namespace OpenGL_Game
     }
 
     [Serializable]
-    class ChunkCache
+    struct ChunkCache
     {
         private readonly BlockPos _chunkPos;
         private readonly short[,,] _chunkBlocks;

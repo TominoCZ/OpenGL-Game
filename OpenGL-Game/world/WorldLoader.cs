@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
@@ -7,40 +9,43 @@ namespace OpenGL_Game
 {
     class WorldLoader
     {
-        static string dir = "SharpCraft_Data/saves/world";
+        private static string dir = "SharpCraft_Data/saves/world";
+
+        private static bool saving;
 
         public static void saveWorld(World w)
         {
-            if (w == null)
+            if (w == null || saving)
                 return;
 
-            ThreadPool.runTask(false, () =>
+            saving = true;
+
+            var bf = new BinaryFormatter();
+
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            try
             {
-                var bf = new BinaryFormatter();
+                var wcn = new WorldChunksNode(w);
 
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
-
-                try
+                using (var fs = File.OpenWrite(dir + "/chunks.dat"))
                 {
-                    var wcn = new WorldChunksNode(w);
-
-                    using (var fs = File.OpenWrite(dir + "/chunks.dat"))
-                    {
-                        bf.Serialize(fs, wcn);
-                    }
-
-                    var wpn = new WorldPlayerNode(Game.INSTANCE.player);
-
-                    using (var fs = File.OpenWrite(dir + "/player.dat"))
-                    {
-                        bf.Serialize(fs, wpn);
-                    }
+                    bf.Serialize(fs, wcn);
                 }
-                catch
+
+                var wpn = new WorldPlayerNode(Game.INSTANCE.player);
+
+                using (var fs = File.OpenWrite(dir + "/player.dat"))
                 {
+                    bf.Serialize(fs, wpn);
                 }
-            });
+            }
+            catch
+            {
+            }
+
+            saving = false;
         }
 
         public static World loadWorld()
@@ -49,6 +54,8 @@ namespace OpenGL_Game
 
             if (!Directory.Exists(dir))
                 return null;
+
+            World world = null;
 
             try
             {
@@ -65,7 +72,7 @@ namespace OpenGL_Game
                     wpn = (WorldPlayerNode) bf.Deserialize(fs);
                 }
 
-                var world = World.Create(wcn.seed, wcn.caches);
+                world = World.Create(wcn.seed, wcn.caches);
 
                 var player = new EntityPlayerSP(wpn.pos);
                 player.camera.pitch = wpn.pitch;
@@ -76,17 +83,15 @@ namespace OpenGL_Game
                     player.hotbar[i] = wpn.hotbar[i];
                 }
 
-                Game.INSTANCE.player = player;
-
                 world.addEntity(player);
 
-                return world;
+                Game.INSTANCE.player = player;
             }
             catch
             {
             }
 
-            return null;
+            return world;
         }
     }
 }

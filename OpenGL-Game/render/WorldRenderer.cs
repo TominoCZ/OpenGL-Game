@@ -35,7 +35,7 @@ namespace OpenGL_Game
 
         public WorldRenderer()
         {
-            modelLight = new ModelLight(new Vector3(-8, 12, -10f) * 500, Vector3.One);
+            modelLight = new ModelLight(new Vector3(-8, 12, -10f) * 750, Vector3.One);
             selectionOutlineModel = new CubeOutlineModel(new BlockShaderWireframe());
 
             RenderDistance = 5;
@@ -72,6 +72,9 @@ namespace OpenGL_Game
 
         public void render(Matrix4 viewMatrix)
         {
+            if (Game.INSTANCE.world == null)
+                return;
+
             var hit = Game.INSTANCE.mouseOverObject;
 
             if (hit.hit != null && hit.hit is EnumBlock block && block != EnumBlock.AIR)
@@ -109,7 +112,8 @@ namespace OpenGL_Game
                     shader.loadLight(modelLight);
                     shader.loadViewMatrix(viewMatrix);
 
-                    shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(node.chunk.chunkPos.vector));
+                    shader.loadTransformationMatrix(
+                        MatrixHelper.createTransformationMatrix(node.chunk.chunkPos.vector));
 
                     GL.DrawArrays(shader.renderType, 0, chunkFragmentModel.rawModel.vertexCount);
 
@@ -135,15 +139,21 @@ namespace OpenGL_Game
                 updateTimer.Restart();
             }
 
-            var shader = (BlockShaderWireframe)selectionOutlineModel.shader;
-            var size = ModelManager.getModelForBlock(block).boundingBox.size + Vector3.One * 0.005f;
+            var shader = (BlockShaderWireframe) selectionOutlineModel.shader;
+            var bb = ModelManager.getModelForBlock(block, Game.INSTANCE.world.getMetadata(pos))?.boundingBox;
+            
+            if (bb == null)
+                return;
+            
+            var size = bb.size + Vector3.One * 0.005f;
 
             bindModel(selectionOutlineModel);
             shader.start();
 
             shader.loadColor(selectionOutlineColor);
             shader.loadViewMatrix(viewMatrix);
-            shader.loadTransformationMatrix(MatrixHelper.createTransformationMatrix(pos.vector - Vector3.One * 0.0025f, size));
+            shader.loadTransformationMatrix(
+                MatrixHelper.createTransformationMatrix(pos.vector - Vector3.One * 0.0025f, size));
 
             GL.Disable(EnableCap.CullFace);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
@@ -160,11 +170,11 @@ namespace OpenGL_Game
 
         private void renderSelectedBlock(Matrix4 viewMatrix)
         {
-            var item = Game.INSTANCE.player.getEquippedItem();
+            var stack = Game.INSTANCE.player.getEquippedItemStack();
 
-            if (item is ItemBlock itemBlock)
+            if (stack?.Item is ItemBlock itemBlock)
             {
-                var model = ModelManager.getModelForBlock(itemBlock.getBlock());
+                var model = ModelManager.getModelForBlock(itemBlock.getBlock(), stack.Meta);
 
                 bindModel(model);
                 model.shader.start();
@@ -187,9 +197,9 @@ namespace OpenGL_Game
         {
             var rads = MathHelper.DegreesToRadians(hue);
 
-            var r = (float)(Math.Sin(rads) * 0.5 + 0.5);
-            var g = (float)(Math.Sin(rads + MathHelper.PiOver3 * 2) * 0.5 + 0.5);
-            var b = (float)(Math.Sin(rads + MathHelper.PiOver3 * 4) * 0.5 + 0.5);
+            var r = (float) (Math.Sin(rads) * 0.5 + 0.5);
+            var g = (float) (Math.Sin(rads + MathHelper.PiOver3 * 2) * 0.5 + 0.5);
+            var b = (float) (Math.Sin(rads + MathHelper.PiOver3 * 4) * 0.5 + 0.5);
 
             return Vector4.UnitX * r + Vector4.UnitY * g + Vector4.UnitZ * b + Vector4.UnitW;
         }

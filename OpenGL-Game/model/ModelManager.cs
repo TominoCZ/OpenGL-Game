@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Net.Configuration;
+using System.Resources;
+using System.Runtime.CompilerServices;
 
 namespace OpenGL_Game
 {
     class ModelManager
     {
-        private static Dictionary<EnumBlock, BlockModel> models = new Dictionary<EnumBlock, BlockModel>();
+        private static Dictionary<EnumBlock, List<BlockState>> models = new Dictionary<EnumBlock, List<BlockState>>();
 
         private static Dictionary<EnumFacing, float[]> CUBE = new Dictionary<EnumFacing, float[]>();
 
@@ -55,19 +57,45 @@ namespace OpenGL_Game
             });
         }
 
-        public static void registerBlockModel(BlockModel model)
+        public static void registerBlockModel(BlockModel model, int meta)
         {
-            if (models.ContainsKey(model.block))
-                models.Remove(model.block);
-
-            models.Add(model.block, model);
+            List<BlockState> states;
+            
+            //if already contains state with this meta tag, remove and set a new one
+            if (models.TryGetValue(model.block, out states))
+            {
+                for (int i = 0; i < states.Count; i++)
+                {
+                    var state = states[i];
+                    
+                    if (state.meta == meta)
+                    {
+                        states.Remove(state);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                models.Add(model.block, states = new List<BlockState>());
+            }
+            
+            states.Add(new BlockState(model, meta));
         }
 
-        public static BlockModel getModelForBlock(EnumBlock blockType)
+        public static BlockModel getModelForBlock(EnumBlock blockType, int meta)
         {
-            models.TryGetValue(blockType, out var model);
+            models.TryGetValue(blockType, out var states);
 
-            return model;
+            for (int i = 0; i < states.Count; i++)
+            {
+                var state = states[i];
+
+                if (state.meta == meta)
+                    return state.Model;
+            }
+            
+            return null;
         }
 
         public static Dictionary<EnumFacing, RawQuad> createTexturedCubeModel(EnumBlock block)
@@ -114,6 +142,18 @@ namespace OpenGL_Game
             }
 
             return quads;
+        }
+    }
+
+    class BlockState
+    {
+        public BlockModel Model { get; }
+        public int meta { get; }
+
+        public BlockState(BlockModel model, int meta)
+        {
+            Model = model;
+            this.meta = meta;
         }
     }
 }

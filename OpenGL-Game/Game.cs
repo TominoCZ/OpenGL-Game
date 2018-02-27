@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Threading;
+using OpenGL_Game.world;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
@@ -58,7 +59,7 @@ namespace OpenGL_Game
 
             Console.WriteLine("DEBUG: stitching textures");
             TextureManager.stitchTextures();
-
+            
             init();
         }
 
@@ -67,7 +68,7 @@ namespace OpenGL_Game
             Console.WriteLine("DEBUG: loading models");
 
             var shader = new BlockShader("block", PrimitiveType.Quads);
-            //var shader_unlit = new BlockShaderUnlit("block_unlit", PrimitiveType.Quads);
+            var shader_unlit = new BlockShaderUnlit("block_unlit", PrimitiveType.Quads);
 
             var stoneModel = new BlockModel(EnumBlock.STONE, shader, false);
             var grassModel = new BlockModel(EnumBlock.GRASS, shader, false);
@@ -78,18 +79,20 @@ namespace OpenGL_Game
             var furnaceModel = new BlockModel(EnumBlock.FURNACE, shader, true);
             var bedrockModel = new BlockModel(EnumBlock.BEDROCK, shader, false);
             var rareModel = new BlockModel(EnumBlock.RARE, shader, false);
+            var rareModelUnlit = new BlockModel(EnumBlock.RARE, shader_unlit, false);
             var glassModel = new BlockModel(EnumBlock.GLASS, shader, false);
 
-            ModelManager.registerBlockModel(stoneModel);
-            ModelManager.registerBlockModel(grassModel);
-            ModelManager.registerBlockModel(dirtModel);
-            ModelManager.registerBlockModel(cobblestoneModel);
-            ModelManager.registerBlockModel(planksModel);
-            ModelManager.registerBlockModel(craftingTableModel);
-            ModelManager.registerBlockModel(furnaceModel);
-            ModelManager.registerBlockModel(bedrockModel);
-            ModelManager.registerBlockModel(rareModel);
-            ModelManager.registerBlockModel(glassModel);
+            ModelManager.registerBlockModel(stoneModel, 0); //TODO - set model for block using metadata here, dont sore it in the model
+            ModelManager.registerBlockModel(grassModel, 0);
+            ModelManager.registerBlockModel(dirtModel, 0);
+            ModelManager.registerBlockModel(cobblestoneModel, 0);
+            ModelManager.registerBlockModel(planksModel, 0);
+            ModelManager.registerBlockModel(craftingTableModel, 0);
+            ModelManager.registerBlockModel(furnaceModel, 0);
+            ModelManager.registerBlockModel(bedrockModel, 0);
+            ModelManager.registerBlockModel(rareModel, 0);
+            ModelManager.registerBlockModel(rareModelUnlit, 1);
+            ModelManager.registerBlockModel(glassModel, 0);
 
             gameRenderer = new GameRenderer(new Camera());
 
@@ -117,11 +120,13 @@ namespace OpenGL_Game
                 player = new EntityPlayerSP(new Vector3(playerPos.x, world.getHeightAtPos(playerPos.x, playerPos.z),
                     playerPos.z));
 
-                player.setItemInHotbar(0, new ItemBlock(EnumBlock.CRAFTING_TABLE));
-                player.setItemInHotbar(1, new ItemBlock(EnumBlock.FURNACE));
-                player.setItemInHotbar(2, new ItemBlock(EnumBlock.COBBLESTONE));
-                player.setItemInHotbar(3, new ItemBlock(EnumBlock.PLANKS));
-                player.setItemInHotbar(4, new ItemBlock(EnumBlock.GLASS));
+                world.addEntity(player);
+
+                player.setItemStackInHotbar(0, new ItemStack(new ItemBlock(EnumBlock.CRAFTING_TABLE)));
+                player.setItemStackInHotbar(1, new ItemStack(new ItemBlock(EnumBlock.FURNACE)));
+                player.setItemStackInHotbar(2, new ItemStack(new ItemBlock(EnumBlock.COBBLESTONE)));
+                player.setItemStackInHotbar(3, new ItemStack(new ItemBlock(EnumBlock.PLANKS)));
+                player.setItemStackInHotbar(4, new ItemStack(new ItemBlock(EnumBlock.GLASS)));
             }
             else
             {
@@ -135,11 +140,11 @@ namespace OpenGL_Game
 
             gameRenderer.setCamera(player.camera);
 
-            world.addEntity(player);
-
             runUpdateThreads();
 
             ShaderManager.updateProjectionMatrix();
+            
+            world.setBlock(new BlockPos(player.pos), EnumBlock.RARE, 1, true);
         }
 
         private void runUpdateThreads()
@@ -153,7 +158,7 @@ namespace OpenGL_Game
                             checkForEmptyChunks();
                         }
 
-                        Thread.Sleep(250);
+                        Thread.Sleep(50);
                     }
                 })
                 {IsBackground = true}.Start();
@@ -217,7 +222,7 @@ namespace OpenGL_Game
 
             var wheelValue = Mouse.WheelPrecise;
 
-            if (player != null)
+            if (player != null && guiScreen == null)
             {
                 if (wheelValue < mouseWheelLast)
                     player.selectNextItem();
@@ -252,15 +257,21 @@ namespace OpenGL_Game
 
                         if (chunk == null)
                         {
-                            ThreadPool.runTask(false, () => world.generateChunk(pos, true));
-
+                            ThreadPool.RunTask(false, () =>
+                            {
+                                world.generateChunk(pos, true);
+                                
+                                //WorldRegionManager.saveChunk(world.getChunkFromPos(pos));
+                            });
+                            
                             Console.WriteLine("generated a chunk!");
                         }
                         else if (!world.doesChunkHaveModel(pos))
                         {
-                            ThreadPool.runTask(false, () => world.updateModelForChunk(pos));
-                            world.setChunkHasModel(pos, true);
+                            ThreadPool.RunTask(false, () => world.updateModelForChunk(pos));
                         }
+                        
+                        Thread.Sleep(2);
                     }
                 }
             }
@@ -314,7 +325,7 @@ namespace OpenGL_Game
 
                             if (block != EnumBlock.AIR)
                             {
-                                var model = ModelManager.getModelForBlock(block);
+                                var model = ModelManager.getModelForBlock(block, world.getMetadata(pos));
                                 var bb = model.boundingBox.offset(pos.vector);
 
                                 var hitSomething = RayHelper.rayIntersectsBB(player.camera.pos,
@@ -421,7 +432,8 @@ namespace OpenGL_Game
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
-            if (Keyboard.GetState().IsKeyDown(Key.Escape))
+            var state = Keyboard.GetState();
+            if (state.IsKeyDown(Key.Escape))
             {
                 if (guiScreen is GuiScreenMainMenu)
                     return;
@@ -432,11 +444,24 @@ namespace OpenGL_Game
                 {
                     openGuiScreen(new GuiScreenIngameMenu());
 
-                    WorldLoader.saveWorld(world);
+                    ThreadPool.RunTask(false, () => { WorldLoader.saveWorld(world); });
                 }
             }
 
-            if (Keyboard.GetState().IsKeyDown(Key.LAlt | Key.F4))
+            if (guiScreen == null)
+            {
+                for (int i = 0; i < 9; i++)
+                {
+                    if (state.IsKeyDown(Key.Number1 + i))
+                    {
+                        player?.setSelectedSlot(i);
+
+                        break;
+                    }
+                }
+            }
+
+            if (state.IsKeyDown(Key.LAlt | Key.F4))
                 Exit();
 
             if (e.Key == Key.F11)
@@ -470,7 +495,7 @@ namespace OpenGL_Game
 
                             if (clickedBlock != EnumBlock.AIR)
                             {
-                                player.setItemInSelectedSlot(new ItemBlock(clickedBlock));
+                                player.setItemStackInSelectedSlot(new ItemStack(new ItemBlock(clickedBlock), 1, world.getMetadata(pos)));
                             }
                         }
 
@@ -478,7 +503,7 @@ namespace OpenGL_Game
                         if (e.Button == MouseButton.Right)
                         {
                             var block = world.getBlock(pos);
-                            var model = ModelManager.getModelForBlock(block);
+                            var model = ModelManager.getModelForBlock(block, world.getMetadata(pos));
 
                             if (model != null && model.canBeInteractedWith)
                             {
@@ -490,35 +515,35 @@ namespace OpenGL_Game
                                         break;
                                 }
                             }
-                            else if (player.getEquippedItem() is ItemBlock itemBlock)
+                            else if (player.getEquippedItemStack()?.Item is ItemBlock itemBlock)
                             {
                                 pos = pos.offset(mouseOverObject.sideHit);
 
                                 var blockAtPos = world.getBlock(pos);
 
                                 var heldBlock = itemBlock.getBlock();
-                                var blockBB = ModelManager.getModelForBlock(heldBlock).boundingBox.offset(pos.vector);
+                                var blockBB = ModelManager.getModelForBlock(heldBlock, world.getMetadata(pos)).boundingBox.offset(pos.vector);
 
                                 if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntitiesBBs(blockBB).Count == 0)
                                 {
                                     var posUnder = pos.offset(EnumFacing.DOWN);
-
+                                    
                                     var blockUnder = world.getBlock(posUnder);
                                     var blockAbove = world.getBlock(pos.offset(EnumFacing.UP));
 
                                     if (blockUnder == EnumBlock.GRASS)
-                                        world.setBlock(posUnder, EnumBlock.DIRT, false);
+                                        world.setBlock(posUnder, EnumBlock.DIRT, 0, false);
                                     if (blockAbove != EnumBlock.AIR && heldBlock == EnumBlock.GRASS)
-                                        world.setBlock(pos, EnumBlock.DIRT, true);
+                                        world.setBlock(pos, EnumBlock.DIRT, 0, true);
                                     else
-                                        world.setBlock(pos, heldBlock, true);
+                                        world.setBlock(pos, heldBlock, player.getEquippedItemStack().Meta, true);
                                 }
                             }
                         }
 
                         //break
                         if (e.Button == MouseButton.Left)
-                            world.setBlock(pos, EnumBlock.AIR, true);
+                            world.setBlock(pos, EnumBlock.AIR, 0, true);
                     }
                 }
                 else

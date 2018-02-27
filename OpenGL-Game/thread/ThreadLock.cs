@@ -6,9 +6,6 @@ namespace OpenGL_Game
     {
         private bool locked;
 
-        public void Lock() => locked = true;
-        public void Unlock() => locked = false;
-
         public delegate void Method();
 
         private Method method;
@@ -20,6 +17,8 @@ namespace OpenGL_Game
 
         public void WaitFor()
         {
+            locked = true;
+            
             while (locked)
             {
                 Thread.Sleep(1);
@@ -29,7 +28,7 @@ namespace OpenGL_Game
         public void ExecuteCode()
         {
             method();
-            Unlock();
+            locked = false;
         }
     }
 }

@@ -46,9 +46,9 @@ namespace OpenGL_Game.gui
 
                 renderTexture(shader, b ? slot_selected : slot, x, y);
 
-                var item = Game.INSTANCE.player.hotbar[i];
+                var stack = Game.INSTANCE.player.hotbar[i];
 
-                if (item != null && item is ItemBlock itemBlock)
+                if (stack != null && stack.Item is ItemBlock itemBlock)
                 {
                     var block = itemBlock.getBlock();
 
@@ -56,10 +56,6 @@ namespace OpenGL_Game.gui
                     y += 14;
 
                     renderBlock(block, 2.25f, x, y);
-
-                    //renderBlock(itemBlock, 64, 0);
-
-                    //TODO render preview
                 }
             }
         }

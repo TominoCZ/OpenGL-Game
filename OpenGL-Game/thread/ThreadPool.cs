@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace OpenGL_Game
@@ -10,6 +11,9 @@ namespace OpenGL_Game
         private static List<Worker> _workers;
         private static List<Worker.Method> _queue;
 
+        private static List<Worker> _workersHigh;
+        private static List<Worker.Method> _queueHigh;
+
         private static Thread _queueThread;
 
         static ThreadPool()
@@ -17,27 +21,41 @@ namespace OpenGL_Game
             _workers = new List<Worker>();
             _queue = new List<Worker.Method>();
 
-            for (int i = 0; i < 4; i++)
+            _workersHigh = new List<Worker>();
+            _queueHigh = new List<Worker.Method>();
+
+            int threads = Math.Max(Environment.ProcessorCount * 2 / 3, 1);
+
+            for (int i = 0; i < threads; i++)
             {
                 _workers.Add(new Worker());
             }
 
+            for (int i = 0; i < threads; i++)
+            {
+                _workersHigh.Add(new Worker());
+            }
+
             _queueThread = new Thread(manageTaskQueue);
+            _queueThread.IsBackground = true;
             _queueThread.Start();
         }
 
-        public static void runTask(bool highPriority, Worker.Method f)
+        public static void RunTask(bool highPriority, Worker.Method f)
         {
-            var worker = getAvailableWorker();
+            var worker = getAvailableWorker(highPriority);
 
             if (worker != null)
-                worker.runTask(f);
+                worker.RunTask(f);
             else
             {
-                if (highPriority)
-                    _queue.Insert(0, f);
-                else
-                    _queue.Add(f);
+                lock (_queue)
+                {
+                    if (highPriority)
+                        _queueHigh.Add(f);
+                    else
+                        _queue.Add(f);
+                }
             }
         }
 
@@ -45,26 +63,51 @@ namespace OpenGL_Game
         {
             while (true)
             {
-                var worker = getAvailableWorker();
+                var workerHigh = getAvailableWorker(true);
 
-                if (worker != null && _queue.Count > 0)
+                lock (_queueHigh)
                 {
-                    var func = _queue.First();
+                    if (workerHigh != null && _queueHigh.Count > 0)
+                    {
+                        var func = _queueHigh.First();
 
-                    worker.runTask(func);
+                        if (func == null)
+                        {
+                            workerHigh.RunTask(func);
 
-                    _queue.Remove(func);
+                            _queueHigh.Remove(func);
+                        }
+                    }
                 }
 
-                Thread.Sleep(2);
+                var worker = getAvailableWorker(false);
+
+                lock (_queue)
+                {
+                    if (worker != null && _queue.Count > 0)
+                    {
+                        var func = _queue.First();
+
+                        if (func == null)
+                        {
+                            worker.RunTask(func);
+
+                            _queue.Remove(func);
+                        }
+                    }
+                }
+
+                Thread.Sleep(1);
             }
         }
 
-        private static Worker getAvailableWorker()
+        private static Worker getAvailableWorker(bool highPriority)
         {
-            for (int i = 0; i < _workers.Count; i++)
+            var workers = highPriority ? _workersHigh : _workers;
+
+            for (int i = 0; i < workers.Count; i++)
             {
-                var worker = _workers[i];
+                var worker = workers[i];
 
                 if (worker.Ready)
                     return worker;
@@ -104,11 +147,11 @@ namespace OpenGL_Game
                     Ready = true;
                 }
 
-                Thread.Sleep(2);
+                Thread.Sleep(1);
             }
         }
 
-        public void runTask(Method workerFunc)
+        public void RunTask(Method workerFunc)
         {
             Ready = false;
 
