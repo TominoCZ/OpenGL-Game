@@ -1,16 +1,14 @@
-﻿using System.Linq;
-using OpenTK;
-using GL = OpenTK.Graphics.OpenGL.GL;
-using TextureUnit = OpenTK.Graphics.OpenGL.TextureUnit;
-using TextureTarget = OpenTK.Graphics.OpenGL.TextureTarget;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
-using System.Drawing;
+using GL = OpenTK.Graphics.OpenGL.GL;
+using TextureTarget = OpenTK.Graphics.OpenGL.TextureTarget;
+using TextureUnit = OpenTK.Graphics.OpenGL.TextureUnit;
 
 namespace OpenGL_Game
 {
-    class WorldRenderer
+    internal class WorldRenderer
     {
         private CubeOutlineModel selectionOutlineModel;
 
@@ -139,12 +137,12 @@ namespace OpenGL_Game
                 updateTimer.Restart();
             }
 
-            var shader = (BlockShaderWireframe) selectionOutlineModel.shader;
+            var shader = (BlockShaderWireframe)selectionOutlineModel.shader;
             var bb = ModelManager.getModelForBlock(block, Game.INSTANCE.world.getMetadata(pos))?.boundingBox;
-            
+
             if (bb == null)
                 return;
-            
+
             var size = bb.size + Vector3.One * 0.005f;
 
             bindModel(selectionOutlineModel);
@@ -193,13 +191,13 @@ namespace OpenGL_Game
             }
         }
 
-        Vector4 getHue(int hue)
+        private Vector4 getHue(int hue)
         {
             var rads = MathHelper.DegreesToRadians(hue);
 
-            var r = (float) (Math.Sin(rads) * 0.5 + 0.5);
-            var g = (float) (Math.Sin(rads + MathHelper.PiOver3 * 2) * 0.5 + 0.5);
-            var b = (float) (Math.Sin(rads + MathHelper.PiOver3 * 4) * 0.5 + 0.5);
+            var r = (float)(Math.Sin(rads) * 0.5 + 0.5);
+            var g = (float)(Math.Sin(rads + MathHelper.PiOver3 * 2) * 0.5 + 0.5);
+            var b = (float)(Math.Sin(rads + MathHelper.PiOver3 * 4) * 0.5 + 0.5);
 
             return Vector4.UnitX * r + Vector4.UnitY * g + Vector4.UnitZ * b + Vector4.UnitW;
         }

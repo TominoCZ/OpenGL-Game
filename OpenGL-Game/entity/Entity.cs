@@ -1,11 +1,10 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using OpenTK;
 
 namespace OpenGL_Game
 {
-    class Entity
+    internal class Entity
     {
         protected AxisAlignedBB boundingBox;
 
@@ -83,7 +82,6 @@ namespace OpenGL_Game
 
         public virtual void Render(float particalTicks)
         {
-
         }
 
         public AxisAlignedBB getBoundingBox()

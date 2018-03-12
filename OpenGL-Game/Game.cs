@@ -1,4 +1,7 @@
-﻿using System;
+﻿using OpenTK;
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -6,25 +9,21 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Threading;
-using OpenGL_Game.world;
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
 using GL = OpenTK.Graphics.OpenGL.GL;
 
 namespace OpenGL_Game
 {
-    class GameMain
+    internal class GameMain
     {
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             var window = new Game();
             window.Run(0);
         }
     }
 
-    sealed class Game : GameWindow
+    internal sealed class Game : GameWindow
     {
         private WindowState lastWindowState;
 
@@ -59,7 +58,7 @@ namespace OpenGL_Game
 
             Console.WriteLine("DEBUG: stitching textures");
             TextureManager.stitchTextures();
-            
+
             init();
         }
 
@@ -82,7 +81,8 @@ namespace OpenGL_Game
             var rareModelUnlit = new BlockModel(EnumBlock.RARE, shader_unlit, false);
             var glassModel = new BlockModel(EnumBlock.GLASS, shader, false);
 
-            ModelManager.registerBlockModel(stoneModel, 0); //TODO - set model for block using metadata here, dont sore it in the model
+            ModelManager.registerBlockModel(stoneModel,
+                0); //TODO - set model for block using metadata here, dont sore it in the model
             ModelManager.registerBlockModel(grassModel, 0);
             ModelManager.registerBlockModel(dirtModel, 0);
             ModelManager.registerBlockModel(cobblestoneModel, 0);
@@ -111,8 +111,8 @@ namespace OpenGL_Game
 
                 var r = new Random();
 
-                var playerPos = new BlockPos(-100 + (float) r.NextDouble() * 200, 0,
-                    -100 + (float) r.NextDouble() * 200);
+                var playerPos = new BlockPos(-100 + (float)r.NextDouble() * 200, 0,
+                    -100 + (float)r.NextDouble() * 200);
 
                 world = new World(0);
                 world.generateChunk(playerPos, true);
@@ -143,7 +143,7 @@ namespace OpenGL_Game
             runUpdateThreads();
 
             ShaderManager.updateProjectionMatrix();
-            
+
             world.setBlock(new BlockPos(player.pos), EnumBlock.RARE, 1, true);
         }
 
@@ -161,7 +161,7 @@ namespace OpenGL_Game
                         Thread.Sleep(50);
                     }
                 })
-                {IsBackground = true}.Start();
+            { IsBackground = true }.Start();
 
             new Thread(() =>
                 {
@@ -203,10 +203,10 @@ namespace OpenGL_Game
                             mouseLast = point;
                         }
 
-                        Thread.Sleep(2);
+                        Thread.Sleep(5);
                     }
                 })
-                {IsBackground = true}.Start();
+            { IsBackground = true }.Start();
         }
 
         private void resetMouse()
@@ -260,18 +260,18 @@ namespace OpenGL_Game
                             ThreadPool.RunTask(false, () =>
                             {
                                 world.generateChunk(pos, true);
-                                
+
                                 //WorldRegionManager.saveChunk(world.getChunkFromPos(pos));
                             });
-                            
+
                             Console.WriteLine("generated a chunk!");
                         }
                         else if (!world.doesChunkHaveModel(pos))
                         {
                             ThreadPool.RunTask(false, () => world.updateModelForChunk(pos));
                         }
-                        
-                        Thread.Sleep(2);
+
+                        Thread.Sleep(5);
                     }
                 }
             }
@@ -287,27 +287,34 @@ namespace OpenGL_Game
 
         public void openGuiScreen(GuiScreen guiScreen)
         {
+            if (guiScreen == null)
+            {
+                closeGuiScreen();
+                return;
+            }
+
             this.guiScreen = guiScreen;
 
-            if (guiScreen is GuiScreenIngameMenu)
-            {
-                var middle = new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
-                middle = PointToScreen(middle);
+            var middle = new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
+            middle = PointToScreen(middle);
 
-                OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
-            }
+            OpenTK.Input.Mouse.SetPosition(middle.X, middle.Y);
         }
 
         public float getRenderPartialTicks()
         {
-            return (float) timer.Elapsed.TotalMilliseconds / 50f;
+            return (float)timer.Elapsed.TotalMilliseconds / 50f;
         }
 
         private void getMouseOverObject()
         {
             int radius = 5;
 
-            List<MouseOverObject> moos = new List<MouseOverObject>();
+            MouseOverObject final = new MouseOverObject();
+
+            float dist = float.MaxValue;
+
+            var camPos = Vector3.One * 0.5f + player.camera.pos;
 
             for (int z = -radius; z <= radius; z++)
             {
@@ -315,7 +322,7 @@ namespace OpenGL_Game
                 {
                     for (int x = -radius; x <= radius; x++)
                     {
-                        var vec = new Vector3(x, y, z) + Vector3.One * 0.5f + player.camera.pos;
+                        var vec = new Vector3(x, y, z) + camPos;
                         float f = (vec - player.camera.pos).LengthFast;
 
                         if (f <= radius)
@@ -347,15 +354,24 @@ namespace OpenGL_Game
                                         sideHit = EnumFacing.NORTH;
                                     else if (normal.Z > 0)
                                         sideHit = EnumFacing.SOUTH;
+                                    
+                                    var p = new BlockPos(hitPos - normal * 0.5f);
 
-                                    moos.Add(new MouseOverObject
+                                    var l = Math.Abs((player.camera.pos - (p.vector + Vector3.One * 0.5f)).Length);
+
+                                    if (l < dist)
                                     {
-                                        hit = block,
-                                        hitVec = hitPos,
-                                        blockPos = new BlockPos(hitPos - normal * 0.5f),
-                                        normal = normal,
-                                        sideHit = sideHit
-                                    });
+                                        dist = l;
+
+                                        final = new MouseOverObject()
+                                        {
+                                            hit = block,
+                                            hitVec = hitPos,
+                                            blockPos = p,
+                                            normal = normal,
+                                            sideHit = sideHit
+                                        };
+                                    }
                                 }
                             }
                         }
@@ -363,32 +379,7 @@ namespace OpenGL_Game
                 }
             }
 
-            float dist = float.MaxValue;
-
-            MouseOverObject closest = null;
-
-            for (var index = 0; index < moos.Count; index++)
-            {
-                var moo = moos[index];
-                var l = Math.Abs((player.camera.pos - (moo.blockPos.vector + Vector3.One * 0.5f)).Length);
-
-                if (l < dist && (EnumBlock) moo.hit != EnumBlock.AIR)
-                {
-                    dist = l;
-
-                    closest = moo;
-                }
-            }
-
-            if (closest != null)
-            {
-                mouseOverObject.hitVec = closest.hitVec;
-                mouseOverObject.blockPos = closest.blockPos;
-                mouseOverObject.normal = closest.normal;
-                mouseOverObject.sideHit = closest.sideHit;
-            }
-
-            mouseOverObject.hit = closest?.hit;
+            mouseOverObject = final;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -495,7 +486,8 @@ namespace OpenGL_Game
 
                             if (clickedBlock != EnumBlock.AIR)
                             {
-                                player.setItemStackInSelectedSlot(new ItemStack(new ItemBlock(clickedBlock), 1, world.getMetadata(pos)));
+                                player.setItemStackInSelectedSlot(new ItemStack(new ItemBlock(clickedBlock), 1,
+                                    world.getMetadata(pos)));
                             }
                         }
 
@@ -522,12 +514,13 @@ namespace OpenGL_Game
                                 var blockAtPos = world.getBlock(pos);
 
                                 var heldBlock = itemBlock.getBlock();
-                                var blockBB = ModelManager.getModelForBlock(heldBlock, world.getMetadata(pos)).boundingBox.offset(pos.vector);
+                                var blockBB = ModelManager.getModelForBlock(heldBlock, world.getMetadata(pos))
+                                    .boundingBox.offset(pos.vector);
 
                                 if (blockAtPos == EnumBlock.AIR && world.getIntersectingEntitiesBBs(blockBB).Count == 0)
                                 {
                                     var posUnder = pos.offset(EnumFacing.DOWN);
-                                    
+
                                     var blockUnder = world.getBlock(posUnder);
                                     var blockAbove = world.getBlock(pos.offset(EnumFacing.UP));
 
@@ -588,6 +581,8 @@ namespace OpenGL_Game
 
             GraphicsManager.cleanUp();
 
+            openGuiScreen(new GuiScreen());
+
             WorldLoader.saveWorld(world);
             SettingsManager.save();
         }
@@ -600,7 +595,7 @@ namespace OpenGL_Game
             for( int i=0; i<6; i++ )
             {
                 int j = 0;
-                    
+
                     j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.min.X, box.min.Y, box.min.Z, 1.0f)) < 0.0 )?1:0);
                     j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.max.X, box.min.Y, box.min.Z, 1.0f) ) < 0.0 )?1:0);
                     j += ((Vector4.Dot( fru.mPlane[i], new Vector4(box.min.X, box.max.Y, box.min.Z, 1.0f) ) < 0.0 )?1:0);
@@ -625,7 +620,7 @@ namespace OpenGL_Game
         }*/
     }
 
-    class SettingsManager
+    internal class SettingsManager
     {
         public static void load()
         {

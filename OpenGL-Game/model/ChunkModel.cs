@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace OpenGL_Game
 {
-    class ChunkModel
+    internal class ChunkModel
     {
         private Dictionary<ShaderProgram, ChunkFragmentModel> fragmentPerShader;
 

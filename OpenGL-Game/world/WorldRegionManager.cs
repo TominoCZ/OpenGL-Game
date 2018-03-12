@@ -1,25 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.SqlServer.Server;
-using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL_Game.world
 {
-    static class WorldRegionManager
+    internal static class WorldRegionManager
     {
         private static string dir = "SharpCraft_Data/saves/world/regions";
 
-        static ReaderWriterLock locker = new ReaderWriterLock();
+        private static ReaderWriterLock locker = new ReaderWriterLock();
 
         private static long _regionInfoSize;
         private static long _chunkSize;
@@ -45,8 +36,7 @@ namespace OpenGL_Game.world
             {
                 locker.AcquireWriterLock(1000);
                 locker.AcquireReaderLock(1000);
-                
-                
+
                 /*
                 var bf = new BinaryFormatter();
 
@@ -62,7 +52,7 @@ namespace OpenGL_Game.world
                         for (int i = 0; i < 16; i++)
                         {
                             var cc = new ChunkCache(c.chunkPos, new short[16, 256, 16]);
-                            
+
                             bf.Serialize(fs, cc);
 
                             if (i < 15)
@@ -75,7 +65,7 @@ namespace OpenGL_Game.world
                 using (var fs = File.Open($"{dir}/{fileName}", FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     fs.Seek(0, SeekOrigin.Begin); //.SetLength(_regionInfoSize);
-                    
+
                     var regionInfo = (RegionInfo) bf.Deserialize(fs);
                     var chunkFilePos = regionInfo.getChunkPos(c.chunkPos);
 
@@ -117,13 +107,13 @@ namespace OpenGL_Game.world
                 {
                     fs.SetLength(_regionInfoSize);
 
-                    var regionInfo = (RegionInfo) bf.Deserialize(fs);
+                    var regionInfo = (RegionInfo)bf.Deserialize(fs);
                     var chunkFilePos = regionInfo.getChunkPos(chunkPos);
 
                     fs.Position = chunkFilePos;
                     fs.SetLength(_chunkSize);
 
-                    var cc = (ChunkCache) bf.Deserialize(fs);
+                    var cc = (ChunkCache)bf.Deserialize(fs);
 
                     return Chunk.CreateFromCache(cc);
                 }
@@ -140,7 +130,7 @@ namespace OpenGL_Game.world
     }
 
     [Serializable]
-    struct RegionInfo
+    internal struct RegionInfo
     {
         private MyDictionary<BlockPos, long> _pointers;
 
@@ -164,7 +154,7 @@ namespace OpenGL_Game.world
     }
 
     [Serializable]
-    struct MyDictionary<TKey, TValue>
+    internal struct MyDictionary<TKey, TValue>
     {
         private ValueNode<TKey, TValue>[] _values;
 
@@ -216,7 +206,7 @@ namespace OpenGL_Game.world
     }
 
     [Serializable]
-    struct ValueNode<TKey, TValue>
+    internal struct ValueNode<TKey, TValue>
     {
         public TKey key { get; }
         public TValue value { get; }

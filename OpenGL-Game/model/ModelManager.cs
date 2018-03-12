@@ -85,6 +85,9 @@ namespace OpenGL_Game
 
         public static BlockModel getModelForBlock(EnumBlock blockType, int meta)
         {
+            if (blockType == EnumBlock.AIR)
+                return null;
+
             models.TryGetValue(blockType, out var states);
 
             for (int i = 0; i < states.Count; i++)

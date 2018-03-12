@@ -1,13 +1,13 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using OpenTK;
 
 namespace OpenGL_Game
 {
-    class World
+    internal class World
     {
         private ConcurrentDictionary<BlockPos, ChunkData> _chunks;
 
@@ -38,6 +38,7 @@ namespace OpenGL_Game
                 var model = new ChunkModel();
 
                 var data = new ChunkData(chunk, model);
+                data.chunkGenerated = true;
 
                 _chunks.TryAdd(pos, data);
             }
@@ -83,11 +84,11 @@ namespace OpenGL_Game
 
             var bb = box.union(box);
 
-            for (int x = (int) bb.min.X, maxX = (int) bb.max.X; x < maxX; x++)
+            for (int x = (int)bb.min.X, maxX = (int)bb.max.X; x < maxX; x++)
             {
-                for (int y = (int) bb.min.Y, maxY = (int) bb.max.Y; y < maxY; y++)
+                for (int y = (int)bb.min.Y, maxY = (int)bb.max.Y; y < maxY; y++)
                 {
-                    for (int z = (int) bb.min.Z, maxZ = (int) bb.max.Z; z < maxZ; z++)
+                    for (int z = (int)bb.min.Z, maxZ = (int)bb.max.Z; z < maxZ; z++)
                     {
                         var pos = new BlockPos(x, y, z);
                         var block = Game.INSTANCE.world.getBlock(pos);
@@ -135,41 +136,38 @@ namespace OpenGL_Game
             chunk.setBlock(pos - chunk.chunkPos, blockType, meta);
 
             if (redraw)
+            {
+                updateModelForChunk(chunk.chunkPos);
                 markNeighbourChunksForUpdate(chunk, pos);
+            }
         }
 
-        void markNeighbourChunksForUpdate(Chunk chunk, BlockPos pos)
+        private void markNeighbourChunksForUpdate(Chunk chunk, BlockPos pos)
         {
-            ThreadPool.RunTask(true, () =>
+            var sw = Stopwatch.StartNew();
+
+            var sides = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
+
+            int chunksUpdated = 1;
+
+            for (var index = 0; index < sides.Length; index++)
             {
-                var sw = new Stopwatch();
-                sw.Start();
+                EnumFacing side = sides[index];
 
-                updateModelForChunk(chunk.chunkPos);
+                var p = pos.offset(side);
+                var ch = getChunkFromPos(p);
 
-                var sides = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
-
-                int chunksUpdated = 1;
-
-                for (var index = 0; index < sides.Length; index++)
+                if (ch != chunk && ch != null)
                 {
-                    EnumFacing side = sides[index];
-
-                    var p = pos.offset(side);
-                    var ch = getChunkFromPos(p);
-
-                    if (ch != chunk && ch != null)
-                    {
-                        updateModelForChunk(ch.chunkPos);
-                        chunksUpdated++;
-                    }
+                    updateModelForChunk(ch.chunkPos);
+                    chunksUpdated++;
                 }
+            }
 
-                sw.Stop();
+            sw.Stop();
 
-                Console.WriteLine(
-                    $"DEBUG: built terrain model [{sw.Elapsed.TotalMilliseconds:F}ms] ({chunksUpdated} {(chunksUpdated > 1 ? "chunks" : "chunk")})");
-            });
+            Console.WriteLine(
+                $"DEBUG: built terrain model [{sw.Elapsed.TotalMilliseconds:F}ms] ({chunksUpdated} {(chunksUpdated > 1 ? "chunks" : "chunk")})");
         }
 
         public EnumBlock getBlock(BlockPos pos)
@@ -199,7 +197,10 @@ namespace OpenGL_Game
             chunk.setMetadata(this, pos - chunk.chunkPos, meta, redraw);
 
             if (redraw)
+            {
+                updateModelForChunk(chunk.chunkPos);
                 markNeighbourChunksForUpdate(chunk, pos);
+            }
         }
 
         public int getHeightAtPos(int x, int z)
@@ -237,8 +238,9 @@ namespace OpenGL_Game
                 return;
 
             var chunk = new Chunk(chunkPos);
+            var data = new ChunkData(chunk, new ChunkModel());
 
-            _chunks.TryAdd(chunkPos, new ChunkData(chunk, new ChunkModel()));
+            _chunks.TryAdd(chunkPos, data);
 
             for (int z = 0; z < 16; z++)
             {
@@ -247,7 +249,7 @@ namespace OpenGL_Game
                     var X = (x + chunkPos.x) / 1.25f;
                     var Y = (z + chunkPos.z) / 1.25f;
 
-                    int peakY = 32 + (int) Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal(X, Y), 0, 1) * 30);
+                    int peakY = 32 + (int)Math.Abs(MathHelper.Clamp(0.35f + noise.GetPerlinFractal(X, Y), 0, 1) * 30);
 
                     for (int y = peakY; y >= 0; y--)
                     {
@@ -270,32 +272,42 @@ namespace OpenGL_Game
             }
 
             if (redraw)
-                ThreadPool.RunTask(false, () => updateModelForChunk(chunk.chunkPos));
+                updateModelForChunk(chunkPos);
 
-            var sides = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
+            markNeighbourChunksForUpdate(chunk, chunk.chunkPos);
 
-            for (var index = 0; index < sides.Length - 2; index++)
-            {
-                var side = sides[index];
+            data.chunkGenerated = true;
 
-                var vec = new BlockPos().offset(side).vector;
-                var offset = new BlockPos(vec * 16);
+            /* var sides = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
 
-                var c = getChunkFromPos(offset + chunkPos);
+             for (var index = 0; index < sides.Length - 2; index++)
+             {
+                 var side = sides[index];
 
-                if (c != null)
-                    ThreadPool.RunTask(false, () => updateModelForChunk(c.chunkPos));
-            }
+                 var vec = new BlockPos().offset(side).vector;
+                 var offset = new BlockPos(vec * 16);
+
+                 var c = getChunkFromPos(offset + chunkPos);
+
+                 if (c != null)
+                     updateModelForChunk(c.chunkPos);
+             }*/
         }
 
         public void updateModelForChunk(BlockPos pos)
         {
             if (_chunks.TryGetValue(pos.ChunkPos(), out var node))
             {
+                if (!node.chunkGenerated)
+                    return;
+
                 node.modelGenerated = true;
 
-                var model = node.chunk.generateModel(this, node.model);
-                node.model = model;
+                ThreadPool.RunTask(false, () =>
+                {
+                    var model = node.chunk.generateModel(this, node.model);
+                    node.model = model;
+                });
             }
         }
 

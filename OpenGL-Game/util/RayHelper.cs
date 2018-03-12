@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
-using OpenTK.Graphics.ES20;
+﻿using OpenTK;
+using System;
 
 namespace OpenGL_Game
 {
-    class RayHelper
+    internal class RayHelper
     {
         public static bool rayIntersectsBB(Vector3 /*ray*/origin, Vector3 /*ray*/direction, AxisAlignedBB bb, out Vector3 hitPosition, out Vector3 hitNormal)
         {
@@ -18,7 +12,7 @@ namespace OpenGL_Game
             hitPosition = Vector3.Zero;
 
             float tmin, tmax, tymin, tymax, tzmin, tzmax;
-            Vector3 invrd = direction;
+            var invrd = direction;
             invrd.X = 1.0f / invrd.X;
             invrd.Y = 1.0f / invrd.Y;
             invrd.Z = 1.0f / invrd.Z;
@@ -96,11 +90,11 @@ namespace OpenGL_Game
             hitNormal = Vector3.Zero;
             int maxDir = 0; // x
             if (ratio.X >= ratio.Y && ratio.X >= ratio.Z)
-            { // x is the greatest	
+            { // x is the greatest
                 maxDir = 0;
             }
             else if (ratio.Y >= ratio.X && ratio.Y >= ratio.Z)
-            { // y is the greatest	
+            { // y is the greatest
                 maxDir = 1;
             }
             else if (ratio.Z >= ratio.X && ratio.Z >= ratio.Y)

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 
 namespace OpenGL_Game
 {
-    class WorldLoader
+    internal class WorldLoader
     {
         private static string dir = "SharpCraft_Data/saves/world";
 
@@ -64,12 +60,12 @@ namespace OpenGL_Game
 
                 using (var fs = File.OpenRead(dir + "/chunks.dat"))
                 {
-                    wcn = (WorldChunksNode) bf.Deserialize(fs);
+                    wcn = (WorldChunksNode)bf.Deserialize(fs);
                 }
 
                 using (var fs = File.OpenRead(dir + "/player.dat"))
                 {
-                    wpn = (WorldPlayerNode) bf.Deserialize(fs);
+                    wpn = (WorldPlayerNode)bf.Deserialize(fs);
                 }
 
                 world = World.Create(wcn.seed, wcn.caches);

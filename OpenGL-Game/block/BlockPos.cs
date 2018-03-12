@@ -1,5 +1,5 @@
-﻿using System;
-using OpenTK;
+﻿using OpenTK;
+using System;
 
 namespace OpenGL_Game
 {
@@ -59,23 +59,7 @@ namespace OpenGL_Game
 
         public BlockPos offset(EnumFacing dir)
         {
-            switch (dir)
-            {
-                case EnumFacing.NORTH:
-                    return new BlockPos(_x, _y, _z - 1);
-                case EnumFacing.SOUTH:
-                    return new BlockPos(_x, _y, _z + 1);
-                case EnumFacing.EAST:
-                    return new BlockPos(_x + 1, _y, _z);
-                case EnumFacing.WEST:
-                    return new BlockPos(_x - 1, _y, _z);
-                case EnumFacing.UP:
-                    return new BlockPos(_x, _y + 1, _z);
-                case EnumFacing.DOWN:
-                    return new BlockPos(_x, _y - 1, _z);
-
-                default: return this;
-            }
+            return new BlockPos(new Vector3(_x, _y, _z) + ModelHelper.getFacingVector(dir));
         }
 
         public BlockPos ChunkPos()

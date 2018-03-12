@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using OpenTK;
 
 namespace OpenGL_Game
 {
-    class Chunk
+    internal class Chunk
     {
         private short[,,] chunkBlocks;
 
@@ -41,7 +38,7 @@ namespace OpenGL_Game
 
         public void setBlock(BlockPos pos, EnumBlock blockType, int meta)
         {
-            short id = (short) ((short) blockType << 4 | meta);
+            short id = (short)((short)blockType << 4 | meta);
 
             chunkBlocks[pos.x, pos.y, pos.z] = id;
         }
@@ -49,7 +46,7 @@ namespace OpenGL_Game
         public EnumBlock getBlock(World w, BlockPos pos)
         {
             if (isPosInChunk(pos))
-                return (EnumBlock) (chunkBlocks[pos.x, pos.y, pos.z] >> 4);
+                return (EnumBlock)(chunkBlocks[pos.x, pos.y, pos.z] >> 4);
 
             var block = w.getBlock(pos + chunkPos);
 
@@ -70,7 +67,7 @@ namespace OpenGL_Game
             {
                 var id = chunkBlocks[pos.x, pos.y, pos.z];
 
-                chunkBlocks[pos.x, pos.y, pos.z] = (short) (id & 4095 | meta);
+                chunkBlocks[pos.x, pos.y, pos.z] = (short)(id & 4095 | meta);
             }
 
             w.setMetadata(pos + chunkPos, meta, redraw);
@@ -102,7 +99,7 @@ namespace OpenGL_Game
 
         public ChunkModel generateModel(World w, ChunkModel previousChunkModel)
         {
-            var possibleDirections = (EnumFacing[]) Enum.GetValues(typeof(EnumFacing));
+            var possibleDirections = (EnumFacing[])Enum.GetValues(typeof(EnumFacing));
             List<RawQuad> quads;
 
             var l_x = 16;
@@ -139,10 +136,9 @@ namespace OpenGL_Game
                             {
                                 /*if (isBlockAbove(pos)) //TODO: Lighting
                                 {
-
                                 }*/
 
-                                var quad = ((RawBlockModel) blockModel.rawModel)?.getQuadForSide(dir)?.offset(pos);
+                                var quad = ((RawBlockModel)blockModel.rawModel)?.getQuadForSide(dir)?.offset(pos);
 
                                 if (quad != null)
                                     quads.Add(quad);
@@ -197,7 +193,7 @@ namespace OpenGL_Game
     }
 
     [Serializable]
-    struct ChunkCache
+    internal struct ChunkCache
     {
         private readonly BlockPos _chunkPos;
         private readonly short[,,] _chunkBlocks;
